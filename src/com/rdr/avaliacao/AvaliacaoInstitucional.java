@@ -1,5 +1,10 @@
 package com.rdr.avaliacao;
 
-public class AvaliacaoInstitucional {
+import com.rdr.avaliacao.ig.IgAvaliacaoInstitucional;
 
+public class AvaliacaoInstitucional {
+	
+	public static void main(String[] args) {
+		new IgAvaliacaoInstitucional();
+	}
 }

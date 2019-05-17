@@ -17,27 +17,27 @@ public class IgRelatorio extends JFrame {
 		
 		JPanel panel = new JPanel();
 		panel.setBorder(new TitledBorder(null, "Dados", TitledBorder.LEADING, TitledBorder.TOP, null, null));
-		panel.setBounds(10, 0, 534, 370);
+		panel.setBounds(10, 0, 661, 431);
 		getContentPane().add(panel);
 		panel.setLayout(null);
 		
 		JPanel panel_1 = new JPanel();
 		panel_1.setBorder(new TitledBorder(null, "Modo de Exibi\u00E7\u00E3o", TitledBorder.LEADING, TitledBorder.TOP, null, null));
-		panel_1.setBounds(10, 381, 534, 69);
+		panel_1.setBounds(10, 432, 661, 69);
 		getContentPane().add(panel_1);
 		panel_1.setLayout(null);
 		
 		JRadioButton rdbtnNewRadioButton = new JRadioButton("Tabela");
-		rdbtnNewRadioButton.setBounds(146, 19, 109, 23);
+		rdbtnNewRadioButton.setBounds(155, 19, 109, 23);
 		panel_1.add(rdbtnNewRadioButton);
 		
 		JRadioButton rdbtnNewRadioButton_1 = new JRadioButton("Gr\u00E1fico");
-		rdbtnNewRadioButton_1.setBounds(260, 19, 109, 23);
+		rdbtnNewRadioButton_1.setBounds(354, 19, 109, 23);
 		panel_1.add(rdbtnNewRadioButton_1);
 		
 		JButton btnGerarPdf = new JButton("Gerar PDF");
 		btnGerarPdf.setEnabled(false);
-		btnGerarPdf.setBounds(418, 35, 89, 23);
+		btnGerarPdf.setBounds(550, 35, 89, 23);
 		panel_1.add(btnGerarPdf);
 	}
 }

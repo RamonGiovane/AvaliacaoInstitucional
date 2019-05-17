@@ -8,6 +8,7 @@ import static javax.swing.JOptionPane.showConfirmDialog;
 import static javax.swing.JOptionPane.showInputDialog;
 import static javax.swing.JOptionPane.showMessageDialog;
 
+import java.awt.Component;
 import java.awt.Dimension;
 
 import javax.swing.JScrollPane;
@@ -16,51 +17,52 @@ import javax.swing.JTextArea;
 import javax.swing.SwingConstants;
 import javax.swing.table.DefaultTableCellRenderer;
 
+
 public class EntradaESaida {
 	/**
 	 * Exibe uma mensagem informativa em uma caixa de diálogo com o texto da barra de título definido em 
 	 * titulo.
 	 */
-	public static void msgInfo(String mensagem, String titulo) {
-		showMessageDialog(null, mensagem, titulo, INFORMATION_MESSAGE);
+	public static void msgInfo(Component componentePai, String mensagem, String titulo) {
+		showMessageDialog(componentePai, mensagem, titulo, INFORMATION_MESSAGE);
 	}
 	
 	/**
 	 * Exibe um componente em uma caixa de diálogo com o texto da barra de título definido em titulo.
 	 */
-	public static void msgInfo(Object componente, String titulo) {
-		showMessageDialog(null, componente, titulo, INFORMATION_MESSAGE);
+	public static void msgInfo(Component componentePai, Object componente, String titulo) {
+		showMessageDialog(componentePai, componente, titulo, INFORMATION_MESSAGE);
 	}
 	
 	/**
 	 * Exibe uma mensagem de erro em uma caixa de diálogo com o texto da barra de título definido em titulo.
 	 */
-	public static void msgErro(String mensagem, String titulo) {
-		showMessageDialog(null, mensagem, titulo, ERROR_MESSAGE);
+	public static void msgErro(Component componentePai, String mensagem, String titulo) {
+		showMessageDialog(componentePai, mensagem, titulo, ERROR_MESSAGE);
 	}
 	
 	/**
 	 * Lê uma string em uma caixa de diálogo com o texto da barra de título definido em titulo.
 	 * Retorna a string lida ou null se o usuário cancelar a operação (clicando no botão Cancelar ou Fechar).
 	 */
-	public static String lerString(String mensagem, String titulo) {
-		return showInputDialog(null, mensagem, titulo, QUESTION_MESSAGE);
+	public static String lerString(Component componentePai, String mensagem, String titulo) {
+		return showInputDialog(componentePai, mensagem, titulo, QUESTION_MESSAGE);
 	}
 	
 	/**
 	 * Lê um número inteiro em uma caixa de diálogo com o texto da barra de título definido em titulo.
 	 * Retorna o numero lido ou null se o usuário cancelar a operação (clicando no botão Cancelar ou Fechar).
 	 */
-	public static Integer lerNumeroInteiro(String mensagem, String titulo) throws NumberFormatException {
-		return Integer.parseInt(lerString(mensagem, titulo)); 
+	public static Integer lerNumeroInteiro(Component componentePai, String mensagem, String titulo) throws NumberFormatException {
+		return Integer.parseInt(lerString(componentePai, mensagem, titulo)); 
 	}
 	
 	/**
 	 * Lê um número real em uma caixa de diálogo com o texto da barra de título definido em titulo.
 	 * Retorna o numero lido ou null se o usuário cancelar a operação (clicando no botão Cancelar ou Fechar).
 	 */
-	public static Float lerNumeroReal(String mensagem, String titulo) {
-		return Float.parseFloat(lerString(mensagem, titulo)); 
+	public static Float lerNumeroReal(Component componentePai, String mensagem, String titulo) {
+		return Float.parseFloat(lerString(componentePai, mensagem, titulo)); 
 	}
 	
 	/**
@@ -96,7 +98,7 @@ public class EntradaESaida {
 	 * 
 	 * @see javax.swing.SwingConstants
 	 */
-	public static void exibirTabela(String titulo, Object[][] linhas, String[] colunas, int[] larguraColuna, 
+	public static void exibirTabela(Component componentePai, String titulo, Object[][] linhas, String[] colunas, int[] larguraColuna, 
 			int[] alinhamentoColuna, int larguraTabela, int alturaTabela) {
 		
 		 	// Cria o componente GUI Swing JTable para exibir a tabela.
@@ -135,13 +137,13 @@ public class EntradaESaida {
 		 		}
 		 	
 		 	// Exibe a tabela em uma caixa de diálogo usando um painel rolável (JScrollPane).
-		 	msgInfo(new JScrollPane(table), titulo);
+		 	msgInfo(componentePai, new JScrollPane(table), titulo);
 	} // exibirTabela()
 	
 	/**
 	 * Exibe um texto em uma caixa de diálogo com o texto da barra de título definido em titulo.
 	 */
-	public static void exibirTexto(String texto, String titulo) {
+	public static void exibirTexto(Component componentePai, String texto, String titulo) {
 		/* Cria uma área de texto para armazenar o texto a ser exibido. Define, respectivamente, o título, o 
 		 * número de linhas e colunas. */
 		JTextArea textArea = new JTextArea(titulo, 10, 20);
@@ -159,6 +161,6 @@ public class EntradaESaida {
 		textArea.setText(texto);
 		
 		// Exibe a área de texto em uma caixa de diálogo usando um painel rolável (JScrollPane).
-		msgInfo(new JScrollPane(textArea), titulo);
+		msgInfo(componentePai, new JScrollPane(textArea), titulo);
 	}
 } // class EntradaESaida
