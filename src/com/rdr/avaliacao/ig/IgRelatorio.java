@@ -6,11 +6,12 @@ import java.awt.BorderLayout;
 import javax.swing.border.BevelBorder;
 import javax.swing.JRadioButton;
 import javax.swing.JButton;
+import javax.swing.JDialog;
 import javax.swing.border.LineBorder;
 import java.awt.Color;
 import javax.swing.border.TitledBorder;
 
-public class IgRelatorio extends JFrame {
+public class IgRelatorio extends JDialog {
 	public IgRelatorio() {
 		setTitle("Relat\u00F3rio de Autoavalia\u00E7\u00E3o Institucional");
 		getContentPane().setLayout(null);
