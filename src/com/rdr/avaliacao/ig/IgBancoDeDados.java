@@ -12,25 +12,30 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
-import static com.rdr.avaliacao.ig.IgConstantes.*;
+import static com.rdr.avaliacao.ig.InterfaceConstraints.*;
 import com.rdr.avaliacao.es.EntradaESaida;
 import com.rdr.avaliacao.es.bd.BancoDeDados;
 
 @SuppressWarnings("serial")
 public class IgBancoDeDados extends JDialog{
-	private BancoDeDados bd;
-	private JTextField fieldNomeBD;
-	private JTextField filedUsuario;
-	private JPasswordField fieldSenha;
+	private static BancoDeDados bd;
+	private static JTextField fieldNomeBD;
+	private static JTextField filedUsuario;
+	private static JPasswordField fieldSenha;
 	private static IgBancoDeDados igBancoDeDados;
 	
 	private IgBancoDeDados() {
+		
 		construirIg();
+
 	}
 	
 	public static IgBancoDeDados getInstance() {
-		if(igBancoDeDados == null)
-			return new IgBancoDeDados();
+		System.out.println(igBancoDeDados);
+		if(igBancoDeDados == null) {
+			igBancoDeDados = new IgBancoDeDados();
+			return igBancoDeDados;
+		}
 		else {
 			igBancoDeDados.setVisible(true);
 			return igBancoDeDados;
@@ -42,6 +47,7 @@ public class IgBancoDeDados extends JDialog{
 	}
 	
 	private void construirIg() {
+		System.out.println("Passing through...");
 		Aparencia.definirLookAndFeel(this);
 		setModal(true);
 		setResizable(false);
@@ -56,6 +62,7 @@ public class IgBancoDeDados extends JDialog{
 		fieldNomeBD.setBounds(158, 51, 134, 20);
 		getContentPane().add(fieldNomeBD);
 		fieldNomeBD.setColumns(10);
+		
 		
 		JLabel lblNomeDaBase = new JLabel("Nome da Base de Dados: ");
 		lblNomeDaBase.setBounds(25, 54, 123, 14);
@@ -84,7 +91,7 @@ public class IgBancoDeDados extends JDialog{
 			public void actionPerformed(ActionEvent arg0) {
 				
 				solicitarConexaoBanco(fieldNomeBD.getText(), filedUsuario.getText(), 
-						fieldSenha.getPassword().toString());
+						new String(fieldSenha.getPassword()));
 			}
 
 			
@@ -97,11 +104,20 @@ public class IgBancoDeDados extends JDialog{
 		label.setBounds(10, 11, 37, 32);
 		getContentPane().add(label);
 		setTitle(TITULO_BD);
-		setLocationRelativeTo(IgAvaliacaoInstitucional.getReference());
+		
+		setModal(true);
+		getContentPane().setBackground(COR_BACKGROUND);
+		setLocationRelativeTo(IgAvaliacaoInstitucional.getInstance());
+		
+		fieldNomeBD.setText(NOME_BD_PADRAO);
+		fieldSenha.setText(SENHA_BD_PADRAO);
+		filedUsuario.setText(USUARIO_BD_PADRAO);
+		
 		setVisible(true);
 	}
 	
 	private void solicitarConexaoBanco(String nomeBD, String usuarioBD, String senhaBD) {
+		System.out.println(bd);
 		if(bd != null) {
 			int msgConfirma = EntradaESaida.msgConfirma(this, MSG_BD_CONEXAO_JA_EXISTE, 
 					TITULO_BD);
@@ -121,6 +137,13 @@ public class IgBancoDeDados extends JDialog{
 		else {
 			EntradaESaida.msgInfo(this, MSG_SUCESSO_BD, TITULO_BD);
 			setVisible(false);
+			definirCredenciais(nomeBD, usuarioBD, senhaBD);
 		}
+	}
+	
+	private void definirCredenciais(String nomeBD, String usuarioBD, String senhaBD) {
+		filedUsuario.setText(usuarioBD);
+		fieldNomeBD.setText(nomeBD);
+		fieldSenha.setText(senhaBD);
 	}
 }

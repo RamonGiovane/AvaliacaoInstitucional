@@ -13,6 +13,7 @@ import javax.swing.border.TitledBorder;
 
 public class IgRelatorio extends JDialog {
 	public IgRelatorio() {
+		setResizable(false);
 		setTitle("Relat\u00F3rio de Autoavalia\u00E7\u00E3o Institucional");
 		getContentPane().setLayout(null);
 		
@@ -24,7 +25,7 @@ public class IgRelatorio extends JDialog {
 		
 		JPanel panel_1 = new JPanel();
 		panel_1.setBorder(new TitledBorder(null, "Modo de Exibi\u00E7\u00E3o", TitledBorder.LEADING, TitledBorder.TOP, null, null));
-		panel_1.setBounds(10, 432, 661, 69);
+		panel_1.setBounds(10, 442, 661, 75);
 		getContentPane().add(panel_1);
 		panel_1.setLayout(null);
 		

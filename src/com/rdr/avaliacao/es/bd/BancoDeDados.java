@@ -6,10 +6,10 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 /** 
- * Usa o padr„o de projeto (design pattern) Singleton para obter uma conex„o ˙nica com o banco 
- * de dados. Esta classe possui operaÁıes para permitir as operaÁıes CRUD no banco de dados.
+ * Usa o padr√£o de projeto (design pattern) Singleton para obter uma conex√£o √∫nica com o banco 
+ * de dados. Esta classe possui opera√ß√µes para permitir as opera√ß√µes CRUD no banco de dados.
  * 
- *   O acrÙnimo CRUD corresponde as seguintes instruÁıes SQL:
+ *   O acr√¥nimo CRUD corresponde as seguintes instru√ß√µes SQL:
  *   
  *   Create = SQL INSERT 
  *   Retrieve =  SQL SELECT
@@ -30,25 +30,25 @@ public class BancoDeDados {
 		this.usuarioBD = usuarioBD;
 		this.senhaBD = senhaBD;
 
-		/* ObtÈm uma conex„o com o banco de dados bd identificado por nomeBD e que possui 
-		 * us·rio e senha de acesso definidos por usuarioBD e senhaBD.
+		/* Obt√©m uma conex√£o com o banco de dados bd identificado por nomeBD e que possui 
+		 * us√°rio e senha de acesso definidos por usuarioBD e senhaBD.
 		 *
-		 * A partir do JDBC 4.0 o comando abaixo n„o È mais necess·rio porque a classe 
-		 * DriverManager se encarregada de carreg·-lo automaticamente. 
+		 * A partir do JDBC 4.0 o comando abaixo n√£o √© mais necess√°rio porque a classe 
+		 * DriverManager se encarregada de carreg√°-lo automaticamente. 
 		 * 
 		 * // Driver JDBC do PostgreSQL.
 		 * String driverJDBC = "org.postgresql.Driver";
 		 * 
-		 * // Carrega a classe do driver JDBC para permitir conex„o com o BD. 
+		 * // Carrega a classe do driver JDBC para permitir conex√£o com o BD. 
 		 * 	Class.forName(driverJDBC);   
 		 */
 		connection = DriverManager.getConnection(DRIVER_BD + nomeBD, usuarioBD, senhaBD);
 
-		// ObtÈm um objeto Statement para enviar consultas SQL ao banco de dados.
+		// Obt√©m um objeto Statement para enviar consultas SQL ao banco de dados.
 		statement = connection.createStatement(); 
 	} // construtor privado
 
-	/** ObtÈm uma conex„o ˙nica com o banco de dados. Se n„o for possÌvel estabelecer uma conex„o
+	/** Obt√©m uma conex√£o √∫nica com o banco de dados. Se n√£o for poss√≠vel estabelecer uma conex√£o
 	 * com o banco de dados retorna null.
 	 */
 	public static BancoDeDados criarConexao(String nomeBD, String usuarioBD, String senhaBD) {
@@ -56,15 +56,18 @@ public class BancoDeDados {
 			try { 
 				bd = new BancoDeDados(nomeBD, usuarioBD, senhaBD);
 			} catch (SQLException e) {
+				System.out.println(nomeBD + usuarioBD + senhaBD);
+				System.out.println(e);
 				conectado = false;
 				return null;
 			}
 		}
 		conectado = true;
+		System.out.println("BD = " + bd);
 		return bd;
 	} // criarConexao()
 
-	/** Fecha a conex„o com o banco de dados. */  
+	/** Fecha a conex√£o com o banco de dados. */  
 	public void fecharConexao() throws SQLException { 
 		if (statement != null) statement.close();
 		if (connection != null) connection.close();

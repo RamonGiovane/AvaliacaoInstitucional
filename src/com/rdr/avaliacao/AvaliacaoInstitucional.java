@@ -1,20 +1,44 @@
 package com.rdr.avaliacao;
 
-import com.rdr.avaliacao.ig.IgAvaliacaoInstitucional;
-import com.rdr.avaliacao.ig.IgBancoDeDados;
+import java.io.IOException;
+import java.sql.SQLException;
 
-/**Classe principal do programa de AvaliaÁ„o Institucional. Nesta classe encontra-se o mÈtodo main.
+import com.rdr.avaliacao.es.EntradaESaida;
+import com.rdr.avaliacao.es.ExtratorDeDados;
+import com.rdr.avaliacao.es.bd.BancoDeDados;
+import com.rdr.avaliacao.ig.IgAvaliacaoInstitucional;
+import com.rdr.avaliacao.ig.InterfaceConstraints;
+
+/**Classe principal do programa de Avalia√ß√£o Institucional. Nesta classe encontra-se o m√©todo main.
  * Nenhuma outra classe pode instaciar um objeto desta.
- * Portanto, seu funcionamento consiste em fornecer o execut·vel do programa e intermediar as classes de
- * interface gr·fica e modelo de negÛcio com os dados.*/
+ * Portanto, seu funcionamento consiste em fornecer o execut√°vel do programa e intermediar as classes de
+ * interface gr√°fica e modelo de neg√≥cio com os dados.*/
 public class AvaliacaoInstitucional {
-	
+	private ExtratorDeDados extrator;
+	private static BancoDeDados bd;
 	private AvaliacaoInstitucional() {
-		//ConstrÛi a janela de conex„o ao banco de dados
-		IgBancoDeDados.getInstance();
 		
-		//ConstrÛi a janela do menu principal
+		try {
+		
+		//Constr√≥i a janela do menu principal
 		IgAvaliacaoInstitucional.getInstance(this);
+		
+		//Salva a refer√™ncia do banco de dados
+		bd = BancoDeDados.getBancoDeDados();
+		
+		
+		}catch(Exception e) {
+			
+		}finally {
+			try {
+				bd.fecharConexao();
+			}catch (NullPointerException e) {
+				System.out.println("Banco de Dados n√£o estava conectado.");
+			} catch (SQLException e1) {
+				EntradaESaida.msgErro(null, InterfaceConstraints.ERRO_DESCONECTAR_BD,
+						InterfaceConstraints.TITULO_PROGRAMA);
+			}
+		}
 
 	}
 	
@@ -22,7 +46,14 @@ public class AvaliacaoInstitucional {
 		new AvaliacaoInstitucional();
 	}
 	
-	public void extrairDados() {
-		
+	public void importarDados(String nomeArquivo) {
+		if(extrator == null) extrator = new ExtratorDeDados(bd, nomeArquivo);
+		extrator.setNomeArquivo(nomeArquivo);
+		try {
+			extrator.extrairDados();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 }
