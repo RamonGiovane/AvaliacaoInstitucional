@@ -1,0 +1,182 @@
+--
+-- PostgreSQL database dump
+--
+
+-- Dumped from database version 9.6.13
+-- Dumped by pg_dump version 9.6.13
+
+-- Started on 2019-05-27 00:50:49
+
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SELECT pg_catalog.set_config('search_path', '', false);
+SET check_function_bodies = false;
+SET xmloption = content;
+SET client_min_messages = warning;
+SET row_security = off;
+
+SET default_tablespace = '';
+
+SET default_with_oids = false;
+
+--
+-- TOC entry 201 (class 1259 OID 16947)
+-- Name: pergunta; Type: TABLE; Schema: public; Owner: spaadmin
+--
+
+CREATE TABLE public.pergunta (
+    codigo integer NOT NULL,
+    descricao character varying(150)
+);
+
+
+ALTER TABLE public.pergunta OWNER TO spaadmin;
+
+--
+-- TOC entry 200 (class 1259 OID 16945)
+-- Name: pergunta_codigo_seq; Type: SEQUENCE; Schema: public; Owner: spaadmin
+--
+
+CREATE SEQUENCE public.pergunta_codigo_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.pergunta_codigo_seq OWNER TO spaadmin;
+
+--
+-- TOC entry 2170 (class 0 OID 0)
+-- Dependencies: 200
+-- Name: pergunta_codigo_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: spaadmin
+--
+
+ALTER SEQUENCE public.pergunta_codigo_seq OWNED BY public.pergunta.codigo;
+
+
+--
+-- TOC entry 2043 (class 2604 OID 16950)
+-- Name: pergunta codigo; Type: DEFAULT; Schema: public; Owner: spaadmin
+--
+
+ALTER TABLE ONLY public.pergunta ALTER COLUMN codigo SET DEFAULT nextval('public.pergunta_codigo_seq'::regclass);
+
+
+--
+-- TOC entry 2164 (class 0 OID 16947)
+-- Dependencies: 201
+-- Data for Name: pergunta; Type: TABLE DATA; Schema: public; Owner: spaadmin
+--
+
+COPY public.pergunta (codigo, descricao) FROM stdin;
+80	Quantitativo de Mesas e cadeiras
+81	Quantitativo de salas
+82	Dimensão das salas
+83	Limpeza
+84	Iluminação
+85	Internet na sala de aula
+86	Acústica
+87	Ventilação
+88	Equipamentos de multimídia
+89	Dimensão do auditório
+90	Internet
+91	Acessibilidade
+92	Conservação da mobília
+93	Equipamentos de multmídia
+94	Segurança contra incêndio
+95	Sistema de som
+96	Acesso à internet
+97	Acesso WIFI
+98	Velocidade da Internet
+99	Uso da internet para atividades acadêmicas
+100	Espaço para estudo individual
+101	Espaço para estudo em grupo
+102	Número de tomadas elétricas disponíveis
+103	Quantidade do Acervo
+104	Acervo atualizado
+105	Biblioteca virtual ou acesso a obras disponíveis em acervos virtuais
+106	Espaço da biblioteca
+107	Conservação do mobilário
+108	Segurança
+109	Acesso à internet via Wifi
+110	Informatização do acervo (empréstimo, devolução e renovação)
+111	Horário de atendimento
+112	Mesas e cadeiras
+113	Internet via cabo (computadores)
+114	Internet WIFI
+115	Esquipamentos e programas disponíveis
+116	Climatização com ar condicionado
+117	Quantidade de laboratórios
+118	Dimensões
+119	Equipamentos especializados
+120	Materiais disponíveis (ex: material de uso didático)
+121	Ventilação (ventilador ou ar condicionado)
+122	Dimensão
+123	Materiais disponíveis (ex: jogos, livros, TV, etc.)
+124	Equipamentos Disponíveis
+125	Acesso à internet para impressões
+126	Pastas digitalizadas de materiais
+127	Atendimento
+128	Preços praticados
+129	Espaço do Refeitório
+130	Quantitativo de cadeiras e mesas
+131	Conservação do imobiliário
+132	Qualidade da alimentação
+133	Qualidade do atendimento
+134	Tempo de espera em fila
+135	Materiais disponíveis (ex: talheres, guardanapo, copos e pratos)
+136	Temperatura da água
+137	Localização
+138	Quantidade
+139	Conservação
+140	Quantitativo
+141	Vasos e mictórios
+142	Materiais disponíveis (ex: papel higiênico, sabonete, papel toalha, álcool gel, etc.)
+143	Rampas com corrimão que facilitem a circulação de cadeiras de rodas
+144	Adaptação de portas e banheiros com espaço suficiente para permitir o acesso de cadeiras de rodas
+145	Eliminação de barreiras arquitetônicas para circulação, permitindo acesso aos espaços de uso coletivo
+146	Colocação de barras de apoio nos banheiros aos usuários de cadeiras de rodas
+147	Horário de Atendimento
+148	Recepção
+149	Consultórios
+150	Sala de procedimentos
+151	Quantitativo de Vigilantes
+152	Guaritas
+153	Sistema interno de segurança
+154	Sistema de controle de acesso de pessoas
+155	Em linhas gerais, como você avalia os estacionamentos:
+156	Em linhas gerais, como você avalia a infraestrutura de esporte e lazer:
+157	revo san revo revucc admir
+158	Em linhas gerais, como você avalia as vias de acesso a outros espaços:
+\.
+
+
+--
+-- TOC entry 2171 (class 0 OID 0)
+-- Dependencies: 200
+-- Name: pergunta_codigo_seq; Type: SEQUENCE SET; Schema: public; Owner: spaadmin
+--
+
+SELECT pg_catalog.setval('public.pergunta_codigo_seq', 158, true);
+
+
+--
+-- TOC entry 2045 (class 2606 OID 16952)
+-- Name: pergunta pergunta_pkey; Type: CONSTRAINT; Schema: public; Owner: spaadmin
+--
+
+ALTER TABLE ONLY public.pergunta
+    ADD CONSTRAINT pergunta_pkey PRIMARY KEY (codigo);
+
+
+-- Completed on 2019-05-27 00:50:49
+
+--
+-- PostgreSQL database dump complete
+--
+

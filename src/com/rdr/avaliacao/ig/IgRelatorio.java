@@ -23,6 +23,7 @@ public class IgRelatorio extends JDialog {
 		getContentPane().add(panel);
 		panel.setLayout(null);
 		
+		
 		JPanel panel_1 = new JPanel();
 		panel_1.setBorder(new TitledBorder(null, "Modo de Exibi\u00E7\u00E3o", TitledBorder.LEADING, TitledBorder.TOP, null, null));
 		panel_1.setBounds(10, 442, 661, 75);

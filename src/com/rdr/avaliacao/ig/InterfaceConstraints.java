@@ -9,7 +9,7 @@ public interface InterfaceConstraints {
 			COR_BACKGROUND = new Color(250, 250, 250),
 			COR_BACKGROUND_BOTAO = Color.BLACK;//new Color(245, 245, 245);
 
-	//Mensagens de interface gráfica
+	/**Mensagem de interface gráfica*/
 	public final static String TITULO_PROGRAMA = "Autoavalia\u00E7\u00E3o Institucional",
 			TITULO_ABRIR_ARQUIVO = "Abrir aquivo",
 			MSG_ERRO_BUILD_UI = "Ocorreu um problema desconhecido durante a contrução da interface gráfica.\n "
@@ -22,7 +22,7 @@ public interface InterfaceConstraints {
 					MSG_BD_CONEXAO_JA_EXISTE =	"Já existe uma conexão ativa com o banco de dados."
 							+ "\nSe continuar a conexão atual será encerrada.\nProsseguir mesmo assim?";
 
-	//Caminhos de imagens
+	/**Caminho de imagem usada na interface gráfica**/
 	public final static String CAMINHO_ICON_DB = "/com/rdr/avaliacao/ig/img/db_icon.png",
 			CAMINHO_ICON_GRAPHIC = "/com/rdr/avaliacao/ig/img/graphic_icon.png",
 			CAMINHO_IMPORT_ICON = "/com/rdr/avaliacao/ig/img/import_icon.png",
@@ -32,6 +32,7 @@ public interface InterfaceConstraints {
 	//Banco de Dados
 	public final static String NOME_BD_PADRAO = "spadb", USUARIO_BD_PADRAO = "spaadmin", 
 			SENHA_BD_PADRAO = "SPA#Barbacena@IFSudesteMG";
+	
 
 	//Filtros de extensão de arquivos
 	public final static String[] 

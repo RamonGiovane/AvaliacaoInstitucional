@@ -12,6 +12,8 @@ import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -231,6 +233,16 @@ public class IgAvaliacaoInstitucional extends JFrame{
 
 		setSize(600, 600);
 		getContentPane().setBackground(COR_BACKGROUND);
+		
+		addWindowListener(new WindowAdapter() {
+			@Override
+			public void windowClosing(WindowEvent e) {
+				
+				dispose();
+				AvaliacaoInstitucional.fecharPrograma();
+			}
+		});
+		
 		setResizable(false);
 		setVisible(true);
 

@@ -59,7 +59,7 @@ public class IgBancoDeDados extends JDialog{
 		getContentPane().add(lblParaImportarOs);
 		
 		fieldNomeBD = new JTextField();
-		fieldNomeBD.setBounds(158, 51, 134, 20);
+		fieldNomeBD.setBounds(158, 51, 140, 20);
 		getContentPane().add(fieldNomeBD);
 		fieldNomeBD.setColumns(10);
 		
@@ -77,12 +77,12 @@ public class IgBancoDeDados extends JDialog{
 		getContentPane().add(lblSenha);
 		
 		filedUsuario = new JTextField();
-		filedUsuario.setBounds(158, 87, 134, 20);
+		filedUsuario.setBounds(158, 87, 140, 20);
 		getContentPane().add(filedUsuario);
 		filedUsuario.setColumns(10);
 		
 		fieldSenha = new JPasswordField();
-		fieldSenha.setBounds(158, 119, 134, 20);
+		fieldSenha.setBounds(158, 119, 140, 20);
 		getContentPane().add(fieldSenha);
 		fieldSenha.setColumns(10);
 		
@@ -96,7 +96,7 @@ public class IgBancoDeDados extends JDialog{
 
 			
 		});
-		btnConectar.setBounds(227, 186, 89, 23);
+		btnConectar.setBounds(227, 190, 89, 23);
 		getContentPane().add(btnConectar);
 		
 		JLabel label = new JLabel("");

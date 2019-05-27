@@ -1,6 +1,7 @@
 package com.rdr.avaliacao.es;
 
 import java.io.EOFException;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -23,7 +24,8 @@ import com.rdr.avaliacao.ig.InterfaceConstraints;
  * o método <code>fechar</code>.
  * </p>
  *   
- * @author Prof. Márlon Oliveira da Silva
+ * @author Prof. Márlon Oliveira da Silva<br>
+ * 		   Ramon Giovane
  * 
  * @version 0.1
  */
@@ -80,14 +82,11 @@ public class ArquivoTexto {
 	  /** 
 	   * Lê o conteúdo completo do arquivo texto.
 	   * 
-	   * As exceções disparadas pelo método <code>ler</code> tem o seu ponto de disparo nos 
-	   * métodos <code>hasNextLine()</code> e <code>nextLine()</code> 
-	   * da classe <code>java.util.Scanner</code>. Lembre que o arquivo texto é lido usando 
-	   * um objeto Scanner. Estas exceções são geradas pelos métodos da classe Scanner. 
-	   * 
-	   * @return um <code>String</code> com o conteúdo lido do arquivo texto.
+	   * @return uma <code>String</code> com o conteúdo lido do arquivo texto.
 	   *
 	   * @throws IOException ocorre se o arquivo estiver fechado.  
+	   * 
+	   * @author Prof. Márlon Oliveira da Silva
 	   */
 	  public String ler() throws IOException {
 		  StringBuilder conteudo = new StringBuilder();
@@ -102,6 +101,16 @@ public class ArquivoTexto {
 		}
 	  }
 	  
+	  /** 
+	   * Lê o conteúdo completo de uma linha do arquivo texto.
+	   * 
+	   * @return uma <code>String</code> com o conteúdo lido do arquivo texto.
+	   *
+	   * @throws IOException ocorre se o arquivo estiver fechado ou se não há mais linhas para ler
+	   * 
+	   * @author Ramon Giovane
+	   * */  
+	   
 	  public String lerLinha() throws IOException {
 		  
 		  try { // Lê uma linha do arquivo.
@@ -113,7 +122,9 @@ public class ArquivoTexto {
 		  } catch (Exception e) {
 			  throw new IOException();
 		}
-	  } 
+	  }
+	  
+	
 	  
 	  /**
 	   * Fecha os arquivos que foram criados para manipulação do arquivo texto.
