@@ -5,6 +5,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.sql.SQLType;
+import java.sql.Types;
 
 //Pode-se tentar um relacionamento de herança com BD
 
@@ -48,6 +50,7 @@ public class DAO {
 	 * <b>Nota:</b> o uso deste método é recomendado para a inserção de objetos <code>String</code>,
 	 *  <code>Integer</code>, <code>Float</code>, etc...
 	 *  O uso para objetos não <code>String</code> ou que não pertencem às classes empacotadoras de tipo é desencorajado.
+	 *  Apenas objetos <code>String </code> podem ser passados como <code>null</code>.
 	 * 
 	 * <br>
 	 * 
@@ -94,7 +97,11 @@ public class DAO {
 	 * <br>
 	 * <b>Nota:</b> o uso deste método é recomendado para a inserção de objetos <code>String</code>,
 	 *  <code>Integer</code>, <code>Float</code>, etc...
+	 *  
+	 *  <br>
+	 *  
 	 *  O uso para objetos não <code>String</code> ou que não pertencem às classes empacotadoras de tipo é desencorajado.
+	 *  Apenas objetos <code>String </code> podem ser passados como <code>null</code>.
 	 * 
 	 * <br>
 	 * 
@@ -136,7 +143,15 @@ public class DAO {
 	 * <br><br>
 	 * <b>Nota:</b> este método é <b>seguro</b> contra injeções de SQL. 
 	 * <br>
+	 * <b>Nota:</b> o uso deste método é recomendado com parâmetros de objetos <code>String</code>,
+	 *  <code>Integer</code>, <code>Float</code>, etc...
+	 *  
+	 *  <br>
+	 *  
+	 *  O uso para objetos não <code>String</code> ou que não pertencem às classes empacotadoras de tipo é desencorajado.
+	 *  Apenas objetos <code>String </code> podem ser passados como <code>null</code>.
 	 * 
+	 * <br>
 	 * @param nomeFuncao nome da função armazenada no banco de dados.
 	 * @param parametros lista de objetos que compõe os parâmetros necessários na chamada da função.
 	 * @return uma matriz de objetos contendo os nomes das colunas correspondentes no banco e objetos
@@ -217,7 +232,7 @@ public class DAO {
 	/**Retorna a quantidade de registros em um ResultSet*/
 	private int resultSetLength(ResultSet resultSet) throws SQLException {
 		int size = 0;
-		try{resultSet.first();}catch (SQLException e) {}
+		try{resultSet.beforeFirst();}catch (SQLException e) {}
 		while(!resultSet.isLast()) {
 			resultSet.next();
 			System.out.println("next");
@@ -234,16 +249,21 @@ public class DAO {
 	 * @throws SQLException
 	 */
 	private Object[][] resultSetAsMatrix(ResultSet resultSet) throws SQLException {
-		
+		//System.out.println("FetchSize " + resultSet.getFetchSize());
 		int length = resultSetLength(resultSet);
+		
 		Object resultados[][] =  new Object[2][length];
 		
 		ResultSetMetaData metaData = resultSet.getMetaData();
 		
 		
-		for(int i = 0; i<length; i++) {
+		//for(int i = 0; i<length; i++) {
+		int i =0;
+		while(resultSet.next()){// {System.out.println("cabo"); break; }
 			resultados[0][i] = metaData.getColumnName(i+1);
 			resultados[1][i] = resultSet.getObject(i+1);
+			i++;
+			
 		}
 		
 		return resultados;
@@ -282,7 +302,9 @@ public class DAO {
 	
 	private void inserirObjetosPreparedStatement(PreparedStatement ps, Object...objetos) throws SQLException {
 		for(int indice = 0; indice<objetos.length; indice++)
-			ps.setObject(indice+1, objetos[indice]);
+			if(objetos[indice] == null)
+				ps.setNull(indice+1, Types.VARCHAR);
+			else ps.setObject(indice+1, objetos[indice]);
 	}
 	
 	
