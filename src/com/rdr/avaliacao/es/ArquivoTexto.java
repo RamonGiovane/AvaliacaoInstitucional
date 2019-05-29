@@ -1,15 +1,13 @@
 package com.rdr.avaliacao.es;
 
-import java.io.EOFException;
-import java.io.File;
+import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.util.Formatter;
 import java.util.FormatterClosedException;
 import java.util.Scanner;
-
-import com.rdr.avaliacao.ig.InterfaceConstraints;
 /**
  * Fornece vários métodos para manipular um arquivo texto em disco.
  * <p>
@@ -33,6 +31,7 @@ public class ArquivoTexto {
 	private Scanner inputScanner; // O conteúdo do arquivo texto será lido usando um objeto Scanner.
 	private FileInputStream fileInputStream; // Representa o arquivo texto como um arquivo de bytes. 
 	private Formatter fileOutputFormatter; // O conteúdo do arquivo texto será escrito usando um objeto Formatter.
+	private BufferedReader reader;
 	 
 	private final String EOF_MESSAGE ="Fim do arquivo (EOF) atingido.";
 	/** 
@@ -43,6 +42,9 @@ public class ArquivoTexto {
 	 * @throws FileNotFoundException se o nome do arquivo não for encontrado.
 	 */
 	  public void abrir(String nomeArquivo) throws FileNotFoundException {
+		 //Cria um objeto de reder bufferizado.
+		  reader = new BufferedReader(new FileReader(nomeArquivo));
+		
 		  // Abre um arquivo de bytes para realizar a entrada de dados. 
 		  fileInputStream = new FileInputStream(nomeArquivo);
 		        
@@ -112,12 +114,10 @@ public class ArquivoTexto {
 	   * */  
 	   
 	  public String lerLinha() throws IOException {
-		  
-		  try { // Lê uma linha do arquivo.
-			      if (inputScanner.hasNextLine()) 
-			    	  return inputScanner.nextLine();
-			      else
-			    	  throw new IOException(EOF_MESSAGE);
+
+		 
+		 try { 
+			 return reader.readLine();
 			      
 		  } catch (Exception e) {
 			  throw new IOException();

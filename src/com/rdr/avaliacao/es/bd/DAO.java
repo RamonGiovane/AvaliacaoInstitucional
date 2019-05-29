@@ -179,7 +179,6 @@ public class DAO {
 		}
 		
 		try {
-			System.out.println(call);
 			inserirObjetosPreparedStatement(statement, parametros);
 			
 			return resultSetAsMatrix(statement.executeQuery());
@@ -191,6 +190,16 @@ public class DAO {
 		}
 	}
 	
+	
+	public void executar(String query) throws SQLException{
+		CallableStatement statement = prepareCall(new StringBuilder().append(STR_ABRE_CALL).append(query).append(STR_FECHA_CALL).toString());
+		try{
+			statement.execute();
+		}finally {
+			statement.close();
+		}
+		
+	}
 	
 	
 	public <T extends Persistencia> Object[] pesquisar(T t, Object[] chaves) throws SQLException {
@@ -232,10 +241,8 @@ public class DAO {
 	/**Retorna a quantidade de registros em um ResultSet*/
 	private int resultSetLength(ResultSet resultSet) throws SQLException {
 		int size = 0;
-		try{resultSet.beforeFirst();}catch (SQLException e) {}
-		while(!resultSet.isLast()) {
-			resultSet.next();
-			System.out.println("next");
+		resultSet.beforeFirst();
+		while(resultSet.next()) {
 			size++;
 		}
 		resultSet.beforeFirst();
@@ -245,25 +252,23 @@ public class DAO {
 	/**A partir de um objeto <code>ResultSet</code> retorna uma matriz com os objetos obtidos em uma consulta SQL.
 	 * 
 	 * @param resultSet conjunto de dados obtidos numa consulta SQL
-	 * @return uma matriz de objetos contendo os nomes das colunas correspondentes no banco e objetos recuperados na consulta.
+	 * @return uma matriz de objetos contendo as linhas e colunas correspondentes recuperados na consulta SQL.
 	 * @throws SQLException
 	 */
 	private Object[][] resultSetAsMatrix(ResultSet resultSet) throws SQLException {
-		//System.out.println("FetchSize " + resultSet.getFetchSize());
 		int length = resultSetLength(resultSet);
-		
-		Object resultados[][] =  new Object[2][length];
-		
+
 		ResultSetMetaData metaData = resultSet.getMetaData();
-		
+		int numeroColunas = metaData.getColumnCount();
+		Object resultados[][] =  new Object[length][numeroColunas];
 		
 		//for(int i = 0; i<length; i++) {
-		int i =0;
-		while(resultSet.next()){// {System.out.println("cabo"); break; }
-			resultados[0][i] = metaData.getColumnName(i+1);
-			resultados[1][i] = resultSet.getObject(i+1);
-			i++;
-			
+		int linhas =0;
+		while(resultSet.next()){
+			for(int colunas = 0; colunas < numeroColunas; colunas++)
+				resultados[linhas][colunas] = resultSet.getObject(colunas+1);
+			linhas++;
+		
 		}
 		
 		return resultados;
@@ -279,7 +284,6 @@ public class DAO {
 	private String queryFormatSymbols(int numeroDeParametros, boolean adicionarValues) {
 		StringBuilder str = new StringBuilder();
 		str.append(adicionarValues ? STR_VALUES : " ").append(STR_ABRE_PARENTESES);
-		System.out.println(str);
 		for(int i =0; i<numeroDeParametros; i++) {
 			str.append(STR_INTERROGACAO);
 			if(i+1 != numeroDeParametros)

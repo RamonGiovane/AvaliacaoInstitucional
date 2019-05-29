@@ -4,6 +4,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Calendar;
 import java.util.StringTokenizer;
 import java.util.regex.Pattern;
 
@@ -22,8 +23,12 @@ public class ExtratorDeDados {
 	private ArquivoTexto arquivo; 
 	private Pergunta[] perguntas;
 	private final String TEMA_INDEFINIDO = "Geral";
+	private Aluno aluno;
 	private DAO dao;
 
+	private IndicePergunta indices[];
+	private Pergunta pergunta;
+	
 	public ExtratorDeDados(BancoDeDados bd, String nomeArquivo) {
 		super();
 		this.bd = bd;
@@ -31,6 +36,11 @@ public class ExtratorDeDados {
 		this.nomeArquivo = nomeArquivo;
 		this.separador = SEPARADOR_PADRAO;
 		arquivo = new ArquivoTexto();
+		
+		
+		//Objeto aluno necessário para a importação dos dados
+		aluno = new Aluno();
+		pergunta = new Pergunta();
 	}
 
 
@@ -69,18 +79,14 @@ public class ExtratorDeDados {
 		return (bd != null);
 	}
 
-
-	public Object extrairDados(ResultSet resultSet, String nomeColuna) throws SQLException {
-		return resultSet.getObject(nomeColuna);
-	}
-
 	private String[] quebrarTexto(String texto) throws IOException {
-		System.out.println("TEXTO " +  texto.split(";").length);
+		
 		return texto.split(";"); 
 
 	}
 
 	public void extrairDados() throws IOException{
+		Calendar inicio = Calendar.getInstance();
 		extrairPerguntas();
 		try {
 			extrairRespostas();
@@ -88,17 +94,25 @@ public class ExtratorDeDados {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		
+		arquivo.fechar();
+		
+		Calendar fim = Calendar.getInstance();
+		
+		EntradaESaida.msgInfo(null, String.format("Time %d", 
+				fim.getTimeInMillis() - inicio.getTimeInMillis()), "Opa");
 	}
 
 	private void extrairPerguntas() throws IOException {
 
 		String strPerguntas[] =  quebrarTexto(obterCabecalho()); //!!! must check this
 		perguntas =  new Pergunta[strPerguntas.length-3];
+		indices = new IndicePergunta[strPerguntas.length-3];
 
 		//Ignora as colunas de identificacao do entrevistado
 		int indice = 3;
 		String tema, questao;
-		Pergunta pergunta;
+		Object[][] retorno;
 		for(; indice<strPerguntas.length; indice++) {
 			strPerguntas[indice] = strPerguntas[indice].replace(" - ", ".");
 			strPerguntas[indice] = strPerguntas[indice].replaceAll("\\d{1,}[.]", "").trim();
@@ -112,26 +126,17 @@ public class ExtratorDeDados {
 				tema = TEMA_INDEFINIDO;
 				questao = strPerguntas[indice];
 			}
-			System.out.println(tema + ": " + questao);
-			pergunta =  new Pergunta(questao, tema);
-			System.out.println(pergunta);
-			System.out.println("DAO " + dao);
+			
+	
+
 			try {
-				dao.executarFuncao("inserir_pergunta", questao, tema);
+				retorno = dao.executarFuncao("inserir_pergunta", questao, tema);
+			
+				indices[indice-3] = new IndicePergunta((int)retorno[0][0], (int) retorno[0][1]);
 
 			} catch (SQLException e) {
 				System.out.println(e.getErrorCode() + " " + e.getMessage());
 			}
-
-			perguntas[indice-3] = pergunta;
-		}
-
-		try {
-			extrairRespostas();
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			System.out.println("DEU RUIM");
 		}
 
 	}
@@ -141,37 +146,41 @@ public class ExtratorDeDados {
 		int codigoEntrevistado;
 		String linha, respostas[];
 
-		while(true) {
+		do {
 
 			/* 	Obtendo uma linha do arquivo e capturando a exceção e saindo do loop
 			 * 	se houver algum erro ou chegar ao fim do arquivo.
-			 */ 
-			try{
+			 */
 				linha = arquivo.lerLinha();
-				System.out.println("Linha " +  linha);
-			}catch (IOException e) {
-				break;
-			}
+				if(linha == null) break;
+				
 
 			//Dividindo a linha e strings com cada coluna
 			respostas = quebrarTexto(linha);
 
 			//Extrai e salva no banco de dados o entrevistado, obtendo o código do entrevistado salvo no banco
 			codigoEntrevistado = extrairEntrevistado(respostas);
-			System.out.println("Codigo Entrevistado " + codigoEntrevistado);
 
 			//Extrai e salva no banco de dados as respostas de um entrevistado.
 			extrairLinhaResposta(respostas, codigoEntrevistado);
 
-		}
+		}while(linha != null);
 
 	}
 
 	private void extrairLinhaResposta(String[] textoLinha, int codigoEntrevistado) throws SQLException {
-		
+	
 		for(int i =3; i<textoLinha.length; i++) {
-			dao.executarFuncao("inserir_resposta", textoLinha[i], perguntas[i-3].getDescricao(),
-					perguntas[i-3].getAssunto(), Integer.valueOf(codigoEntrevistado));
+			/*str = new StringBuilder("inserir_resposta (");
+			str.append("'").append(textoLinha[i]).append("'").append(",").
+					append("'").append(perguntas[i-3].getDescricao()).append("'").append(",").
+					append("'").append(perguntas[i-3].getAssunto()).append("'").append(",").
+					append(codigoEntrevistado).append(")");
+			//System.out.println(str.toString());
+			dao.executar(str.toString());*/
+
+			dao.executarFuncao("inserir_resposta", textoLinha[i], indices[i-3].getIndiceAssunto(),
+					indices[i-3].getIndicePergunta(), codigoEntrevistado);
 
 		}
 
@@ -180,13 +189,13 @@ public class ExtratorDeDados {
 	private int extrairEntrevistado(String[] textoLinhas) throws IOException, SQLException {
 		String grau, curso;
 		int codigoEntrevistado;
-		Aluno aluno;
-
+		
 		final String STR_VAZIA = null;
 
 		//Identificando se a ocorrência é um aluno. Se for, separa seu grau e curso
-		if(Segmento.DISCENTE.equals(Segmento.parseSegmento(textoLinhas[0]))) {
-			aluno = seprarGrauECurso(textoLinhas[1]);
+		//if(Segmento.DISCENTE.equals(Segmento.parseSegmento(textoLinhas[0]))) {
+		if(textoLinhas[2].isEmpty()) {
+			seprarGrauECurso(aluno, textoLinhas[1]);
 			grau = aluno.getGrau();
 			curso = aluno.getCurso();
 		}
@@ -201,8 +210,8 @@ public class ExtratorDeDados {
 		 */
 		Object resultado [][] = dao.executarFuncao("inserir_entrevistado", textoLinhas[0], textoLinhas[1],  grau, curso);
 
-
-		codigoEntrevistado = (int) resultado[1][0];
+	
+		codigoEntrevistado = (int) resultado[0][0];
 
 		return codigoEntrevistado;
 
@@ -225,39 +234,22 @@ public class ExtratorDeDados {
 	}
 
 
-	private Aluno seprarGrauECurso(String grauECurso){
-		Aluno aluno = new Aluno();
-		String grau;
-		//		//int i = 0
-		//		if(grauECurso.matches("^Técnico")) {
-		//				System.out.println("cURSO TECNICO + 1");
-		//				grau = "Técnico";
-		//		}
-		//		else if(grauECurso.matches("^Bacharelado")) {
-		//			System.out.println("bACHARELADO + 1");
-		//			grau = "Bacharelado";
-		//		}
-		//		else if(grauECurso.matches("^Tecnologia")) {
-		//			System.out.println("tECNOLOGO + 1");
-		//			grau = "Tecnólogo";
-		//		}
-		//		
-		//		else if(grauECurso.matches("^Licenciatura")) {
-		//			System.out.println("tECNOLOGO + 1");
-		//			grau = "Tecnólogo";
-		//		}
+	private void seprarGrauECurso(Aluno aluno, String grauECurso){
+		StringTokenizer stringTokenizer = new StringTokenizer(grauECurso, "em");
 
-		String[] str = grauECurso.split("em");
-
-		try {
-			aluno.setGrau(str[0] == "Tecnologia" ? "Tecnólogo" : str[0]);
-			aluno.setCurso(str[1]);
-		}catch(ArrayIndexOutOfBoundsException e) {
+		String str;
+		
+		if(stringTokenizer.hasMoreElements()) {
+			str = stringTokenizer.nextToken();
+			aluno.setGrau(str == "Tecnologia" ? "Tecnólogo" : str);
+			
+			aluno.setCurso(stringTokenizer.nextToken());
+		}
+		
+		else {
 			aluno.setCurso(grauECurso);
 			aluno.setGrau(grauECurso);
 		}
-
-		return aluno;
 	}
 
 
@@ -269,6 +261,39 @@ public class ExtratorDeDados {
 
 	public class Dados{
 
+	}
+	
+	private class IndicePergunta{
+		private int indiceAssunto, indicePergunta;
+
+		public IndicePergunta(int indiceAssunto, int indicePergunta) {
+			this.indiceAssunto = indiceAssunto;
+			this.indicePergunta = indicePergunta;
+		}
+
+		public IndicePergunta() {
+			super();
+		}
+
+		public int getIndiceAssunto() {
+			return indiceAssunto;
+		}
+
+		public void setIndiceAssunto(int indiceAssunto) {
+			this.indiceAssunto = indiceAssunto;
+		}
+
+		public int getIndicePergunta() {
+			return indicePergunta;
+		}
+
+		public void setIndicePergunta(int indicePergunta) {
+			this.indicePergunta = indicePergunta;
+		}
+		
+		
+		
+		
 	}
 
 
