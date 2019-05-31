@@ -81,7 +81,11 @@ public class IgAvaliacaoInstitucional extends JFrame{
 		JButton lblImportarDados = new JButton("Importar Dados...");
 		lblImportarDados.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				importarDados();
+				try{
+					importarDados();
+				}catch (NullPointerException e) {
+					System.out.println("Abrir arquivo cancelado.");
+				}
 			}
 
 		

@@ -40,8 +40,9 @@ public class ArquivoTexto {
 	 * @param nomeArquivo nome do arquivo a ser aberto.
 	 * 
 	 * @throws FileNotFoundException se o nome do arquivo não for encontrado.
+	 * @throws NullPointerException se o nome do arquivo for nulo.
 	 */
-	  public void abrir(String nomeArquivo) throws FileNotFoundException {
+	  public void abrir(String nomeArquivo) throws FileNotFoundException, NullPointerException {
 		 //Cria um objeto de reder bufferizado.
 		  reader = new BufferedReader(new FileReader(nomeArquivo));
 		
