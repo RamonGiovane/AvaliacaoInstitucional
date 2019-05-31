@@ -13,12 +13,15 @@ import java.awt.Dimension;
 import java.io.File;
 
 import javax.swing.JFileChooser;
+import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.SwingConstants;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableCellRenderer;
+
+import com.sun.org.apache.bcel.internal.generic.NEW;
 
 
 public class EntradaESaida {
@@ -153,7 +156,7 @@ public class EntradaESaida {
 	 * 
 	 * @author Prof. Márlon Oliveira da Silva
 	 */
-	public static void exibirTabela(Component janelaPai, String titulo, Object[][] linhas, String[] colunas, int[] larguraColuna, 
+	public static JTable gerarTabela(Object[][] linhas, String[] colunas, int[] larguraColuna, 
 			int[] alinhamentoColuna, int larguraTabela, int alturaTabela) {
 
 		// Cria o componente GUI Swing JTable para exibir a tabela.
@@ -191,10 +194,22 @@ public class EntradaESaida {
 				table.getColumnModel().getColumn(coluna).setCellRenderer(colunaTableCellRenderer);
 		}
 
-		// Exibe a tabela em uma caixa de diálogo usando um painel rolável (JScrollPane).
-		msgInfo(janelaPai, new JScrollPane(table), titulo);
+		return table;
 	} // exibirTabela()
 
+	
+	public static void exibirTabela(Component janelaPai, String titulo, Object[][] linhas, String[] colunas, int[] larguraColuna, 
+			int[] alinhamentoColuna, int larguraTabela, int alturaTabela) {
+		// Exibe a tabela em uma caixa de diálogo usando um painel rolável (JScrollPane).
+		msgInfo(janelaPai,  
+				new JScrollPane(gerarTabela(linhas, colunas, larguraColuna, alinhamentoColuna, larguraTabela, alturaTabela)), 
+				titulo);
+	}
+
+	
+
+	
+	
 	/**
 	 * Exibe um texto em uma caixa de diálogo com o texto da barra de título definido em titulo.
 	 * 

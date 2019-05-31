@@ -112,6 +112,11 @@ public class IgAvaliacaoInstitucional extends JFrame{
 		panel.add(lblFinalizar);
 
 		JButton lblGerarRelatrios = new JButton("Participantes por Curso...");
+		lblGerarRelatrios.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				new IgRelatorio();
+			}
+		});
 		lblGerarRelatrios.setFont(new Font("Tahoma", Font.PLAIN, 13));
 		lblGerarRelatrios.setForeground(COR_BTN_MENU);
 		lblGerarRelatrios.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
