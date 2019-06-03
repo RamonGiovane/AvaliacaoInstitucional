@@ -32,15 +32,6 @@ public class BancoDeDados {
 
 		/* Obtém uma conexão com o banco de dados bd identificado por nomeBD e que possui 
 		 * usário e senha de acesso definidos por usuarioBD e senhaBD.
-		 *
-		 * A partir do JDBC 4.0 o comando abaixo não é mais necessário porque a classe 
-		 * DriverManager se encarregada de carregá-lo automaticamente. 
-		 * 
-		 * // Driver JDBC do PostgreSQL.
-		 * String driverJDBC = "org.postgresql.Driver";
-		 * 
-		 * // Carrega a classe do driver JDBC para permitir conexão com o BD. 
-		 * 	Class.forName(driverJDBC);   
 		 */
 		connection = DriverManager.getConnection(DRIVER_BD + nomeBD, usuarioBD, senhaBD);
 

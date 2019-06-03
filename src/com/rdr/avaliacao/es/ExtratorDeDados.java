@@ -1,48 +1,46 @@
 package com.rdr.avaliacao.es;
 
+import java.awt.Component;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Calendar;
 import java.util.StringTokenizer;
-import java.util.regex.Pattern;
 
 import com.rdr.avaliacao.es.bd.BancoDeDados;
 import com.rdr.avaliacao.es.bd.DAO;
+import com.rdr.avaliacao.ig.IgBarraDeProgresso;
+import com.rdr.avaliacao.ig.InterfaceConstraints;
 import com.rdr.avaliacao.questionario.Aluno;
-import com.rdr.avaliacao.questionario.Entrevistado;
-import com.rdr.avaliacao.questionario.Pergunta;
-import com.rdr.avaliacao.questionario.Segmento;
+import com.rdr.avaliacao.questionario.Pesquisa;
 
 public class ExtratorDeDados {
 	private final String SEPARADOR_PADRAO = ";";
 	private BancoDeDados bd;
-	private String nomeArquivo;
 	private String separador;
 	private ArquivoTexto arquivo; 
 	private final String TEMA_INDEFINIDO = "Geral";
 	private DAO dao;
-
-	private IndicePergunta indices[];
-
- 
-	public ExtratorDeDados(BancoDeDados bd, String nomeArquivo) {
+	
+	private IndicePergunta indicesPerguntas[];
+	
+	private Pesquisa pesquisa;
+	
+	private IgBarraDeProgresso barraDeProgresso;
+	
+	private Component janelaPai;
+	
+	private ExtratorDeDados(Component janelaPai, BancoDeDados bd, Pesquisa pesquisa) {
 		super();
 		this.bd = bd;
 		dao = new DAO(bd);
-		this.nomeArquivo = nomeArquivo;
+		
 		this.separador = SEPARADOR_PADRAO;
 		arquivo = new ArquivoTexto();
-							
+		this.janelaPai = janelaPai;
+		this.pesquisa = pesquisa;
 	}
 
-
-
-	public ExtratorDeDados(BancoDeDados bd) {
-		this(bd, null);
-
-	}
 
 	public BancoDeDados getBd() {
 		return bd;
@@ -52,13 +50,6 @@ public class ExtratorDeDados {
 		this.bd = bd;
 	}
 
-	public String getNomeArquivo() {
-		return nomeArquivo;
-	}
-
-	public void setNomeArquivo(String nomeArquivo) {
-		this.nomeArquivo = nomeArquivo;
-	}
 
 	public String getSeparador() {
 		return separador;
@@ -78,19 +69,43 @@ public class ExtratorDeDados {
 		return texto.split(";"); 
 
 	}
-
-	public void extrairDados() throws IOException{
-		Calendar inicio = Calendar.getInstance();
-		extrairPerguntas();
+	
+	private void fecharArquivo() throws IOException {
+		arquivo.fechar();
+	}
+	
+	private void extrairDados() throws IOException {
+		System.out.println(pesquisa.getCaminhoDataSet());
+		abrirArquivo();
+		
 		try {
+			extrairPerguntas();
 			extrairRespostas();
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
-		arquivo.fechar();
+		fecharArquivo();
 
+	}
+
+	private void iniciarBarraDeProgresso() {
+		barraDeProgresso = new IgBarraDeProgresso(janelaPai, 
+				InterfaceConstraints.TITULO_PROGRAMA, 
+				"Lendo respostas...", indicesPerguntas.length);
+	}
+	
+	private void terminarBarraDeProgresso() {
+		barraDeProgresso.fechar();
+	}
+
+	//TODO: Verificar o nome da pesquisa no banco de dados. Salvar se não existe, sinalizar se já existe
+	public static void extrairDados(Component janelaPai, BancoDeDados banco, Pesquisa pesquisa) throws IOException{
+		Calendar inicio = Calendar.getInstance();
+		
+		new ExtratorDeDados(janelaPai, banco, pesquisa).extrairDados();
+		
 		Calendar fim = Calendar.getInstance();
 
 		EntradaESaida.msgInfo(null, String.format("Time %d", 
@@ -101,7 +116,7 @@ public class ExtratorDeDados {
 
 		String strPerguntas[] =  quebrarTexto(obterCabecalho()); //!!! must check this
 
-		indices = new IndicePergunta[strPerguntas.length-3];
+		indicesPerguntas = new IndicePergunta[strPerguntas.length-3];
 
 		//Ignora as colunas de identificacao do entrevistado
 		int indice = 3;
@@ -126,9 +141,11 @@ public class ExtratorDeDados {
 
 
 			try {
-				retorno = dao.executarFuncao("inserir_pergunta", questao, tema);
+				System.out.println(tema + " " + questao);
+				System.out.println(dao);
+				retorno = dao.executarFuncao("inserir_pergunta", pesquisa.getCodigo(), questao, tema);
 
-				indices[indice-3] = new IndicePergunta((int)retorno[0][0], (int) retorno[0][1]);
+				indicesPerguntas[indice-3] = new IndicePergunta((int)retorno[0][0], (int) retorno[0][1]);
 
 			} catch (SQLException e) {
 				System.out.println(e.getErrorCode() + " " + e.getMessage());
@@ -141,7 +158,10 @@ public class ExtratorDeDados {
 
 		int codigoEntrevistado;
 		String linha, respostas[];
-
+		int contador = 0;
+		
+		iniciarBarraDeProgresso();
+		
 		do {
 
 			/* 	Obtendo uma linha do arquivo e capturando a exceção e saindo do loop
@@ -151,7 +171,8 @@ public class ExtratorDeDados {
 			if(linha == null) break;
 	
 
-
+			barraDeProgresso.incrementar(contador++);
+			
 			//Dividindo a linha e strings com cada coluna
 			respostas = quebrarTexto(linha);
 
@@ -160,9 +181,11 @@ public class ExtratorDeDados {
 
 			//Extrai e salva no banco de dados as respostas de um entrevistado.
 			extrairLinhaResposta(linha, codigoEntrevistado);
+			
 
 		}while(linha != null);
-
+		
+		terminarBarraDeProgresso();
 	}
 
 	private void extrairLinhaResposta(String textoLinha, int codigoEntrevistado) throws SQLException {
@@ -174,27 +197,26 @@ public class ExtratorDeDados {
 			word = textoLinha.substring(0,textoLinha.indexOf(";"));
 			System.out.printf("[%s]", word);
 		}
-																			 
-											
-										
-								  
 
+		
 		while(true){
-			dao.executarFuncao("inserir_resposta", word.trim(), indices[i].getIndiceAssunto(),
-					indices[i].getIndicePergunta(), codigoEntrevistado);
+			dao.executarFuncao("inserir_resposta", pesquisa.getCodigo(), word.trim(), indicesPerguntas[i].getIndiceAssunto(),
+					indicesPerguntas[i].getIndicePergunta(), codigoEntrevistado);
 
 			textoLinha = textoLinha.substring(textoLinha.indexOf(";") + 1) + " ";
+			
 			
 			try {
 				word = textoLinha.substring(0,textoLinha.indexOf(";"));
 				System.out.printf("[%s]", word);
+				
 			}catch (Exception e) {
-				dao.executarFuncao("inserir_resposta", textoLinha.trim(), indices[i].getIndiceAssunto(),
-						indices[i].getIndicePergunta(), codigoEntrevistado);
+				dao.executarFuncao("inserir_resposta", pesquisa.getCodigo(), textoLinha.trim(), indicesPerguntas[i].getIndiceAssunto(),
+						indicesPerguntas[i].getIndicePergunta(), codigoEntrevistado);
 				break;
 			}
 
-  
+			
 
 			i++;
 		}
@@ -202,7 +224,7 @@ public class ExtratorDeDados {
 	}
 	
 	
-//TO DO: QUEBRAR O TEXTO NA FUNÇÃO ANTERIOR, PASSAR APENAS OS TRES PARAMETROS PARA ESSA! EVITA COPIAR A LINHA INTEIRA.
+//TODO: QUEBRAR O TEXTO NA FUNÇÃO ANTERIOR, PASSAR APENAS OS TRES PARAMETROS PARA ESSA! EVITA COPIAR A LINHA INTEIRA.
 	private int extrairEntrevistado(String[] textoLinhas) throws IOException, SQLException {
 
 		int codigoEntrevistado;
@@ -260,12 +282,16 @@ public class ExtratorDeDados {
 	}
 
 
+	
 	/*Fecha o arquivo de texto (se aberto, estiver) e o abre novamente, a fim de ler o início do texto*/
 	private void resetarArquivo() throws IOException {
 		arquivo.fechar();
-		arquivo.abrir(nomeArquivo);
+		abrirArquivo();
 	}
 
+	private void abrirArquivo() throws FileNotFoundException{
+		arquivo.abrir(pesquisa.getCaminhoDataSet());
+	}
 
 	private class IndicePergunta{
 		private int indiceAssunto, indicePergunta;

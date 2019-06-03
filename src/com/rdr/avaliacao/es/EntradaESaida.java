@@ -10,10 +10,10 @@ import static javax.swing.JOptionPane.showMessageDialog;
 
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.Toolkit;
 import java.io.File;
 
 import javax.swing.JFileChooser;
-import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
@@ -21,10 +21,14 @@ import javax.swing.SwingConstants;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableCellRenderer;
 
-import com.sun.org.apache.bcel.internal.generic.NEW;
-
 
 public class EntradaESaida {
+	
+	/**Reproduz um som de alerta padrão do sistema operacional*/
+	private static void reproduzirSom() {
+		Toolkit.getDefaultToolkit().beep();
+	}
+	
 	/**
 	 * Exibe uma mensagem informativa em uma caixa de diálogo com o texto da barra de título definido em 
 	 * titulo.
@@ -37,6 +41,7 @@ public class EntradaESaida {
 	 * @author Prof. Márlon Oliveira da Silva. Modificado por: Ramon Giovane
 	 */
 	public static void msgInfo(Component janelaPai, String mensagem, String titulo) {
+		reproduzirSom();
 		showMessageDialog(janelaPai, mensagem, titulo, INFORMATION_MESSAGE);
 	}
 
@@ -51,6 +56,7 @@ public class EntradaESaida {
 	 * @author Prof. Márlon Oliveira da Silva. Modificado por: Ramon Giovane
 	 */
 	public static void msgInfo(Component janelaPai, Object componente, String titulo) {
+		reproduzirSom();
 		showMessageDialog(janelaPai, componente, titulo, INFORMATION_MESSAGE);
 	}
 
@@ -65,6 +71,7 @@ public class EntradaESaida {
 	 * @author Prof. Márlon Oliveira da Silva. Modificado por: Ramon Giovane
 	 */
 	public static void msgErro(Component janelaPai, String mensagem, String titulo) {
+		reproduzirSom();
 		showMessageDialog(janelaPai, mensagem, titulo, ERROR_MESSAGE);
 	}
 

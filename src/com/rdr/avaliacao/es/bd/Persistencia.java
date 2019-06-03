@@ -8,6 +8,7 @@ public interface Persistencia {
 	 * 
 	 * @author Ramon Giovane
 	 * @see DAO#inserir(Persistencia)
+	 * @see Recuperacao
 	 */
 	public abstract String insertQuery();
 	
@@ -18,12 +19,10 @@ public interface Persistencia {
 	 * @return um array de objetos (<code>Object</code>) com os atributos a serem inseridos.
 	 * 
 	 * @see DAO#inserir(Persistencia)
+	 * @see Recuperacao
 	 * 
 	 * @author Ramon Giovane
 	 */
 	 public abstract Object[] insertObjects();
-	
-	
-	 public abstract String selectQuery();
 	
 }

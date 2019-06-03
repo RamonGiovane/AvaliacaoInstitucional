@@ -1,13 +1,18 @@
 package com.rdr.avaliacao.ig;
 
+import static com.rdr.avaliacao.ig.InterfaceConstraints.CAMINHO_ICON_DB;
+import static com.rdr.avaliacao.ig.InterfaceConstraints.CAMINHO_ICON_GRAPHIC;
+import static com.rdr.avaliacao.ig.InterfaceConstraints.CAMINHO_IMPORT_ICON;
+import static com.rdr.avaliacao.ig.InterfaceConstraints.COR_BACKGROUND;
 import static com.rdr.avaliacao.ig.InterfaceConstraints.COR_BTN_MENU;
-import static com.rdr.avaliacao.ig.InterfaceConstraints.MSG_ERRO_BUILD_UI;
-import static com.rdr.avaliacao.ig.InterfaceConstraints.TITULO_PROGRAMA;
+import static com.rdr.avaliacao.ig.InterfaceConstraints.COR_BTN_MENU_HOVER;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Font;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
@@ -15,6 +20,8 @@ import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
@@ -23,25 +30,14 @@ import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JSeparator;
 import javax.swing.KeyStroke;
-import javax.swing.UIManager;
 
 import com.rdr.avaliacao.AvaliacaoInstitucional;
-import com.rdr.avaliacao.es.EntradaESaida;
-import com.rdr.avaliacao.es.bd.BancoDeDados;
 
-import static com.rdr.avaliacao.es.EntradaESaida.*;
-import static com.rdr.avaliacao.ig.InterfaceConstraints.*;
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
-import java.awt.Toolkit;
-import java.awt.event.ActionListener;
-import java.awt.event.ActionEvent;
-import javax.swing.JTree;
-
-@SuppressWarnings("serial")
 public class IgAvaliacaoInstitucional extends JFrame{
 	private static IgAvaliacaoInstitucional igAvaliacaoInstitucional;
 	private static IgBancoDeDados igBancoDeDados;
+	private static IgNovaPesquisa igPesquisa;
+	
 	private AvaliacaoInstitucional avaliacaoInstitucional;
 
 	
@@ -63,6 +59,7 @@ public class IgAvaliacaoInstitucional extends JFrame{
 		return igAvaliacaoInstitucional == null ? 
 				new IgAvaliacaoInstitucional(avaliacaoInstitucional) : igAvaliacaoInstitucional;
 	}
+
 
 	public static IgAvaliacaoInstitucional getInstance() {
 		return igAvaliacaoInstitucional;
@@ -114,7 +111,7 @@ public class IgAvaliacaoInstitucional extends JFrame{
 		JButton lblGerarRelatrios = new JButton("Participantes por Curso...");
 		lblGerarRelatrios.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				new IgRelatorio();
+				relatorio(TipoPesquisa.POR_CURSO);
 			}
 		});
 		lblGerarRelatrios.setFont(new Font("Tahoma", Font.PLAIN, 13));
@@ -124,6 +121,12 @@ public class IgAvaliacaoInstitucional extends JFrame{
 		panel.add(lblGerarRelatrios);
 
 		JButton lblparticipantesPorSegmento = new JButton("Participantes por Segmento...");
+		lblparticipantesPorSegmento.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				relatorio(TipoPesquisa.POR_SEGMENTO);
+			}
+
+		});
 		lblparticipantesPorSegmento.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 		lblparticipantesPorSegmento.setFont(new Font("Tahoma", Font.PLAIN, 13));
 		lblparticipantesPorSegmento.setForeground(COR_BTN_MENU);
@@ -131,6 +134,11 @@ public class IgAvaliacaoInstitucional extends JFrame{
 		panel.add(lblparticipantesPorSegmento);
 
 		JButton lblconceitoMdioPor = new JButton("Conceito M\u00E9dio por Curso...");
+		lblconceitoMdioPor.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				relatorio(TipoPesquisa.CONCEITO_MEDIO_CURSO);
+			}
+		});
 		lblconceitoMdioPor.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 		lblconceitoMdioPor.setFont(new Font("Tahoma", Font.PLAIN, 13));
 		lblconceitoMdioPor.setBounds(239, 315, 213, 24);
@@ -138,6 +146,11 @@ public class IgAvaliacaoInstitucional extends JFrame{
 		panel.add(lblconceitoMdioPor);
 
 		JButton lblconceitoMdioPor_1 = new JButton("Conceito M\u00E9dio por Assunto...");
+		lblconceitoMdioPor_1.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				relatorio(TipoPesquisa.CONCEITO_MEDIO_ASSUNTO);
+			}
+		});
 		lblconceitoMdioPor_1.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 		lblconceitoMdioPor_1.setFont(new Font("Tahoma", Font.PLAIN, 13));
 		lblconceitoMdioPor_1.setBounds(239, 355, 213, 24);
@@ -251,8 +264,6 @@ public class IgAvaliacaoInstitucional extends JFrame{
 				AvaliacaoInstitucional.fecharPrograma();
 			}
 		});
-		
-		setResizable(false);
 		setVisible(true);
 
 	}
@@ -274,8 +285,12 @@ public class IgAvaliacaoInstitucional extends JFrame{
 		});
 	}
 	
+	private void relatorio(TipoPesquisa tipoPesquisa) {
+		IgSeletorRelatorio.getInstance(avaliacaoInstitucional, tipoPesquisa).exibir();
+		
+	}
+	
 	private void importarDados() {
-		String nomeArquivo = dialogoAbrirArquivo(this, TITULO_ABRIR_ARQUIVO, DESCRICOES_EXTENSOES, EXTENSOES);
-		avaliacaoInstitucional.importarDados(nomeArquivo);
+		IgNovaPesquisa.getInstance(avaliacaoInstitucional).exibir();
 	}
 }

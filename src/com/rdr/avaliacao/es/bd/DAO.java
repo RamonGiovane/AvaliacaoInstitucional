@@ -5,7 +5,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
-import java.sql.SQLType;
 import java.sql.Types;
 
 //Pode-se tentar um relacionamento de herança com BD
@@ -192,7 +191,8 @@ public class DAO {
 	
 	
 	public void executar(String query) throws SQLException{
-		CallableStatement statement = prepareCall(new StringBuilder().append(STR_ABRE_CALL).append(query).append(STR_FECHA_CALL).toString());
+		CallableStatement statement = prepareCall(new StringBuilder().
+				append(STR_ABRE_CALL).append(query).append(STR_FECHA_CALL).toString());
 		try{
 			statement.execute();
 		}finally {
@@ -201,35 +201,22 @@ public class DAO {
 		
 	}
 	
-	
-	public <T extends Persistencia> Object[] pesquisar(T t, Object[] chaves) throws SQLException {
-		PreparedStatement ps = prepareStatement(t.selectQuery());
-		try{
-			inserirObjetosPreparedStatement(ps, chaves);
-			return resultSetAsMatrix(ps.executeQuery());
-		}catch (Exception e) {
-			throw e;
-		}finally {
-			ps.close();
-		}
-	}
-	
 	/**Realiza uma pesquisa no banco de dados, retornando uma matriz de objetos obtidos na consulta.
 	 * 
 	 * <br><br>
 	 * <b>Nota:</b> este método é <b>seguro</b> contra injeções de SQL. 
 	 * <br>
-	 * 
-	 * @param query instrução SQL contendo a especificações do que deve ser pesquisado.
-	 * @param chaves lista de objetos (<code>Object</code>) que representa os termos de busca para 
-	 * encontrar o que foi especificado na query.
+	 * @param t objeto de uma classe que implementa {@link Recuperacao}.
+	 * @author Ramon Giovane
 	 * @return uma matriz de objetos contendo os nomes das colunas correspondentes no banco e objetos recuperados na consulta.
 	 * @throws SQLException caso ocorra algum erro na execução da instrução ou de conexão ao banco.
 	 */
-	public Object[][] pesquisar(String query, Object... chaves) throws SQLException {
-		PreparedStatement ps = prepareStatement(query);
+	public <T extends Recuperacao> Object[][] consultar(T t) throws SQLException {
+		PreparedStatement ps = prepareStatement(t.selectQuery());
+		Object chavesPrimarias[] = t.searchKeys();
 		try{
-			inserirObjetosPreparedStatement(ps, chaves);
+			if(chavesPrimarias != null)
+				inserirObjetosPreparedStatement(ps, chavesPrimarias);
 			return resultSetAsMatrix(ps.executeQuery());
 		}catch (Exception e) {
 			throw e;
@@ -237,6 +224,9 @@ public class DAO {
 			ps.close();
 		}
 	}
+	
+
+
 	
 	/**Retorna a quantidade de registros em um ResultSet*/
 	private int resultSetLength(ResultSet resultSet) throws SQLException {
