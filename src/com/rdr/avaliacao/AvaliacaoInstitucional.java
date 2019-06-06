@@ -14,7 +14,11 @@ import com.rdr.avaliacao.es.bd.DAO;
 import com.rdr.avaliacao.es.bd.Recuperacao;
 import com.rdr.avaliacao.ig.IgAvaliacaoInstitucional;
 import com.rdr.avaliacao.ig.InterfaceConstraints;
+import com.rdr.avaliacao.questionario.Curso;
+import com.rdr.avaliacao.questionario.Pergunta;
 import com.rdr.avaliacao.questionario.Pesquisa;
+import com.rdr.avaliacao.questionario.Resposta;
+import com.rdr.avaliacao.relatorio.DataSet;
 
 /**Classe principal do programa de Avaliação Institucional. Nesta classe encontra-se o método main.
  * Nenhuma outra classe pode instaciar um objeto desta.
@@ -26,6 +30,8 @@ public class AvaliacaoInstitucional {
 	//TODO: Este objeto DAO deve ser comum para todas as classes que fazem acesso ao banco de dados
 	//TODO: Fazer método que obtém este objeto
 	private static DAO dao;
+	
+	private ExtratorDeDados extrator;
 
 	/**Lista de todas as pesquisas armazenadas no banco. Deve ser feita uma consulta e recuperar
 	 * todas as pesquisas existentes no início. Se uma pesquisa for adicionada, deve ser adicionado 
@@ -104,8 +110,8 @@ public class AvaliacaoInstitucional {
 			DAO dao = new DAO(bd);
 			
 			//TODO: RESETANDO O BANCO. APAGAR DEPOIS!!
-			dao.executarFuncao("truncate_tables", "spaadmin");
-			dao.inserir("pesquisa", new String[] {"codigo", "descricao"}, 1, "aaa");
+			//dao.executarFuncao("truncate_tables", "spaadmin");
+			//dao.inserir("pesquisa", new String[] {"codigo", "descricao"}, 1, "aaa");
 			
 			bd.fecharConexao();
 		}catch (NullPointerException e) {
@@ -167,6 +173,17 @@ public class AvaliacaoInstitucional {
 		}
 		
 		return strPesquisas;
+	}
+	
+	public static DataSet gerarRelatorioPorParticipantes(Pesquisa pesquisa) throws SQLException {
+		ExtratorDeDados extrator = new ExtratorDeDados(bd, pesquisa);
+		DataSet dataSet = extrator.consultarBancoDeDados(pesquisa);
+		dataSet.ordenarPorValor();
+		return dataSet;
+	}
+	
+	public Pesquisa obterPesquisa(String nomePesquisa) {
+		return pesquisasList.get(pesquisasList.indexOf(new Pesquisa(nomePesquisa)));
 	}
 	
 	public void importarDados(Component janelaPai, Pesquisa pesquisa) throws FileNotFoundException, IOException {

@@ -14,12 +14,19 @@ public class Questionario {
 		this.entrevistado = entrevistado;
 	}
 	
-	public void adicionarResposta(TipoResposta tipoResposta) {
-		Resposta resposta = new Resposta(tipoResposta);
+	public void adicionarResposta(Resposta resposta) {
 		respostas[indice++] = resposta; 
-		
-		
 	}
+
+	public Entrevistado getEntrevistado() {
+		return entrevistado;
+	}
+
+	public void setEntrevistado(Entrevistado entrevistado) {
+		this.entrevistado = entrevistado;
+	}
+	
+	
 	
 	
 	

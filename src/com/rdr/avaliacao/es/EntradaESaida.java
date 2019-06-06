@@ -8,8 +8,10 @@ import static javax.swing.JOptionPane.showConfirmDialog;
 import static javax.swing.JOptionPane.showInputDialog;
 import static javax.swing.JOptionPane.showMessageDialog;
 
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.Toolkit;
 import java.io.File;
 
@@ -21,14 +23,31 @@ import javax.swing.SwingConstants;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableCellRenderer;
 
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartPanel;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.labels.CategoryItemLabelGenerator;
+import org.jfree.chart.labels.ItemLabelAnchor;
+import org.jfree.chart.labels.ItemLabelPosition;
+import org.jfree.chart.labels.StandardCategoryItemLabelGenerator;
+import org.jfree.chart.plot.CategoryPlot;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.renderer.category.BarRenderer3D;
+import org.jfree.chart.renderer.category.CategoryItemRenderer;
+import org.jfree.data.category.DefaultCategoryDataset;
+import org.jfree.ui.TextAnchor;
+
+import com.rdr.avaliacao.relatorio.DadosDeGrafico;
+import com.rdr.avaliacao.relatorio.DataSet;
+
 
 public class EntradaESaida {
-	
+
 	/**Reproduz um som de alerta padrão do sistema operacional*/
 	private static void reproduzirSom() {
 		Toolkit.getDefaultToolkit().beep();
 	}
-	
+
 	/**
 	 * Exibe uma mensagem informativa em uma caixa de diálogo com o texto da barra de título definido em 
 	 * titulo.
@@ -204,7 +223,7 @@ public class EntradaESaida {
 		return table;
 	} // exibirTabela()
 
-	
+
 	public static void exibirTabela(Component janelaPai, String titulo, Object[][] linhas, String[] colunas, int[] larguraColuna, 
 			int[] alinhamentoColuna, int larguraTabela, int alturaTabela) {
 		// Exibe a tabela em uma caixa de diálogo usando um painel rolável (JScrollPane).
@@ -213,10 +232,10 @@ public class EntradaESaida {
 				titulo);
 	}
 
-	
 
-	
-	
+
+
+
 	/**
 	 * Exibe um texto em uma caixa de diálogo com o texto da barra de título definido em titulo.
 	 * 
@@ -247,7 +266,7 @@ public class EntradaESaida {
 		// Exibe a área de texto em uma caixa de diálogo usando um painel rolável (JScrollPane).
 		msgInfo(janelaPai, new JScrollPane(textArea), titulo);
 	}
-	
+
 	/** 
 	 * Exibe uma caixa de diálogo <code>javax.swing.JFileChooser</code> para o usuário indicar o 
 	 * nome do diretório e arquivo que será aberto. 
@@ -361,8 +380,64 @@ public class EntradaESaida {
 			fileChooser.setFileFilter(filter);
 		}
 	}
+
+	public static<T extends DadosDeGrafico> ChartPanel gerarGraficoBarra3D(DataSet dadosRelatorio, 
+			String titulo, String legendaCategoria, String legendaValores,
+			PlotOrientation orientacao, int largura, int altura) {
+
+		final DefaultCategoryDataset dataset = new DefaultCategoryDataset( );
+
+		for(int i  = 0; i<dadosRelatorio.tamanho(); i++) {
+			dataset.addValue(dadosRelatorio.ober(i).getValorLinha(), dadosRelatorio.ober(i).getValorColuna(), dadosRelatorio.ober(i).getValorColuna());
+		}
+
+		JFreeChart chart = ChartFactory.createBarChart3D(titulo, null, null, 
+				dataset, orientacao, true, false, false);
+
+		CategoryPlot plot = chart.getCategoryPlot();
+		CategoryItemRenderer renderer = plot.getRenderer();
+
+
+
+		BarRenderer3D barRenderer = (BarRenderer3D) plot.getRenderer();
+
+		//Adicionando os números na frente do gráfico de barra
+		CategoryItemLabelGenerator generator = new StandardCategoryItemLabelGenerator();
+		for(int i = 0; i<dataset.getRowCount(); i++) {
+			barRenderer.setSeriesItemLabelGenerator(i, generator);
+			barRenderer.setSeriesItemLabelsVisible(i, true);
+			barRenderer.setSeriesPositiveItemLabelPosition(i, new ItemLabelPosition(ItemLabelAnchor.OUTSIDE2,TextAnchor.CENTER_LEFT));
+			barRenderer.setItemLabelAnchorOffset(15);
+		}
+
+		//TODO: Isso deixa as legendas deitadas
+		//		 CategoryAxis domainAxis = plot.getDomainAxis();
+		//	        domainAxis.setCategoryLabelPositions(
+		//	                CategoryLabelPositions.createUpRotationLabelPositions(
+		//	                        Math.PI / 6.0));
+
+		//Retirando legendas inferiores
+		renderer.setBaseSeriesVisibleInLegend(false);
 	
-	
-	
+		//Colorindo o plot
+		plot.setBackgroundPaint(Color.WHITE);
+		plot.setDomainGridlinePaint(Color.DARK_GRAY);
+		plot.setRangeGridlinePaint(Color.DARK_GRAY);
+		plot.setOutlineVisible(false);
+
+		
+		renderer.setBaseItemLabelPaint(Color.BLACK);
+		renderer.setBaseItemLabelFont(new Font(Font.DIALOG, Font.BOLD, 14));
+
+		plot.getDomainAxis().setMaximumCategoryLabelWidthRatio(10);
+		BarRenderer3D br = (BarRenderer3D) plot.getRenderer();
+		br.setItemMargin(-5);
+
+		ChartPanel panel = new ChartPanel(chart);
+
+		return panel;
+	}
+
+
 
 } // class EntradaESaida

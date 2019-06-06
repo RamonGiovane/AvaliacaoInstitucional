@@ -111,7 +111,7 @@ public class IgAvaliacaoInstitucional extends JFrame{
 		JButton lblGerarRelatrios = new JButton("Participantes por Curso...");
 		lblGerarRelatrios.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				relatorio(TipoPesquisa.POR_CURSO);
+				relatorio(TipoRelatorio.POR_CURSO);
 			}
 		});
 		lblGerarRelatrios.setFont(new Font("Tahoma", Font.PLAIN, 13));
@@ -123,7 +123,7 @@ public class IgAvaliacaoInstitucional extends JFrame{
 		JButton lblparticipantesPorSegmento = new JButton("Participantes por Segmento...");
 		lblparticipantesPorSegmento.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				relatorio(TipoPesquisa.POR_SEGMENTO);
+				relatorio(TipoRelatorio.POR_SEGMENTO);
 			}
 
 		});
@@ -136,7 +136,7 @@ public class IgAvaliacaoInstitucional extends JFrame{
 		JButton lblconceitoMdioPor = new JButton("Conceito M\u00E9dio por Curso...");
 		lblconceitoMdioPor.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				relatorio(TipoPesquisa.CONCEITO_MEDIO_CURSO);
+				relatorio(TipoRelatorio.CONCEITO_MEDIO_CURSO);
 			}
 		});
 		lblconceitoMdioPor.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
@@ -148,7 +148,7 @@ public class IgAvaliacaoInstitucional extends JFrame{
 		JButton lblconceitoMdioPor_1 = new JButton("Conceito M\u00E9dio por Assunto...");
 		lblconceitoMdioPor_1.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				relatorio(TipoPesquisa.CONCEITO_MEDIO_ASSUNTO);
+				relatorio(TipoRelatorio.CONCEITO_MEDIO_ASSUNTO);
 			}
 		});
 		lblconceitoMdioPor_1.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
@@ -285,7 +285,7 @@ public class IgAvaliacaoInstitucional extends JFrame{
 		});
 	}
 	
-	private void relatorio(TipoPesquisa tipoPesquisa) {
+	private void relatorio(TipoRelatorio tipoPesquisa) {
 		IgSeletorRelatorio.getInstance(avaliacaoInstitucional, tipoPesquisa).exibir();
 		
 	}

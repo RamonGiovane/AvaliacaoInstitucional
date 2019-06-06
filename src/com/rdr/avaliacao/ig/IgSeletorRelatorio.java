@@ -8,6 +8,8 @@ import java.awt.Font;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.List;
@@ -27,17 +29,19 @@ import com.rdr.avaliacao.es.bd.BancoDeDados;
 import com.rdr.avaliacao.es.bd.DAO;
 import com.rdr.avaliacao.questionario.Pesquisa;
 
+import javafx.scene.input.KeyCode;
+
 public class IgSeletorRelatorio extends JDialog{
 	private  JComboBox<String> comboNomePesquisa, comboTipoGraduacao;
 	private static IgSeletorRelatorio igPesquisa;
 	private static AvaliacaoInstitucional avaliacao;
 	
-	private TipoPesquisa tipoPesquisa;
+	private TipoRelatorio tipoPesquisa;
 	private JLabel lblDadosASerem;
 	private JLabel lblNomeDaPesquisa;
 	private final String[] TIPOS_GRADUACAO = {"Bacharelado", "Licenciatura", "Tecnólogo"};
 	
-	private IgSeletorRelatorio(AvaliacaoInstitucional avaliacaoInstitucional, TipoPesquisa tipoPesquisa) {
+	private IgSeletorRelatorio(AvaliacaoInstitucional avaliacaoInstitucional, TipoRelatorio tipoPesquisa) {
 		this.tipoPesquisa = tipoPesquisa;
 		avaliacao = avaliacaoInstitucional;
 		construirIg();
@@ -45,12 +49,13 @@ public class IgSeletorRelatorio extends JDialog{
 
 	}
 
-	public static IgSeletorRelatorio getInstance(AvaliacaoInstitucional avaliacaoInstitucional, TipoPesquisa tipoPesquisa) {
+	public static IgSeletorRelatorio getInstance(AvaliacaoInstitucional avaliacaoInstitucional, TipoRelatorio tipoPesquisa) {
 		if(igPesquisa == null) {
 			igPesquisa = new IgSeletorRelatorio(avaliacaoInstitucional, tipoPesquisa);
 			return igPesquisa;
 		}
 		else {
+			igPesquisa.resetar(tipoPesquisa);
 			return igPesquisa;
 		}
 	}
@@ -66,6 +71,10 @@ public class IgSeletorRelatorio extends JDialog{
 		setVisible(true);
 	}
 
+	private void resetar(TipoRelatorio tipoPesquisa) {
+		this.tipoPesquisa = tipoPesquisa;
+		popularCombosBoxes();
+	}
 
 
 	private void construirIg() {
@@ -85,13 +94,13 @@ public class IgSeletorRelatorio extends JDialog{
 		lblNomeDaPesquisa.setBounds(25, 60, 123, 14);
 		getContentPane().add(lblNomeDaPesquisa);
 		
-
+		
+		
 		JButton btnConectar = new JButton("OK");
 		btnConectar.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-
+				abrirRelatorio();
 			}
-
 
 		});
 		btnConectar.setBounds(331, 89, 89, 23);
@@ -125,13 +134,14 @@ public class IgSeletorRelatorio extends JDialog{
 			}
 
 		});
+		
 
 	}
 
 	
 	private void popularCombosBoxes() {
 		popularComboBoxNomePesquisa();
-		if(tipoPesquisa.getNomeRelatório().equals(TipoPesquisa.CONCEITO_MEDIO_CURSO.getNomeRelatório())) {
+		if(tipoPesquisa.getNomeRelatório().equals(TipoRelatorio.CONCEITO_MEDIO_CURSO.getNomeRelatório())) {
 			comboTipoGraduacao.setVisible(true);
 			lblDadosASerem.setVisible(true);
 			
@@ -156,6 +166,24 @@ public class IgSeletorRelatorio extends JDialog{
 	public void esconder() {
 	
 		setVisible(false);
+	}
+	
+	private void abrirRelatorio() {
+		//Esconde a janela de seleção de relatório
+		esconder();
+		
+		Pesquisa pesquisa = avaliacao.obterPesquisa(comboNomePesquisa.getSelectedItem().toString());
+		System.out.println("PESQ " + pesquisa);
+		
+		//Se o relatório for sobre o conceito médio, é preciso chamar a versão sobrecarregada do método que abre IgRelatorio.
+		if(tipoPesquisa.equals(TipoRelatorio.CONCEITO_MEDIO_CURSO))
+			IgRelatorio.getInstance(tipoPesquisa, pesquisa,
+				comboTipoGraduacao.getSelectedItem().toString()).exibir(this);
+		else
+			IgRelatorio.getInstance(tipoPesquisa, pesquisa).exibir(this);
+		
+		
+		
 	}
 
 	public void fechar() {

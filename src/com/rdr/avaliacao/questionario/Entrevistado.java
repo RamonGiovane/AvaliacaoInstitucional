@@ -5,7 +5,7 @@ public class Entrevistado {
 	private Segmento segmento;
 	
 	private String campus;
-
+	
 	public Entrevistado(Segmento segmento, String campus) {
 		this.segmento = segmento;
 		this.campus = campus;

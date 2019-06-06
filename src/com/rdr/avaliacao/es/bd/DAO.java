@@ -225,7 +225,18 @@ public class DAO {
 		}
 	}
 	
-
+	public Object[][] consultar(String query, Object... chavesPrimarias) throws SQLException {
+		PreparedStatement ps = prepareStatement(query);
+		try{
+			if(chavesPrimarias != null)
+				inserirObjetosPreparedStatement(ps, chavesPrimarias);
+			return resultSetAsMatrix(ps.executeQuery());
+		}catch (Exception e) {
+			throw e;
+		}finally {
+			ps.close();
+		}
+	}
 
 	
 	/**Retorna a quantidade de registros em um ResultSet*/

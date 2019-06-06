@@ -7,15 +7,15 @@ import com.rdr.avaliacao.es.bd.DAO;
 import com.rdr.avaliacao.es.bd.Recuperacao;
 
 public class Resposta {
-	private TipoResposta resposta;
+	private Conceito resposta;
 	private Pergunta pergunta;
 	
-	public Resposta(TipoResposta resposta) {
-		this();
-		this.resposta = resposta;
-	}
+//	public Resposta(Conceito conceito) {
+//		this();
+//		this.resposta = conceito;
+//	}
 	
-	public Resposta(TipoResposta resposta, String descricaoPergunta,
+	public Resposta(Conceito resposta, String descricaoPergunta,
 			String assuntoPergunta) {
 		this.resposta = resposta;
 		pergunta  = new Pergunta(descricaoPergunta, assuntoPergunta);
@@ -25,11 +25,11 @@ public class Resposta {
 		pergunta = new Pergunta();
 	}
 
-	public TipoResposta getResposta() {
+	public Conceito getResposta() {
 		return resposta;
 	}
 
-	public void setResposta(TipoResposta resposta) {
+	public void setResposta(Conceito resposta) {
 		this.resposta = resposta;
 	}
 	
