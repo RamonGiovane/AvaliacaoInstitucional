@@ -3,44 +3,40 @@ package com.rdr.avaliacao.ig;
 
 import static com.rdr.avaliacao.ig.InterfaceConstraints.*;
 import static com.rdr.avaliacao.ig.InterfaceConstraints.COR_BACKGROUND;
+import static com.rdr.avaliacao.ig.InterfaceConstraints.MSG_ERRO_GERAR_RELATORIO;
+import static com.rdr.avaliacao.ig.InterfaceConstraints.MSG_NAO_HA_PESQUISAS;
+import static com.rdr.avaliacao.ig.InterfaceConstraints.MSG_RELATORIO_SEM_CONEXAO;
+import static com.rdr.avaliacao.ig.InterfaceConstraints.TITULO_PROGRAMA;
 
 import java.awt.Font;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.util.List;
+import java.sql.SQLException;
 
-import javax.swing.ComboBoxModel;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
-import javax.swing.event.ListDataListener;
 
 import com.rdr.avaliacao.AvaliacaoInstitucional;
 import com.rdr.avaliacao.es.EntradaESaida;
-import com.rdr.avaliacao.es.bd.BancoDeDados;
-import com.rdr.avaliacao.es.bd.DAO;
 import com.rdr.avaliacao.questionario.Pesquisa;
-
-import javafx.scene.input.KeyCode;
 
 public class IgSeletorRelatorio extends JDialog{
 	private  JComboBox<String> comboNomePesquisa, comboTipoGraduacao;
 	private static IgSeletorRelatorio igPesquisa;
 	private static AvaliacaoInstitucional avaliacao;
-	
+
 	private TipoRelatorio tipoPesquisa;
 	private JLabel lblDadosASerem;
 	private JLabel lblNomeDaPesquisa;
 	private final String[] TIPOS_GRADUACAO = {"Bacharelado", "Licenciatura", "Tecnólogo"};
-	
+
 	private IgSeletorRelatorio(AvaliacaoInstitucional avaliacaoInstitucional, TipoRelatorio tipoPesquisa) {
 		this.tipoPesquisa = tipoPesquisa;
 		avaliacao = avaliacaoInstitucional;
@@ -65,7 +61,7 @@ public class IgSeletorRelatorio extends JDialog{
 			EntradaESaida.msgInfo(this, MSG_RELATORIO_SEM_CONEXAO, InterfaceConstraints.TITULO_PROGRAMA);
 			return;
 		}
-		
+
 		if(avaliacao.numeroPesquisas() == 0)
 			EntradaESaida.msgInfo(this, MSG_NAO_HA_PESQUISAS,InterfaceConstraints.TITULO_PROGRAMA);
 		setVisible(true);
@@ -93,9 +89,9 @@ public class IgSeletorRelatorio extends JDialog{
 		lblNomeDaPesquisa = new JLabel("Nome da Pesquisa:");
 		lblNomeDaPesquisa.setBounds(25, 60, 123, 14);
 		getContentPane().add(lblNomeDaPesquisa);
-		
-		
-		
+
+
+
 		JButton btnConectar = new JButton("OK");
 		btnConectar.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
@@ -134,56 +130,69 @@ public class IgSeletorRelatorio extends JDialog{
 			}
 
 		});
-		
+
 
 	}
 
-	
+
 	private void popularCombosBoxes() {
 		popularComboBoxNomePesquisa();
 		if(tipoPesquisa.getNomeRelatório().equals(TipoRelatorio.CONCEITO_MEDIO_CURSO.getNomeRelatório())) {
 			comboTipoGraduacao.setVisible(true);
 			lblDadosASerem.setVisible(true);
-			
-			
-			
+
+
+
 		}
 		else {
 			comboTipoGraduacao.setVisible(false);
 			lblDadosASerem.setVisible(false);
-			
-			
+
+
 		}
 	}
 
 	private void popularComboBoxNomePesquisa() {
 		String[] pesquisas = avaliacao.listarPesquisas();
 		comboNomePesquisa.setModel(new DefaultComboBoxModel<String>(pesquisas));
-		
-		
+
+
 	}
-	
+
 	public void esconder() {
-	
+
 		setVisible(false);
 	}
-	
+
 	private void abrirRelatorio() {
 		//Esconde a janela de seleção de relatório
 		esconder();
-		
-		Pesquisa pesquisa = avaliacao.obterPesquisa(comboNomePesquisa.getSelectedItem().toString());
-		System.out.println("PESQ " + pesquisa);
-		
-		//Se o relatório for sobre o conceito médio, é preciso chamar a versão sobrecarregada do método que abre IgRelatorio.
-		if(tipoPesquisa.equals(TipoRelatorio.CONCEITO_MEDIO_CURSO))
-			IgRelatorio.getInstance(tipoPesquisa, pesquisa,
-				comboTipoGraduacao.getSelectedItem().toString()).exibir(this);
-		else
-			IgRelatorio.getInstance(tipoPesquisa, pesquisa).exibir(this);
-		
-		
-		
+
+		try {
+			Pesquisa pesquisa = avaliacao.obterPesquisa(comboNomePesquisa.getSelectedItem().toString());
+			System.out.println("PESQ " + pesquisa);
+			
+			//Se o relatório for sobre o conceito médio, é preciso chamar a versão sobrecarregada do método que abre IgRelatorio.
+			if(tipoPesquisa.equals(TipoRelatorio.CONCEITO_MEDIO_CURSO))
+				IgRelatorio.getInstance(tipoPesquisa, pesquisa,
+						comboTipoGraduacao.getSelectedItem().toString()).exibir(this);
+			else
+				IgRelatorio.getInstance(tipoPesquisa, pesquisa).exibir(this);
+		}catch (SQLException e) {
+			EntradaESaida.msgErro(this, MSG_ERRO_GERAR_RELATORIO + MSG_DETALHES_ERRO, 
+			TITULO_PROGRAMA);
+
+		} catch (Exception e) {
+			EntradaESaida.msgErro(this, MSG_ERRO_GERAR_RELATORIO, TITULO_PROGRAMA);
+			
+			//Debug only
+			e.printStackTrace();
+			return;
+		}
+
+ 
+
+
 	}
 
 	public void fechar() {

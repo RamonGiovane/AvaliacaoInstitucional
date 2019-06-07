@@ -47,55 +47,59 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 	private JRadioButton radioBtinGrafico;
 	private static JPanel panelDados;
 	private static JPanel panelTabela;
-	private static PlotOrientation orientacao;
-	
+
 	private static TipoRelatorio tipoRelatorio;
 	private static Pesquisa pesquisa;
-	
+
 	private String tipoGraduacao;
-	
+
 	private static IgRelatorio igRelatorio;
-	
+
 	/**Variáveis que guardam informações que povoaram os gráficos e tabelas*/
 	private DataSet dadosRelatorio;
-	
-	
- 	
- 	
+
+
+
+
 	private IgRelatorio() {
 		//construirIg();
 	}
-	
+
 	private void definriParametrosRelatorio(TipoRelatorio tipoPesquisa, Pesquisa pesquisa, String tipoGraduacao) {
 		System.out.println("def param - pesqu " + pesquisa );
 		this.tipoRelatorio = tipoPesquisa;
 		IgRelatorio.pesquisa = pesquisa;
 		this.tipoGraduacao = tipoGraduacao;
-	
+
+
 	}
 
 
-	private static IgRelatorio instanciar(TipoRelatorio tipoPesquisa, Pesquisa pesquisa, String tipoGraduacao) {
+	private static IgRelatorio instanciar(TipoRelatorio tipoPesquisa, Pesquisa pesquisa, String tipoGraduacao) throws SQLException {
+
 		if(igRelatorio == null) {
 			igRelatorio = new IgRelatorio();
-			
+			igRelatorio.definriParametrosRelatorio(tipoPesquisa, pesquisa, tipoGraduacao);
+			igRelatorio.construirIg();
 		}
-		igRelatorio.definriParametrosRelatorio(tipoPesquisa, pesquisa, tipoGraduacao);
-		igRelatorio.construirIg();//TODO: Ta errado isso aqui, quebra totalmente o proposito de apenas 1 objeto
+		else {
+			igRelatorio.definriParametrosRelatorio(tipoPesquisa, pesquisa, tipoGraduacao);
+			igRelatorio.atualizarTelaRelatorio();
+		}
 		return igRelatorio;
 	}
-	
-	public static IgRelatorio getInstance(TipoRelatorio tipoPesquisa, Pesquisa pesquisa) {
+
+	public static IgRelatorio getInstance(TipoRelatorio tipoPesquisa, Pesquisa pesquisa) throws SQLException {
 		return instanciar(tipoPesquisa, pesquisa, null);
 	}
-	
-	public static IgRelatorio getInstance(TipoRelatorio tipoPesquisa, Pesquisa pesquisa, String tipoGraduacao) {
+
+	public static IgRelatorio getInstance(TipoRelatorio tipoPesquisa, Pesquisa pesquisa, String tipoGraduacao) throws SQLException {
 		return instanciar(tipoPesquisa, pesquisa, tipoGraduacao);
-		
+
 	}
-	
-	
-	private void construirIg() {
+
+
+	private void construirIg() throws SQLException {
 		setResizable(false);
 		setTitle("Relat\u00F3rio de Autoavalia\u00E7\u00E3o Institucional");
 		getContentPane().setLayout(null);
@@ -103,35 +107,35 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 		panelDados = new JPanel();
 		panelDados.setBorder(new TitledBorder(null, "Dados", TitledBorder.LEADING, TitledBorder.TOP, null, null));
 		panelDados.setBounds(10, 11, 689, 458);
-		
+
 		panelDados.setLayout(new BorderLayout(0, 0));
-		
+
 		JPanel panelModoExibicao = new JPanel();
 		panelModoExibicao.setBorder(new TitledBorder(null, "Modo de Exibi\u00E7\u00E3o", TitledBorder.LEADING, TitledBorder.TOP, null, null));
 		panelModoExibicao.setBounds(10, 481, 689, 64);
 		getContentPane().add(panelModoExibicao);
 		panelModoExibicao.setLayout(null);
-		
+
 		radioBtnTabela = new JRadioButton("Tabela");
 		radioBtnTabela.setSelected(true);
 		radioBtnTabela.setBounds(165, 19, 109, 23);
 		panelModoExibicao.add(radioBtnTabela);
-		
+
 		radioBtinGrafico = new JRadioButton("Gr\u00E1fico");
 		radioBtinGrafico.setBounds(364, 19, 109, 23);
 		panelModoExibicao.add(radioBtinGrafico);
-		
+
 		JButton btnGerarPdf = new JButton("Gerar PDF");
 		btnGerarPdf.setEnabled(false);
 		btnGerarPdf.setBounds(560, 30, 89, 23);
 		panelModoExibicao.add(btnGerarPdf);
-	
-		
+
+
 		buttonGroup.add(radioBtinGrafico);
 		buttonGroup.add(radioBtnTabela);
-		
+
 		definirComportamentoRadioButtons();
-		
+
 		panelTabela = new JPanel();
 		panelTabela.setLayout(new BorderLayout());
 		definirComportamentoRadioButtons();
@@ -141,110 +145,92 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 		gerarDadosRelatorio();
 		exibirTabela();
 	}
-	
-	
+
+
 	private void definirComportamentoRadioButtons() {
 		radioBtnTabela.addActionListener(new ActionListener() {
-			
+
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				
+
 				System.out.println("Hey");
 				exibirTabela();
 			}
 		});
-		
+
 		radioBtinGrafico.addActionListener(new ActionListener() {
-			
+
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				exibirGrafico();
-				
+
 			}
 
 		});
-		
-	
+
+
 	}
-	
-	private void gerarDadosRelatorio() {
-		try{
-			dadosRelatorio = AvaliacaoInstitucional.gerarDataSetParticipantesCurso(pesquisa, tipoRelatorio);
-//			switch(tipoPesquisa){
-//			case POR_CURSO:
-//				//TODO: O metodo da classe avaliacao institucional para gerar relatorios deve ser único.
-//				//Deve receber como parâmetro o enum TipoRelatorio e assim chamar o extrator de dados especifico
-//				dadosRelatorio = AvaliacaoInstitucional.gerarDataSetParticipantesCurso(pesquisa, tipoPesquisa);
-//				cabecalhosRelatorio = CABECALHOS_PARTICIPANTES_CURSO;
-//				titulo = TipoRelatorio.POR_CURSO.getNomeRelatório();
-//				break;
-//			case POR_SEGMENTO:
-//				dadosRelatorio = AvaliacaoInstitucional.gerarDataSetParticipantesSegmento(pesquisa);
-//				cabecalhosRelatorio = CABECALHOS_PARTICIPANTES_CURSO;
-//				break;
-//
-//				
-//			default:
-//				System.out.println("DEFFED :" + tipoPesquisa);
-//				break;
-//		}
-		
-		}catch (SQLException e) {
-			System.err.println(e);
-		}
-		
+
+	private void gerarDadosRelatorio() throws SQLException {
+
+		dadosRelatorio = AvaliacaoInstitucional.gerarDataSetParticipantesCurso(pesquisa, tipoRelatorio);
+
+
 	}
-	
+
+	private void atualizarTelaRelatorio() throws SQLException {
+		igRelatorio.gerarDadosRelatorio();
+
+		if(radioBtinGrafico.isSelected())
+			exibirGrafico();
+		else
+			exibirTabela();
+	}
 
 	private void exibirGrafico() {
 		limparPaineis();
-		
+
 		panelTabela.add(EntradaESaida.gerarGraficoBarra3D(dadosRelatorio, tipoRelatorio.getNomeRelatório(), 
-						tipoRelatorio.getOrientacaoGrafico(), 200, 400), BorderLayout.CENTER);
+				tipoRelatorio.getOrientacaoGrafico(), 200, 400), BorderLayout.CENTER);
 		panelDados.add(panelTabela);
-		
+
 		repintarPaineis();
 	}
-	
-	
+
+
 	private void exibirTabela() {
-		
+
 		limparPaineis();
-		System.out.println("TR " + tipoRelatorio);
-		
+
 		JTable tabela = EntradaESaida.gerarTabela(dadosRelatorio.asMatrix(), tipoRelatorio.getCabecalhos(), null, 
 				new int[] {SwingConstants.LEFT, SwingConstants.CENTER});
-		
+
 		panelTabela.add(new JScrollPane(tabela), BorderLayout.CENTER);
 		panelTabela.add(tabela.getTableHeader(), BorderLayout.NORTH);
 		panelTabela.add(tabela);
 		panelDados.add(new JScrollPane(panelTabela));
-		
 
-
-	
-		tabela.setVisible(true);
-		
 		repintarPaineis();
 	}
-	
+
 	/**Necessário para limpar o conteúdo dos painéis antes de exibir um novo componente*/
 	private void limparPaineis() {
+
 		panelTabela.removeAll();
 		panelDados.removeAll();
-		
+
 	}
-	
+
 	/**Necessário para atualizar os painéis depois de mudar*/
 	private void repintarPaineis() {
 		panelTabela.revalidate();
 		panelTabela.repaint();
 		panelDados.revalidate();
 		panelDados.repaint();
-		
+
 		panelTabela.setVisible(true);
 		panelDados.setVisible(true);
-		
+
 	}
 
 	@Override
@@ -263,6 +249,5 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 		dispose();
 	}
 
-	
-	
 }
+

@@ -29,7 +29,9 @@ public interface InterfaceConstraints {
 			MSG_CAMINHO_DADOS_VAZIO = "Você deve escolher um arquivo por onde os dados serão importados.",
 			MSG_PESQUISA_JA_EXISTE =  "Já existe uma pesquisa com este nome!",
 			MSG_RELATORIO_SEM_CONEXAO = "Para gerar um relatório, primeiro é preciso uma conexão com o banco de dados.",
-			MSG_NAO_HA_PESQUISAS = "Não há pesquisas cadastradas. Importe os dados de\numa nova pesquisa para gerar um relatório.";
+			MSG_NAO_HA_PESQUISAS = "Não há pesquisas cadastradas. Importe os dados de\numa nova pesquisa para gerar um relatório.",
+	 		MSG_ERRO_GERAR_RELATORIO = "Ocorreu um erro ao gerar os relatórios.\nContate o suporte.",
+	 		MSG_DETALHES_ERRO  = "\nTalvez haja um problema na conexão com o banco\nou você deve re-importar os dados.";
 
 	/**Caminho de imagem usada na interface gráfica**/
 	public final static String CAMINHO_ICON_DB = "/com/rdr/avaliacao/ig/img/db_icon.png",
