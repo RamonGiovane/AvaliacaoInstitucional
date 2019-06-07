@@ -9,6 +9,7 @@ import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
+import javax.swing.SwingConstants;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JDialog;
@@ -17,6 +18,8 @@ import java.awt.Color;
 import java.awt.Component;
 
 import javax.swing.border.TitledBorder;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.JTableHeader;
 
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.ChartUtilities;
@@ -24,6 +27,7 @@ import org.jfree.chart.plot.PlotOrientation;
 
 import com.rdr.avaliacao.AvaliacaoInstitucional;
 import com.rdr.avaliacao.es.EntradaESaida;
+import com.rdr.avaliacao.questionario.Curso;
 import com.rdr.avaliacao.questionario.Pesquisa;
 import com.rdr.avaliacao.relatorio.DadosDeGrafico;
 import com.rdr.avaliacao.relatorio.DataSet;
@@ -32,34 +36,39 @@ import javax.swing.JList;
 import javax.swing.JLabel;
 import javax.swing.JComboBox;
 import java.awt.FlowLayout;
+import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.SQLException;
 
-public class IgRelatorio <T extends DadosDeGrafico> extends JDialog implements PropriedadesDeJanela {
+public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 	private ButtonGroup buttonGroup =  new ButtonGroup();
 	private JRadioButton radioBtnTabela;
 	private JRadioButton radioBtinGrafico;
-	private JPanel panelDados;
+	private static JPanel panelDados;
 	private static JPanel panelTabela;
+	private static PlotOrientation orientacao;
 	
-	private static TipoRelatorio tipoPesquisa;
+	private static TipoRelatorio tipoRelatorio;
 	private static Pesquisa pesquisa;
+	
 	private String tipoGraduacao;
 	
 	private static IgRelatorio igRelatorio;
 	
+	/**Variáveis que guardam informações que povoaram os gráficos e tabelas*/
 	private DataSet dadosRelatorio;
-	private static String[] titulosRelatorio;
 	
- 	private static String[] TITULOS_PARTICIPANTES = new String[]{"Curso", "Número de Participantes"};
+	
+ 	
+ 	
 	private IgRelatorio() {
 		//construirIg();
 	}
 	
 	private void definriParametrosRelatorio(TipoRelatorio tipoPesquisa, Pesquisa pesquisa, String tipoGraduacao) {
 		System.out.println("def param - pesqu " + pesquisa );
-		this.tipoPesquisa = tipoPesquisa;
+		this.tipoRelatorio = tipoPesquisa;
 		IgRelatorio.pesquisa = pesquisa;
 		this.tipoGraduacao = tipoGraduacao;
 	
@@ -129,7 +138,6 @@ public class IgRelatorio <T extends DadosDeGrafico> extends JDialog implements P
 		getContentPane().add(panelDados);
 		panelDados.add(panelTabela, BorderLayout.CENTER);
 		panelDados.add(panelTabela);	
-		
 		gerarDadosRelatorio();
 		exibirTabela();
 	}
@@ -161,16 +169,25 @@ public class IgRelatorio <T extends DadosDeGrafico> extends JDialog implements P
 	
 	private void gerarDadosRelatorio() {
 		try{
-			switch(tipoPesquisa){
-			case POR_SEGMENTO:
-				dadosRelatorio = AvaliacaoInstitucional.gerarRelatorioPorParticipantes(pesquisa);
-				titulosRelatorio = TITULOS_PARTICIPANTES;
-				break;
-				
-			default:
-				System.out.println("DEFFED :" + tipoPesquisa);
-				break;
-		}
+			dadosRelatorio = AvaliacaoInstitucional.gerarDataSetParticipantesCurso(pesquisa, tipoRelatorio);
+//			switch(tipoPesquisa){
+//			case POR_CURSO:
+//				//TODO: O metodo da classe avaliacao institucional para gerar relatorios deve ser único.
+//				//Deve receber como parâmetro o enum TipoRelatorio e assim chamar o extrator de dados especifico
+//				dadosRelatorio = AvaliacaoInstitucional.gerarDataSetParticipantesCurso(pesquisa, tipoPesquisa);
+//				cabecalhosRelatorio = CABECALHOS_PARTICIPANTES_CURSO;
+//				titulo = TipoRelatorio.POR_CURSO.getNomeRelatório();
+//				break;
+//			case POR_SEGMENTO:
+//				dadosRelatorio = AvaliacaoInstitucional.gerarDataSetParticipantesSegmento(pesquisa);
+//				cabecalhosRelatorio = CABECALHOS_PARTICIPANTES_CURSO;
+//				break;
+//
+//				
+//			default:
+//				System.out.println("DEFFED :" + tipoPesquisa);
+//				break;
+//		}
 		
 		}catch (SQLException e) {
 			System.err.println(e);
@@ -180,32 +197,53 @@ public class IgRelatorio <T extends DadosDeGrafico> extends JDialog implements P
 	
 
 	private void exibirGrafico() {
-		panelTabela.removeAll();
-		panelTabela.add(EntradaESaida.gerarGraficoBarra3D(dadosRelatorio, "Título", "Curso", "Número de Part",
-						PlotOrientation.HORIZONTAL, 200, 400), BorderLayout.CENTER);
+		limparPaineis();
+		
+		panelTabela.add(EntradaESaida.gerarGraficoBarra3D(dadosRelatorio, tipoRelatorio.getNomeRelatório(), 
+						tipoRelatorio.getOrientacaoGrafico(), 200, 400), BorderLayout.CENTER);
 		panelDados.add(panelTabela);
-		panelTabela.revalidate();
-		panelTabela.repaint();
 		
-		panelTabela.setVisible(true);
-		panelDados.setVisible(true);
-		
+		repintarPaineis();
 	}
+	
+	
 	private void exibirTabela() {
-		panelTabela.removeAll();
-		JTable tabela = EntradaESaida.gerarTabela(dadosRelatorio.asMatrix(), titulosRelatorio, null, null, 50, 500);
+		
+		limparPaineis();
+		System.out.println("TR " + tipoRelatorio);
+		
+		JTable tabela = EntradaESaida.gerarTabela(dadosRelatorio.asMatrix(), tipoRelatorio.getCabecalhos(), null, 
+				new int[] {SwingConstants.LEFT, SwingConstants.CENTER});
+		
 		panelTabela.add(new JScrollPane(tabela), BorderLayout.CENTER);
 		panelTabela.add(tabela.getTableHeader(), BorderLayout.NORTH);
 		panelTabela.add(tabela);
-		panelDados.add(panelTabela);
+		panelDados.add(new JScrollPane(panelTabela));
+		
+
+
+	
 		tabela.setVisible(true);
 		
+		repintarPaineis();
+	}
+	
+	/**Necessário para limpar o conteúdo dos painéis antes de exibir um novo componente*/
+	private void limparPaineis() {
+		panelTabela.removeAll();
+		panelDados.removeAll();
+		
+	}
+	
+	/**Necessário para atualizar os painéis depois de mudar*/
+	private void repintarPaineis() {
 		panelTabela.revalidate();
 		panelTabela.repaint();
+		panelDados.revalidate();
+		panelDados.repaint();
+		
 		panelTabela.setVisible(true);
 		panelDados.setVisible(true);
-		
-		
 		
 	}
 

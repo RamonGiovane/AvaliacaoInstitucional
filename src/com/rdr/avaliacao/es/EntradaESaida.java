@@ -10,12 +10,12 @@ import static javax.swing.JOptionPane.showMessageDialog;
 
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Toolkit;
 import java.io.File;
 
 import javax.swing.JFileChooser;
+import javax.swing.JLabel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
@@ -175,29 +175,16 @@ public class EntradaESaida {
 	 *                  alinhamento à esquerda (<code>SwingConstants.LEFT</code>) será utilizado em todas as colunas da tabela. Os valores válidos para alinhamento, 
 	 *                  definidos na interface <code>SwingConstants</code>, são: <code>LEFT</code>, <code>CENTER</code>, <code>RIGHT</code>, 
 	 *                  <code>LEADING</code> ou <code>TRAILING</code>;
-	 * @param larguraTabela valor, em <i>pixels</i>, correspondente a largura da área de exibição da tabela;
-	 * @param alturaTabela valor, em <i>pixels</i>, correspondente a altura da área de exibição da tabela.
 	 * 
 	 * @see javax.swing.SwingConstants
 	 * 
 	 * @author Prof. Márlon Oliveira da Silva
 	 */
 	public static JTable gerarTabela(Object[][] linhas, String[] colunas, int[] larguraColuna, 
-			int[] alinhamentoColuna, int larguraTabela, int alturaTabela) {
+			int[] alinhamentoColuna) {
 
 		// Cria o componente GUI Swing JTable para exibir a tabela.
 		JTable table = new JTable(linhas, colunas);
-
-		// Define o tamanho (largura e altura, em pixels, respectivamente) da área de visualização (viewport) da tabela.
-		table.setPreferredScrollableViewportSize(new Dimension(larguraTabela, alturaTabela));
-
-		// Define a largura das colunas da tabela.
-		if (larguraColuna != null)
-			for (int coluna = 0; coluna < larguraColuna.length; coluna++) // A largura das colunas é definido de acordo com os valores do array larguraColuna.
-				table.getColumnModel().getColumn(coluna).setPreferredWidth(larguraColuna[coluna]);
-		else
-			for (int coluna = 0; coluna < colunas.length; coluna++) // A largura das colunas é definido de acordo com a largura da área de exibição da tabela.
-				table.getColumnModel().getColumn(coluna).setPreferredWidth(larguraTabela / colunas.length);
 
 		// Define o alinhamento para cada coluna da tabela.
 		if (alinhamentoColuna != null) {
@@ -216,9 +203,25 @@ public class EntradaESaida {
 			DefaultTableCellRenderer colunaTableCellRenderer = new DefaultTableCellRenderer();
 			colunaTableCellRenderer.setHorizontalAlignment(SwingConstants.LEFT);
 
+
 			for (int coluna = 0; coluna < colunas.length; coluna++)
 				table.getColumnModel().getColumn(coluna).setCellRenderer(colunaTableCellRenderer);
 		}
+
+		DefaultTableCellRenderer renderer = (DefaultTableCellRenderer) table.getTableHeader().getDefaultRenderer();
+		renderer.setHorizontalAlignment(JLabel.CENTER);
+
+		//Aumentando tamanho das linhas
+		table.setRowHeight(30);
+
+		//Customizando o cabeçalho
+		table.getTableHeader().setBackground(Color.BLACK);
+		table.getTableHeader().setForeground(Color.BLACK);
+		table.getTableHeader().setFont(new Font(Font.DIALOG, Font.BOLD, 11));
+
+		//Fazendo que a tabela não seja editável
+		table.setDefaultEditor(Object.class, null);
+
 
 		return table;
 	} // exibirTabela()
@@ -228,7 +231,7 @@ public class EntradaESaida {
 			int[] alinhamentoColuna, int larguraTabela, int alturaTabela) {
 		// Exibe a tabela em uma caixa de diálogo usando um painel rolável (JScrollPane).
 		msgInfo(janelaPai,  
-				new JScrollPane(gerarTabela(linhas, colunas, larguraColuna, alinhamentoColuna, larguraTabela, alturaTabela)), 
+				new JScrollPane(gerarTabela(linhas, colunas, larguraColuna, alinhamentoColuna)), 
 				titulo);
 	}
 
@@ -382,13 +385,12 @@ public class EntradaESaida {
 	}
 
 	public static<T extends DadosDeGrafico> ChartPanel gerarGraficoBarra3D(DataSet dadosRelatorio, 
-			String titulo, String legendaCategoria, String legendaValores,
-			PlotOrientation orientacao, int largura, int altura) {
+			String titulo, PlotOrientation orientacao, int largura, int altura) {
 
 		final DefaultCategoryDataset dataset = new DefaultCategoryDataset( );
-
 		for(int i  = 0; i<dadosRelatorio.tamanho(); i++) {
-			dataset.addValue(dadosRelatorio.ober(i).getValorLinha(), dadosRelatorio.ober(i).getValorColuna(), dadosRelatorio.ober(i).getValorColuna());
+			dataset.addValue(dadosRelatorio.ober(i).getValorLinha(), dadosRelatorio.ober(i).getValorColuna(), 
+					dadosRelatorio.ober(i).getValorColuna());
 		}
 
 		JFreeChart chart = ChartFactory.createBarChart3D(titulo, null, null, 
@@ -401,14 +403,35 @@ public class EntradaESaida {
 
 		BarRenderer3D barRenderer = (BarRenderer3D) plot.getRenderer();
 
-		//Adicionando os números na frente do gráfico de barra
+		plot.getDomainAxis().setMaximumCategoryLabelWidthRatio(10);
+		//plot.getDomainAxis().setCategoryMargin(2);
+
+		barRenderer.setItemMargin(-1.07);
 		CategoryItemLabelGenerator generator = new StandardCategoryItemLabelGenerator();
+
+
 		for(int i = 0; i<dataset.getRowCount(); i++) {
 			barRenderer.setSeriesItemLabelGenerator(i, generator);
 			barRenderer.setSeriesItemLabelsVisible(i, true);
-			barRenderer.setSeriesPositiveItemLabelPosition(i, new ItemLabelPosition(ItemLabelAnchor.OUTSIDE2,TextAnchor.CENTER_LEFT));
+			if(orientacao == PlotOrientation.HORIZONTAL)
+				barRenderer.setSeriesPositiveItemLabelPosition(i, new ItemLabelPosition(ItemLabelAnchor.OUTSIDE3,
+						TextAnchor.CENTER_LEFT));
+			else
+				barRenderer.setSeriesPositiveItemLabelPosition(i, new ItemLabelPosition(ItemLabelAnchor.OUTSIDE12,
+						TextAnchor.BASELINE_CENTER));
+
 			barRenderer.setItemLabelAnchorOffset(15);
+
+
+			//		else {
+				//			for(int i = 0; i<dataset.getRowCount(); i++) {
+			//				barRenderer.setSeriesItemLabelGenerator(i, generator);
+			//				barRenderer.setSeriesItemLabelsVisible(i, true);
+			//				barRenderer.setSeriesPositiveItemLabelPosition(i, new ItemLabelPosition(ItemLabelAnchor.OUTSIDE12,TextAnchor.BASELINE_CENTER));
+			//				barRenderer.setItemLabelAnchorOffset(15);
+			//			}
 		}
+
 
 		//TODO: Isso deixa as legendas deitadas
 		//		 CategoryAxis domainAxis = plot.getDomainAxis();
@@ -418,20 +441,20 @@ public class EntradaESaida {
 
 		//Retirando legendas inferiores
 		renderer.setBaseSeriesVisibleInLegend(false);
-	
+
 		//Colorindo o plot
 		plot.setBackgroundPaint(Color.WHITE);
 		plot.setDomainGridlinePaint(Color.DARK_GRAY);
 		plot.setRangeGridlinePaint(Color.DARK_GRAY);
 		plot.setOutlineVisible(false);
 
-		
+
 		renderer.setBaseItemLabelPaint(Color.BLACK);
 		renderer.setBaseItemLabelFont(new Font(Font.DIALOG, Font.BOLD, 14));
 
-		plot.getDomainAxis().setMaximumCategoryLabelWidthRatio(10);
-		BarRenderer3D br = (BarRenderer3D) plot.getRenderer();
-		br.setItemMargin(-5);
+
+
+
 
 		ChartPanel panel = new ChartPanel(chart);
 

@@ -379,7 +379,7 @@ public class ExtratorDeDados {
 //		return cursos;
 //	}
 
-	public DataSet consultarBancoDeDados(Pesquisa pesquisa) throws SQLException{
+	public DataSet gerarDataSetParticipantesCurso(Pesquisa pesquisa) throws SQLException{
 		DataSet dataSet = new DataSet();
 		
 		//Consulta 1: Seleciona todos os cursos
@@ -394,6 +394,32 @@ public class ExtratorDeDados {
 			
 			//Consulta 2: obtém o número de entrevistados de todos cursos
 			resultado = dao.consultar("select count(codcurso) from entrevistado where codcurso = ?", curso.getCodigo());
+			
+			curso.setQuantidadeEntrevistados((long)resultado[0][0]);
+			
+			//Adiciona um curso no dataSet
+			dataSet.adicionar(curso);
+		}
+
+		
+		return dataSet;
+	}
+	
+	public DataSet gerarDataSetParticipantesSegmento(Pesquisa pesquisa) throws SQLException{
+		DataSet dataSet = new DataSet();
+		
+		//Consulta 1: Seleciona todos os cursos
+		Object[][] objetos = dao.consultar("select codigo, descricao from segmento");
+		
+		Curso curso;
+		int i = 0;
+		Object[][] resultado = new Object[0][0];
+		
+		for(; i<objetos.length; i++) {
+			curso = new Curso((int)objetos[i][0], objetos[i][1].toString());
+			
+			//Consulta 2: obtém o número de entrevistados de todos cursos
+			resultado = dao.consultar("select count(codsegmento) from entrevistado where codsegmento = ?", curso.getCodigo());
 			
 			curso.setQuantidadeEntrevistados((long)resultado[0][0]);
 			

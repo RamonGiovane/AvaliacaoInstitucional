@@ -14,6 +14,7 @@ import com.rdr.avaliacao.es.bd.DAO;
 import com.rdr.avaliacao.es.bd.Recuperacao;
 import com.rdr.avaliacao.ig.IgAvaliacaoInstitucional;
 import com.rdr.avaliacao.ig.InterfaceConstraints;
+import com.rdr.avaliacao.ig.TipoRelatorio;
 import com.rdr.avaliacao.questionario.Curso;
 import com.rdr.avaliacao.questionario.Pergunta;
 import com.rdr.avaliacao.questionario.Pesquisa;
@@ -175,9 +176,26 @@ public class AvaliacaoInstitucional {
 		return strPesquisas;
 	}
 	
-	public static DataSet gerarRelatorioPorParticipantes(Pesquisa pesquisa) throws SQLException {
+	public static DataSet gerarDataSetParticipantesCurso(Pesquisa pesquisa, TipoRelatorio tipoRelatorio) throws SQLException {
 		ExtratorDeDados extrator = new ExtratorDeDados(bd, pesquisa);
-		DataSet dataSet = extrator.consultarBancoDeDados(pesquisa);
+
+		switch(tipoRelatorio){
+		case POR_CURSO:
+			 return extrator.gerarDataSetParticipantesCurso(pesquisa);
+			
+		case POR_SEGMENTO:
+			return extrator.gerarDataSetParticipantesSegmento(pesquisa);
+
+			
+		default:
+			return null;
+		}
+		
+	}
+	
+	public static DataSet gerarDataSetParticipantesSegmento(Pesquisa pesquisa) throws SQLException {
+		ExtratorDeDados extrator = new ExtratorDeDados(bd, pesquisa);
+		DataSet dataSet = extrator.gerarDataSetParticipantesSegmento(pesquisa);
 		dataSet.ordenarPorValor();
 		return dataSet;
 	}
