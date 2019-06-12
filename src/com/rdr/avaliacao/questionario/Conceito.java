@@ -8,6 +8,11 @@ public class Conceito{
 		this.valor = valor;
 		this.descricao = descricao;
 	}
+	
+	public Conceito(int valor) {
+		this.valor = valor;
+		descricao = "Indefinido";
+	}
 
 	public Conceito() {}
 	

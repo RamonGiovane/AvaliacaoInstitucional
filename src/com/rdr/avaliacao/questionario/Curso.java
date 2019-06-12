@@ -38,15 +38,20 @@ public class Curso implements DadosDeGrafico {
 
 	@Override
 	public Number getValorLinha() {
-		// TODO Auto-generated method stub
 		return quantidadeEntrevistados;
 	}
 
 	@Override
 	public String getValorColuna() {
-		// TODO Auto-generated method stub
 		return descricao;
 	}
+
+	@Override
+	public String toString() {
+		return String.format("%s", descricao);
+	}
+	
+	
 	
 	
 

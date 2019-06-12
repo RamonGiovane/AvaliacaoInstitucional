@@ -181,11 +181,14 @@ public class IgSeletorRelatorio extends JDialog{
 		}catch (SQLException e) {
 			EntradaESaida.msgErro(this, MSG_ERRO_GERAR_RELATORIO + MSG_DETALHES_ERRO, 
 			TITULO_PROGRAMA);
+			
+			//TODO: Debug only
+			e.printStackTrace();
 
 		} catch (Exception e) {
 			EntradaESaida.msgErro(this, MSG_ERRO_GERAR_RELATORIO, TITULO_PROGRAMA);
 			
-			//Debug only
+			//TODO: Debug only
 			e.printStackTrace();
 			return;
 		}

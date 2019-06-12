@@ -22,23 +22,9 @@ import javax.swing.JTextArea;
 import javax.swing.SwingConstants;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableCellRenderer;
-
-import org.jfree.chart.ChartFactory;
-import org.jfree.chart.ChartPanel;
-import org.jfree.chart.JFreeChart;
-import org.jfree.chart.labels.CategoryItemLabelGenerator;
-import org.jfree.chart.labels.ItemLabelAnchor;
-import org.jfree.chart.labels.ItemLabelPosition;
-import org.jfree.chart.labels.StandardCategoryItemLabelGenerator;
-import org.jfree.chart.plot.CategoryPlot;
-import org.jfree.chart.plot.PlotOrientation;
-import org.jfree.chart.renderer.category.BarRenderer3D;
-import org.jfree.chart.renderer.category.CategoryItemRenderer;
-import org.jfree.data.category.DefaultCategoryDataset;
-import org.jfree.ui.TextAnchor;
-
-import com.rdr.avaliacao.relatorio.DadosDeGrafico;
-import com.rdr.avaliacao.relatorio.DataSet;
+import javax.swing.table.JTableHeader;
+import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableColumn;
 
 
 public class EntradaESaida {
@@ -180,34 +166,36 @@ public class EntradaESaida {
 	 * 
 	 * @author Prof. Márlon Oliveira da Silva
 	 */
-	public static JTable gerarTabela(Object[][] linhas, String[] colunas, int[] larguraColuna, 
-			int[] alinhamentoColuna) {
+	public static JTable gerarTabela(Object[][] linhas, String[] colunas) {
 
 		// Cria o componente GUI Swing JTable para exibir a tabela.
-		JTable table = new JTable(linhas, colunas);
-
-		// Define o alinhamento para cada coluna da tabela.
-		if (alinhamentoColuna != null) {
-			// Cria um objeto para "renderizar" (desenhar) todas as células de uma coluna da tabela.
-			DefaultTableCellRenderer[] colunaTableCellRenderer = new DefaultTableCellRenderer[colunas.length];
-
-			// Alinhamento das colunas definido de acordo com os valores do array alinhamentoColuna.
-			for (int coluna = 0; coluna < alinhamentoColuna.length; coluna++) {
-				colunaTableCellRenderer[coluna] = new DefaultTableCellRenderer();
-				colunaTableCellRenderer[coluna].setHorizontalAlignment(alinhamentoColuna[coluna]);
-				table.getColumnModel().getColumn(coluna).setCellRenderer(colunaTableCellRenderer[coluna]);
+		JTable table = new JTable(linhas, colunas) {
+			//Sobrescrevendo o método prepareRenderer para que as colunas se ajustem de acodo com o tamanho de seu conteúdo
+			@Override
+			public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
+				Component component = super.prepareRenderer(renderer, row, column);
+				int rendererWidth = component.getPreferredSize().width;
+				TableColumn tableColumn = getColumnModel().getColumn(column);
+				tableColumn.setPreferredWidth(Math.max(rendererWidth + getIntercellSpacing().width, tableColumn.getPreferredWidth()));
+				return component;
 			}
-		}
-		else 
-		{ // Alinhamento das colunas definido por SwingConstants.LEFT.
-			DefaultTableCellRenderer colunaTableCellRenderer = new DefaultTableCellRenderer();
-			colunaTableCellRenderer.setHorizontalAlignment(SwingConstants.LEFT);
+		};
+		table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 
+		//Alinhando o conteúdo das colunas.
+		DefaultTableCellRenderer primeiraColunaCellRenderer = new DefaultTableCellRenderer(), colunasCellRenderer = new DefaultTableCellRenderer();
+		
+		primeiraColunaCellRenderer.setHorizontalAlignment(SwingConstants.LEFT);
+		colunasCellRenderer.setHorizontalAlignment(SwingConstants.CENTER);
 
-			for (int coluna = 0; coluna < colunas.length; coluna++)
-				table.getColumnModel().getColumn(coluna).setCellRenderer(colunaTableCellRenderer);
-		}
+		//Alinha-se a primeira coluna à esquerda...
+		table.getColumnModel().getColumn(0).setCellRenderer(primeiraColunaCellRenderer);
+		
+		//... e as demais ao centro
+		for (int coluna = 1; coluna < colunas.length; coluna++)
+			table.getColumnModel().getColumn(coluna).setCellRenderer(colunasCellRenderer);
 
+		//Alinhando o cabeçalho ao centro
 		DefaultTableCellRenderer renderer = (DefaultTableCellRenderer) table.getTableHeader().getDefaultRenderer();
 		renderer.setHorizontalAlignment(JLabel.CENTER);
 
@@ -227,11 +215,10 @@ public class EntradaESaida {
 	} // exibirTabela()
 
 
-	public static void exibirTabela(Component janelaPai, String titulo, Object[][] linhas, String[] colunas, int[] larguraColuna, 
-			int[] alinhamentoColuna, int larguraTabela, int alturaTabela) {
+	public static void exibirTabela(Component janelaPai, String titulo, Object[][] linhas, String[] colunas) {
 		// Exibe a tabela em uma caixa de diálogo usando um painel rolável (JScrollPane).
 		msgInfo(janelaPai,  
-				new JScrollPane(gerarTabela(linhas, colunas, larguraColuna, alinhamentoColuna)), 
+				new JScrollPane(gerarTabela(linhas, colunas)), 
 				titulo);
 	}
 
@@ -383,84 +370,6 @@ public class EntradaESaida {
 			fileChooser.setFileFilter(filter);
 		}
 	}
-
-	public static<T extends DadosDeGrafico> ChartPanel gerarGraficoBarra3D(DataSet dadosRelatorio, 
-			String titulo, PlotOrientation orientacao, int largura, int altura) {
-
-		final DefaultCategoryDataset dataset = new DefaultCategoryDataset( );
-		for(int i  = 0; i<dadosRelatorio.tamanho(); i++) {
-			dataset.addValue(dadosRelatorio.ober(i).getValorLinha(), dadosRelatorio.ober(i).getValorColuna(), 
-					dadosRelatorio.ober(i).getValorColuna());
-		}
-
-		JFreeChart chart = ChartFactory.createBarChart3D(titulo, null, null, 
-				dataset, orientacao, true, false, false);
-
-		CategoryPlot plot = chart.getCategoryPlot();
-		CategoryItemRenderer renderer = plot.getRenderer();
-
-
-
-		BarRenderer3D barRenderer = (BarRenderer3D) plot.getRenderer();
-
-		plot.getDomainAxis().setMaximumCategoryLabelWidthRatio(10);
-		//plot.getDomainAxis().setCategoryMargin(2);
-
-		barRenderer.setItemMargin(-1.07);
-		CategoryItemLabelGenerator generator = new StandardCategoryItemLabelGenerator();
-
-
-		for(int i = 0; i<dataset.getRowCount(); i++) {
-			barRenderer.setSeriesItemLabelGenerator(i, generator);
-			barRenderer.setSeriesItemLabelsVisible(i, true);
-			if(orientacao == PlotOrientation.HORIZONTAL)
-				barRenderer.setSeriesPositiveItemLabelPosition(i, new ItemLabelPosition(ItemLabelAnchor.OUTSIDE3,
-						TextAnchor.CENTER_LEFT));
-			else
-				barRenderer.setSeriesPositiveItemLabelPosition(i, new ItemLabelPosition(ItemLabelAnchor.OUTSIDE12,
-						TextAnchor.BASELINE_CENTER));
-
-			barRenderer.setItemLabelAnchorOffset(15);
-
-
-			//		else {
-				//			for(int i = 0; i<dataset.getRowCount(); i++) {
-			//				barRenderer.setSeriesItemLabelGenerator(i, generator);
-			//				barRenderer.setSeriesItemLabelsVisible(i, true);
-			//				barRenderer.setSeriesPositiveItemLabelPosition(i, new ItemLabelPosition(ItemLabelAnchor.OUTSIDE12,TextAnchor.BASELINE_CENTER));
-			//				barRenderer.setItemLabelAnchorOffset(15);
-			//			}
-		}
-
-
-		//TODO: Isso deixa as legendas deitadas
-		//		 CategoryAxis domainAxis = plot.getDomainAxis();
-		//	        domainAxis.setCategoryLabelPositions(
-		//	                CategoryLabelPositions.createUpRotationLabelPositions(
-		//	                        Math.PI / 6.0));
-
-		//Retirando legendas inferiores
-		renderer.setBaseSeriesVisibleInLegend(false);
-
-		//Colorindo o plot
-		plot.setBackgroundPaint(Color.WHITE);
-		plot.setDomainGridlinePaint(Color.DARK_GRAY);
-		plot.setRangeGridlinePaint(Color.DARK_GRAY);
-		plot.setOutlineVisible(false);
-
-
-		renderer.setBaseItemLabelPaint(Color.BLACK);
-		renderer.setBaseItemLabelFont(new Font(Font.DIALOG, Font.BOLD, 14));
-
-
-
-
-
-		ChartPanel panel = new ChartPanel(chart);
-
-		return panel;
-	}
-
 
 
 } // class EntradaESaida

@@ -19,7 +19,9 @@ import com.rdr.avaliacao.questionario.Curso;
 import com.rdr.avaliacao.questionario.Pergunta;
 import com.rdr.avaliacao.questionario.Pesquisa;
 import com.rdr.avaliacao.questionario.Resposta;
-import com.rdr.avaliacao.relatorio.DataSet;
+import com.rdr.avaliacao.relatorio.RelatorioDeParticipantes;
+import com.rdr.avaliacao.relatorio.Relatorio;
+import com.rdr.avaliacao.relatorio.RelatorioDeMedias;
 
 /**Classe principal do programa de Avaliação Institucional. Nesta classe encontra-se o método main.
  * Nenhuma outra classe pode instaciar um objeto desta.
@@ -176,29 +178,30 @@ public class AvaliacaoInstitucional {
 		return strPesquisas;
 	}
 	
-	public static DataSet gerarDataSetParticipantesCurso(Pesquisa pesquisa, TipoRelatorio tipoRelatorio) throws SQLException {
+	public static Relatorio gerarRelatorio(Pesquisa pesquisa, TipoRelatorio tipoRelatorio, String tipoGraduacao) throws SQLException {
 		ExtratorDeDados extrator = new ExtratorDeDados(bd, pesquisa);
-
+		System.err.println(tipoRelatorio);
 		switch(tipoRelatorio){
 		case POR_CURSO:
-			 return extrator.gerarDataSetParticipantesCurso(pesquisa);
+			 return extrator.gerarDataSetParticipantesCurso(pesquisa, tipoRelatorio);
 			
 		case POR_SEGMENTO:
-			return extrator.gerarDataSetParticipantesSegmento(pesquisa);
+			return extrator.gerarDataSetParticipantesSegmento(pesquisa, tipoRelatorio);
 
-			
+		case CONCEITO_MEDIO_CURSO:
+			 
+			return extrator.gerarDataSetConceitoMedioAssunto(pesquisa, tipoGraduacao, tipoRelatorio);
+		
 		default:
 			return null;
 		}
 		
 	}
 	
-	public static DataSet gerarDataSetParticipantesSegmento(Pesquisa pesquisa) throws SQLException {
-		ExtratorDeDados extrator = new ExtratorDeDados(bd, pesquisa);
-		DataSet dataSet = extrator.gerarDataSetParticipantesSegmento(pesquisa);
-		dataSet.ordenarPorValor();
-		return dataSet;
-	}
+
+
+	
+
 	
 	public Pesquisa obterPesquisa(String nomePesquisa) {
 		return pesquisasList.get(pesquisasList.indexOf(new Pesquisa(nomePesquisa)));

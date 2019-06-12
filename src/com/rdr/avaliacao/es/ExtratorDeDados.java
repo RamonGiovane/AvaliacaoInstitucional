@@ -3,23 +3,23 @@ package com.rdr.avaliacao.es;
 import java.awt.Component;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.StringTokenizer;
+import java.util.List;
 
 import com.rdr.avaliacao.es.bd.BancoDeDados;
 import com.rdr.avaliacao.es.bd.DAO;
-import com.rdr.avaliacao.es.bd.Recuperacao;
 import com.rdr.avaliacao.ig.IgBarraDeProgresso;
 import com.rdr.avaliacao.ig.InterfaceConstraints;
-import com.rdr.avaliacao.questionario.Aluno;
+import com.rdr.avaliacao.ig.TipoRelatorio;
+import com.rdr.avaliacao.questionario.Assunto;
 import com.rdr.avaliacao.questionario.Curso;
-import com.rdr.avaliacao.questionario.Entrevistado;
 import com.rdr.avaliacao.questionario.Pesquisa;
-import com.rdr.avaliacao.questionario.Questionario;
-import com.rdr.avaliacao.questionario.Resposta;
-import com.rdr.avaliacao.relatorio.DadosDeGrafico;
-import com.rdr.avaliacao.relatorio.DataSet;
+import com.rdr.avaliacao.relatorio.MediasPorCurso;
+import com.rdr.avaliacao.relatorio.RelatorioDeMedias;
+import com.rdr.avaliacao.relatorio.RelatorioDeParticipantes;
 
 public class ExtratorDeDados {
 	private final String SEPARADOR_PADRAO = ";";
@@ -47,7 +47,7 @@ public class ExtratorDeDados {
 		this.janelaPai = janelaPai;
 		this.pesquisa = pesquisa;
 	}
-	
+
 	public ExtratorDeDados(BancoDeDados bd, Pesquisa pesquisa) {
 		dao = new DAO(bd);
 		this.separador = SEPARADOR_PADRAO;
@@ -146,13 +146,13 @@ public class ExtratorDeDados {
 				questao = strPerguntas[indice].substring(strPerguntas[indice].indexOf('[')+1,
 						strPerguntas[indice].indexOf(']')).trim();
 			}catch(StringIndexOutOfBoundsException e) {
+				/*
+				 * Se ocorrer uma exceção no momento de extrair o tema, significa que não há tema, apenas uma pergunta.
+				 * Ou um tema sem pergunta. Em outras palavras, eles deverão ser o mesmo.
+				 */
 				tema = TEMA_INDEFINIDO;
 				questao = strPerguntas[indice];
 			}
-
-
-
-
 
 			try {
 				System.out.println(tema + " " + questao);
@@ -178,7 +178,7 @@ public class ExtratorDeDados {
 
 		do {
 
-			/* 	Obtendo uma linha do arquivo e capturando a exceção e saindo do loop
+			/* 	Obtendo uma linha do arquivo, capturando a exceção e saindo do loop
 			 * 	se houver algum erro ou chegar ao fim do arquivo.
 			 */
 			linha = arquivo.lerLinha();
@@ -271,33 +271,13 @@ public class ExtratorDeDados {
 	 * @author Ramon Giovane
 	 * 
 	 * */
-	public String obterCabecalho() throws IOException {
+	private String obterCabecalho() throws IOException {
 		resetarArquivo();
 		return arquivo.lerLinha();
 	}
 
 
-	private void seprarGrauECurso(Aluno aluno, String grauECurso){
-		StringTokenizer stringTokenizer = new StringTokenizer(grauECurso, "em");
-
-		String str;
-
-		if(stringTokenizer.hasMoreElements()) {
-			str = stringTokenizer.nextToken();
-			aluno.setGrau(str == "Tecnologia" ? "Tecnólogo" : str);
-
-			aluno.setCurso(stringTokenizer.nextToken());
-		}
-
-		else {
-			aluno.setCurso(grauECurso);
-			aluno.setGrau(grauECurso);
-		}
-	}
-
-
-
-	/*Fecha o arquivo de texto (se aberto, estiver) e o abre novamente, a fim de ler o início do texto*/
+	/**Fecha o arquivo de texto (se aberto, estiver) e o abre novamente, a fim de ler o início do texto*/
 	private void resetarArquivo() throws IOException {
 		arquivo.fechar();
 		abrirArquivo();
@@ -307,6 +287,157 @@ public class ExtratorDeDados {
 		arquivo.abrir(pesquisa.getCaminhoDataSet());
 	}
 
+
+
+	public RelatorioDeParticipantes gerarDataSetParticipantesCurso(Pesquisa pesquisa, TipoRelatorio tipoRelatorio) throws SQLException{
+		RelatorioDeParticipantes dataSet = new RelatorioDeParticipantes(tipoRelatorio);
+
+		//Consulta 1: Seleciona todos os cursos
+		Object[][] objetos = dao.consultar("select codigo, descricao from curso");
+
+		Curso curso;
+		int i = 0;
+		Object[][] resultado = new Object[0][0];
+
+		for(; i<objetos.length; i++) {
+			curso = new Curso((int)objetos[i][0], objetos[i][1].toString());
+
+			//Consulta 2: obtém o número de entrevistados de todos cursos
+			resultado = dao.consultar("select count(codcurso) from entrevistado where codcurso = ? and codpesquisa = ?", curso.getCodigo(), pesquisa.getCodigo());
+
+			curso.setQuantidadeEntrevistados((long)resultado[0][0]);
+
+			//Adiciona um curso no dataSet
+			dataSet.adicionar(curso);
+		}
+
+
+		return dataSet;
+	}
+
+	public RelatorioDeParticipantes gerarDataSetParticipantesSegmento(Pesquisa pesquisa, TipoRelatorio tipoRelatorio) throws SQLException{
+		RelatorioDeParticipantes dataSet = new RelatorioDeParticipantes(tipoRelatorio);
+
+		//Consulta 1: Seleciona todos os cursos
+		Object[][] objetos = dao.consultar("select codigo, descricao from segmento");
+
+		Curso curso; //TODO: Trocar pra segmento
+		int i = 0;
+		Object[][] resultado = new Object[0][0];
+
+		for(; i<objetos.length; i++) {
+			curso = new Curso((int)objetos[i][0], objetos[i][1].toString());
+
+			//Consulta 2: obtém o número de entrevistados de todos cursos
+			resultado = dao.consultar("select count(codsegmento) from entrevistado where codsegmento = ? and codpesquisa = ?",
+					curso.getCodigo(), pesquisa.getCodigo());
+
+			curso.setQuantidadeEntrevistados((long)resultado[0][0]);
+
+			//Adiciona um curso no dataSet
+			dataSet.adicionar(curso);
+		}
+
+
+		return dataSet;
+	}
+
+	/**Retorna todos os assuntos de uma pesquisa específica em uma lista de Cursos*/
+	private List<Curso> obterCursos(String tipoGraduacao) throws SQLException {
+		List<Curso> cursosList = new ArrayList<Curso>();
+
+		StringBuilder strBuilder =
+				new StringBuilder("select codigo, descricao from curso ").append("where descricao ilike '%")
+				.append(tipoGraduacao).append("%'");
+		
+		System.out.println(strBuilder.toString());
+
+		Object[][] cursos = dao.consultar(strBuilder.toString());
+
+		for(int i = 0; i<cursos.length; i++) {
+			cursosList.add(new Curso((int)cursos[i][0], cursos[i][1].toString()));
+
+		}
+		
+		return cursosList;
+	}
+	
+	/**Retorna todos os assuntos de uma pesquisa específica em uma lista de Assuntos*/
+	private List<Assunto> obterAssuntos(Pesquisa pesquisa) throws SQLException {
+		List<Assunto> assuntosList = new ArrayList<Assunto>();
+		
+		
+		Object[][] assuntos = 
+				dao.consultar("select distinct assunto.codigo, assunto.descricao from assunto inner join assunto_pergunta on (assunto_pergunta.codassunto = assunto.codigo)" + 
+						"where codpesquisa = ?", pesquisa.getCodigo());
+
+		for(int i = 0; i<assuntos.length; i++) {
+			assuntosList.add(new Assunto((int)assuntos[i][0], assuntos[i][1].toString()));
+
+		}
+		
+		return assuntosList;
+	}
+
+	public RelatorioDeMedias gerarDataSetConceitoMedioAssunto(Pesquisa pesquisa, String tipoGraduacao, TipoRelatorio tipoRelatorio) throws SQLException {
+
+		double media;
+		Object[][] resultado;
+		
+		//Obtendo todos os assuntos avaliados na pesquisa
+		List<Assunto> assuntosList = obterAssuntos(pesquisa);
+		
+		//Obtendo uma lista de todos os cursos pertencentes ao tipo de graduação escolhido
+		List<Curso> cursosList = obterCursos(tipoGraduacao);
+		
+		//Cria uma lista para armazenar a média de notas de cada assunto de cada curso
+		RelatorioDeMedias listaDeMedias = new RelatorioDeMedias(tipoRelatorio);
+		
+		
+		MediasPorCurso notas;
+		
+		for(Curso curso : cursosList) {
+			
+			notas = new MediasPorCurso(curso);
+			
+			
+			for(Assunto assunto : assuntosList) {
+				
+				//Obtendo a média de nota de cada tema avaliado por entrevistados de um curso
+				resultado = dao.consultar("select cast(avg(conceito.valor) as decimal) from conceito " + 
+						"inner join resposta on (conceito.codigo = resposta.codconceito) " + 
+						"inner join entrevistado on (entrevistado.codigo = resposta.codentrevistado) " + 
+						"where entrevistado.codcurso = ? and resposta.codassunto = ? and resposta.codpesquisa = ?", 
+						curso.getCodigo(), assunto.getCodigo(), pesquisa.getCodigo());
+				System.out.println(resultado.length);
+				System.out.println("--------  A " + assunto.getCodigo() + " ----- C " + curso.getCodigo());
+				for(Object[] o : resultado)
+					for(Object x : o)
+						System.out.println(x);
+				if(resultado[0][0] != null) {
+					media = ((BigDecimal)resultado[0][0]).doubleValue();
+					
+					//Adicionando a media associada a um assunto
+					notas.adicionar(assunto, arredondarMedia(media));
+				}
+
+			}
+			
+			if(notas.tamanho() > 0) {
+				//Adicionando as médias de um curso numa lista
+				listaDeMedias.adicionar(notas);
+			}
+			
+			
+		}
+
+		return listaDeMedias;
+	}
+	
+	private double arredondarMedia(double media) {
+		return (double) Math.round(media * 10) /10;
+	}
+	
 	private class IndicePergunta{
 		private int indiceAssunto, indicePergunta;
 
@@ -315,120 +446,14 @@ public class ExtratorDeDados {
 			this.indicePergunta = indicePergunta;
 		}
 
-		public IndicePergunta() {
-			super();
-		}
-
 		public int getIndiceAssunto() {
 			return indiceAssunto;
 		}
 
-		public void setIndiceAssunto(int indiceAssunto) {
-			this.indiceAssunto = indiceAssunto;
-		}
 
 		public int getIndicePergunta() {
 			return indicePergunta;
 		}
 
-		public void setIndicePergunta(int indicePergunta) {
-			this.indicePergunta = indicePergunta;
-		}
-
 	}
-
-//	public <R extends Recuperacao>  DataSet consultarBancoDeDados(R recuperacao) throws SQLException {
-//		DataSet dataSet = new DataSet();
-//		Object[][] dados = dao.consultar(recuperacao);
-//		
-//		for(int i = 0; i<dados.length; i++) {
-//			dataSet.adicionar((Number)dados[i][0], dados[i][1].toString());
-//		}
-//		
-//		return dataSet;
-//	}
-//	
-	
-//	public Curso[] consultarBancoDeDados(Pesquisa pesquisa) throws SQLException{
-//		Curso cursos[];
-//		Object[][] resultado = new Object[0][0], objetos = dao.consultar(new Recuperacao() {
-//			
-//			@Override
-//			public String selectQuery() {
-//
-//				return "select codigo, descricao from curso";
-//			}
-//
-//			@Override
-//			public Object[] searchKeys() {
-//				return null;
-//			}
-//		});
-//		cursos = new Curso[objetos.length];
-//		int i = 0;
-//		for(; i<objetos.length; i++) {
-//			cursos[i] = new Curso((int)objetos[i][0], objetos[i][1].toString());
-//
-//
-//			resultado = dao.consultar("select count(codcurso) from entrevistado where codcurso = ?", cursos[i].getCodigo());
-//			
-//			cursos[i].setQuantidadeEntrevistados((long)resultado[0][0]);
-//		}
-//
-//		
-//		return cursos;
-//	}
-
-	public DataSet gerarDataSetParticipantesCurso(Pesquisa pesquisa) throws SQLException{
-		DataSet dataSet = new DataSet();
-		
-		//Consulta 1: Seleciona todos os cursos
-		Object[][] objetos = dao.consultar("select codigo, descricao from curso");
-		
-		Curso curso;
-		int i = 0;
-		Object[][] resultado = new Object[0][0];
-		
-		for(; i<objetos.length; i++) {
-			curso = new Curso((int)objetos[i][0], objetos[i][1].toString());
-			
-			//Consulta 2: obtém o número de entrevistados de todos cursos
-			resultado = dao.consultar("select count(codcurso) from entrevistado where codcurso = ?", curso.getCodigo());
-			
-			curso.setQuantidadeEntrevistados((long)resultado[0][0]);
-			
-			//Adiciona um curso no dataSet
-			dataSet.adicionar(curso);
-		}
-
-		
-		return dataSet;
-	}
-	
-	public DataSet gerarDataSetParticipantesSegmento(Pesquisa pesquisa) throws SQLException{
-		DataSet dataSet = new DataSet();
-		
-		//Consulta 1: Seleciona todos os cursos
-		Object[][] objetos = dao.consultar("select codigo, descricao from segmento");
-		
-		Curso curso;
-		int i = 0;
-		Object[][] resultado = new Object[0][0];
-		
-		for(; i<objetos.length; i++) {
-			curso = new Curso((int)objetos[i][0], objetos[i][1].toString());
-			
-			//Consulta 2: obtém o número de entrevistados de todos cursos
-			resultado = dao.consultar("select count(codsegmento) from entrevistado where codsegmento = ?", curso.getCodigo());
-			
-			curso.setQuantidadeEntrevistados((long)resultado[0][0]);
-			
-			//Adiciona um curso no dataSet
-			dataSet.adicionar(curso);
-		}
-
-		
-		return dataSet;
-	}
-
 }

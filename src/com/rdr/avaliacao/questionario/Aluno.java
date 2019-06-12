@@ -4,19 +4,16 @@ public class Aluno extends Entrevistado {
 	private String curso;
 	private String grau;
 
-	public Aluno(Segmento segmento, String campus, String curso, String grau) {
-		super(segmento, campus);
+	public Aluno(String campus, String curso) {
+		super(Segmento.DISCENTE, campus);
 		this.curso = curso;
-		this.grau = grau;
 	}
 
 	public Aluno() {
 		super();
 	}
 
-	public Aluno(Segmento segmento, String campus) {
-		super(segmento, campus);
-	}
+
 
 	public String getCurso() {
 		return curso;

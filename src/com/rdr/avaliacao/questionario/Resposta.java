@@ -7,17 +7,20 @@ import com.rdr.avaliacao.es.bd.DAO;
 import com.rdr.avaliacao.es.bd.Recuperacao;
 
 public class Resposta {
-	private Conceito resposta;
+	private Conceito conceito;
 	private Pergunta pergunta;
 	
-//	public Resposta(Conceito conceito) {
-//		this();
-//		this.resposta = conceito;
-//	}
-	
-	public Resposta(Conceito resposta, String descricaoPergunta,
+	public Resposta(int nota, String descricaoConceito,  String descricaoPergunta,
 			String assuntoPergunta) {
-		this.resposta = resposta;
+		
+		conceito = new Conceito(nota, descricaoConceito);
+		pergunta  = new Pergunta(descricaoPergunta, assuntoPergunta);
+	}
+	
+	public Resposta(int nota, String descricaoPergunta,
+			String assuntoPergunta) {
+		
+		conceito = new Conceito(nota);
 		pergunta  = new Pergunta(descricaoPergunta, assuntoPergunta);
 	}
 
@@ -25,12 +28,12 @@ public class Resposta {
 		pergunta = new Pergunta();
 	}
 
-	public Conceito getResposta() {
-		return resposta;
+	public Conceito getConceito() {
+		return conceito;
 	}
 
-	public void setResposta(Conceito resposta) {
-		this.resposta = resposta;
+	public void setConceito(Conceito conceito) {
+		this.conceito = conceito;
 	}
 	
 	public void adicionarPergunta(String descricaoPergunta, String assuntoPergunta) {
@@ -56,6 +59,13 @@ public class Resposta {
 		pergunta.setAssunto(resultado[1][0].toString());
 	}
 	
+	public String obterDescricaoPergunta() {
+		return pergunta.getDescricao();
+	}
+	
+	public String obterAssuntoPergunta() {
+		return pergunta.getAssunto();
+	}
 	
 	
 }

@@ -3,7 +3,6 @@ package com.rdr.avaliacao.questionario;
 public class Entrevistado {
 	
 	private Segmento segmento;
-	
 	private String campus;
 	
 	public Entrevistado(Segmento segmento, String campus) {
@@ -12,6 +11,10 @@ public class Entrevistado {
 	}
 
 	public Entrevistado() {	}
+
+	public Entrevistado(String campus, String segmento) {
+		//TODO: Apagar Enum Segmento
+	}
 
 	public Segmento getSegmento() {
 		return segmento;

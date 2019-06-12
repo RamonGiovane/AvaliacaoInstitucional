@@ -1,45 +1,43 @@
 package com.rdr.avaliacao.ig;
 
-import javax.swing.JFrame;
-import javax.swing.JPanel;
 import java.awt.BorderLayout;
-import javax.swing.border.BevelBorder;
-import javax.swing.JRadioButton;
-import javax.swing.JScrollBar;
-import javax.swing.JScrollPane;
-import javax.swing.JTabbedPane;
-import javax.swing.JTable;
-import javax.swing.SwingConstants;
-import javax.swing.ButtonGroup;
-import javax.swing.JButton;
-import javax.swing.JDialog;
-import javax.swing.border.LineBorder;
 import java.awt.Color;
 import java.awt.Component;
-
-import javax.swing.border.TitledBorder;
-import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.table.JTableHeader;
-
-import org.jfree.chart.ChartPanel;
-import org.jfree.chart.ChartUtilities;
-import org.jfree.chart.plot.PlotOrientation;
-
-import com.rdr.avaliacao.AvaliacaoInstitucional;
-import com.rdr.avaliacao.es.EntradaESaida;
-import com.rdr.avaliacao.questionario.Curso;
-import com.rdr.avaliacao.questionario.Pesquisa;
-import com.rdr.avaliacao.relatorio.DadosDeGrafico;
-import com.rdr.avaliacao.relatorio.DataSet;
-
-import javax.swing.JList;
-import javax.swing.JLabel;
-import javax.swing.JComboBox;
-import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.SQLException;
+
+import javax.swing.ButtonGroup;
+import javax.swing.JButton;
+import javax.swing.JDialog;
+import javax.swing.JPanel;
+import javax.swing.JRadioButton;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.SwingConstants;
+import javax.swing.border.TitledBorder;
+
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartPanel;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.labels.CategoryItemLabelGenerator;
+import org.jfree.chart.labels.ItemLabelAnchor;
+import org.jfree.chart.labels.ItemLabelPosition;
+import org.jfree.chart.labels.StandardCategoryItemLabelGenerator;
+import org.jfree.chart.plot.CategoryPlot;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.renderer.category.BarRenderer3D;
+import org.jfree.chart.renderer.category.CategoryItemRenderer;
+import org.jfree.data.category.DefaultCategoryDataset;
+import org.jfree.ui.TextAnchor;
+
+import com.rdr.avaliacao.AvaliacaoInstitucional;
+import com.rdr.avaliacao.es.EntradaESaida;
+import com.rdr.avaliacao.questionario.Pesquisa;
+import com.rdr.avaliacao.relatorio.DadosDeGrafico;
+import com.rdr.avaliacao.relatorio.Relatorio;
+import com.rdr.avaliacao.relatorio.RelatorioDeParticipantes;
 
 public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 	private ButtonGroup buttonGroup =  new ButtonGroup();
@@ -56,13 +54,14 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 	private static IgRelatorio igRelatorio;
 
 	/**Variáveis que guardam informações que povoaram os gráficos e tabelas*/
-	private DataSet dadosRelatorio;
+	private Relatorio dadosRelatorio;
 
-
+	private static ConstrutorDeGrafico construtorDeGrafico;
 
 
 	private IgRelatorio() {
 		//construirIg();
+		construtorDeGrafico = new ConstrutorDeGrafico();
 	}
 
 	private void definriParametrosRelatorio(TipoRelatorio tipoPesquisa, Pesquisa pesquisa, String tipoGraduacao) {
@@ -171,9 +170,10 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 
 	}
 
+	/**Gera e armazena os dados de um relatório a ser exibido*/
 	private void gerarDadosRelatorio() throws SQLException {
 
-		dadosRelatorio = AvaliacaoInstitucional.gerarDataSetParticipantesCurso(pesquisa, tipoRelatorio);
+		dadosRelatorio = AvaliacaoInstitucional.gerarRelatorio(pesquisa, tipoRelatorio, tipoGraduacao);
 
 
 	}
@@ -187,11 +187,16 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 			exibirTabela();
 	}
 
+	/**Constroi e exibe um gráfico a partir dos dados de um relatório*/
 	private void exibirGrafico() {
 		limparPaineis();
+		if(dadosRelatorio instanceof RelatorioDeParticipantes)
+			panelTabela.add(construtorDeGrafico.gerarGraficoBarra3D(
+					(RelatorioDeParticipantes) dadosRelatorio, 
+					tipoRelatorio.getNomeRelatório(), 
+					tipoRelatorio.getOrientacaoGrafico()), BorderLayout.CENTER);
 
-		panelTabela.add(EntradaESaida.gerarGraficoBarra3D(dadosRelatorio, tipoRelatorio.getNomeRelatório(), 
-				tipoRelatorio.getOrientacaoGrafico(), 200, 400), BorderLayout.CENTER);
+	
 		panelDados.add(panelTabela);
 
 		repintarPaineis();
@@ -202,8 +207,9 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 
 		limparPaineis();
 
-		JTable tabela = EntradaESaida.gerarTabela(dadosRelatorio.asMatrix(), tipoRelatorio.getCabecalhos(), null, 
-				new int[] {SwingConstants.LEFT, SwingConstants.CENTER});
+		System.out.println(dadosRelatorio);
+		System.out.println(tipoRelatorio);
+		JTable tabela = EntradaESaida.gerarTabela(dadosRelatorio.asMatrix(), dadosRelatorio.getHeaders());
 
 		panelTabela.add(new JScrollPane(tabela), BorderLayout.CENTER);
 		panelTabela.add(tabela.getTableHeader(), BorderLayout.NORTH);
@@ -249,5 +255,79 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 		dispose();
 	}
 
+	private class ConstrutorDeGrafico {
+		public <T extends DadosDeGrafico> ChartPanel gerarGraficoBarra3D(RelatorioDeParticipantes dadosRelatorio, 
+				String titulo, PlotOrientation orientacao) {
+
+			DefaultCategoryDataset dataset = new DefaultCategoryDataset( );
+			
+			for(int i  = 0; i<dadosRelatorio.size(); i++) {
+				dataset.addValue(dadosRelatorio.obter(i).getValorLinha(), dadosRelatorio.obter(i).getValorColuna(), 
+						dadosRelatorio.obter(i).getValorColuna());
+			}
+
+			JFreeChart chart = ChartFactory.createBarChart3D(titulo, null, null, 
+					dataset, orientacao, true, false, false);
+
+			CategoryPlot plot = chart.getCategoryPlot();
+			CategoryItemRenderer renderer = plot.getRenderer();
+
+
+
+			BarRenderer3D barRenderer = (BarRenderer3D) plot.getRenderer();
+
+			plot.getDomainAxis().setMaximumCategoryLabelWidthRatio(10);
+			//plot.getDomainAxis().setCategoryMargin(2);
+
+			barRenderer.setItemMargin(-1.07);
+			CategoryItemLabelGenerator generator = new StandardCategoryItemLabelGenerator();
+
+
+			for(int i = 0; i<dataset.getRowCount(); i++) {
+				barRenderer.setSeriesItemLabelGenerator(i, generator);
+				barRenderer.setSeriesItemLabelsVisible(i, true);
+				if(orientacao == PlotOrientation.HORIZONTAL)
+					barRenderer.setSeriesPositiveItemLabelPosition(i, new ItemLabelPosition(ItemLabelAnchor.OUTSIDE3,
+							TextAnchor.CENTER_LEFT));
+				else
+					barRenderer.setSeriesPositiveItemLabelPosition(i, new ItemLabelPosition(ItemLabelAnchor.OUTSIDE12,
+							TextAnchor.BASELINE_CENTER));
+
+				barRenderer.setItemLabelAnchorOffset(15);
+
+			}
+
+
+			//TODO: Isso deixa as legendas deitadas
+			//		 CategoryAxis domainAxis = plot.getDomainAxis();
+			//	        domainAxis.setCategoryLabelPositions(
+			//	                CategoryLabelPositions.createUpRotationLabelPositions(
+			//	                        Math.PI / 6.0));
+
+			//Retirando legendas inferiores
+			renderer.setBaseSeriesVisibleInLegend(false);
+
+			//Colorindo o plot
+			plot.setBackgroundPaint(Color.WHITE);
+			plot.setDomainGridlinePaint(Color.DARK_GRAY);
+			plot.setRangeGridlinePaint(Color.DARK_GRAY);
+			plot.setOutlineVisible(false);
+
+
+			renderer.setBaseItemLabelPaint(Color.BLACK);
+			renderer.setBaseItemLabelFont(new Font(Font.DIALOG, Font.BOLD, 14));
+
+
+
+
+
+			ChartPanel panel = new ChartPanel(chart);
+
+			return panel;
+		}
+
+
+
+	}
 }
 
