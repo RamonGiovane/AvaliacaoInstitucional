@@ -3,6 +3,7 @@ package com.rdr.avaliacao.ig;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Cursor;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -60,7 +61,7 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 
 
 	private IgRelatorio() {
-		//construirIg();
+		
 		construtorDeGrafico = new ConstrutorDeGrafico();
 	}
 
@@ -102,31 +103,31 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 		setResizable(false);
 		setTitle("Relat\u00F3rio de Autoavalia\u00E7\u00E3o Institucional");
 		getContentPane().setLayout(null);
-		setSize(715, 583);
+		setSize(800, 583);
 		panelDados = new JPanel();
 		panelDados.setBorder(new TitledBorder(null, "Dados", TitledBorder.LEADING, TitledBorder.TOP, null, null));
-		panelDados.setBounds(10, 11, 689, 458);
+		panelDados.setBounds(10, 11, 774, 458);
 
 		panelDados.setLayout(new BorderLayout(0, 0));
 
 		JPanel panelModoExibicao = new JPanel();
 		panelModoExibicao.setBorder(new TitledBorder(null, "Modo de Exibi\u00E7\u00E3o", TitledBorder.LEADING, TitledBorder.TOP, null, null));
-		panelModoExibicao.setBounds(10, 481, 689, 64);
+		panelModoExibicao.setBounds(10, 481, 774, 64);
 		getContentPane().add(panelModoExibicao);
 		panelModoExibicao.setLayout(null);
 
 		radioBtnTabela = new JRadioButton("Tabela");
 		radioBtnTabela.setSelected(true);
-		radioBtnTabela.setBounds(165, 19, 109, 23);
+		radioBtnTabela.setBounds(196, 19, 109, 23);
 		panelModoExibicao.add(radioBtnTabela);
 
 		radioBtinGrafico = new JRadioButton("Gr\u00E1fico");
-		radioBtinGrafico.setBounds(364, 19, 109, 23);
+		radioBtinGrafico.setBounds(458, 19, 109, 23);
 		panelModoExibicao.add(radioBtinGrafico);
 
 		JButton btnGerarPdf = new JButton("Gerar PDF");
 		btnGerarPdf.setEnabled(false);
-		btnGerarPdf.setBounds(560, 30, 89, 23);
+		btnGerarPdf.setBounds(649, 30, 89, 23);
 		panelModoExibicao.add(btnGerarPdf);
 
 
@@ -172,9 +173,9 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 
 	/**Gera e armazena os dados de um relatório a ser exibido*/
 	private void gerarDadosRelatorio() throws SQLException {
-
+		
 		dadosRelatorio = AvaliacaoInstitucional.gerarRelatorio(pesquisa, tipoRelatorio, tipoGraduacao);
-
+		IgAvaliacaoInstitucional.mudarCursor(Cursor.DEFAULT_CURSOR);
 
 	}
 
@@ -193,7 +194,7 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 		if(dadosRelatorio instanceof RelatorioDeParticipantes)
 			panelTabela.add(construtorDeGrafico.gerarGraficoBarra3D(
 					(RelatorioDeParticipantes) dadosRelatorio, 
-					tipoRelatorio.getNomeRelatório(), 
+					dadosRelatorio.title(),
 					tipoRelatorio.getOrientacaoGrafico()), BorderLayout.CENTER);
 
 	
@@ -241,6 +242,11 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 
 	@Override
 	public void exibir(Component janelaPai) {
+		setTitle(tipoRelatorio.getDescricao());
+		if(tipoRelatorio == TipoRelatorio.CONCEITO_MEDIO_CURSO)
+			((TitledBorder) panelDados.getBorder()).setTitle("Dados de " + tipoGraduacao + "s");
+		else
+			((TitledBorder) panelDados.getBorder()).setTitle("Dados");
 		setLocationRelativeTo(janelaPai);
 		setVisible(true);
 	}

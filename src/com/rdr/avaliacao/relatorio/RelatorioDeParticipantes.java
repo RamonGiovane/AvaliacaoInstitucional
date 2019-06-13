@@ -9,6 +9,8 @@ import com.rdr.avaliacao.ig.TipoRelatorio;
 public class RelatorioDeParticipantes extends Relatorio{
 	private List<DadosDeGrafico> dados;
 	
+	private final String STR_PARTICIPANTES = "Participantes por ";
+	
 	public RelatorioDeParticipantes(TipoRelatorio tipoRelatorio){
 		super(tipoRelatorio);
 		dados = new ArrayList<DadosDeGrafico>();
@@ -41,12 +43,12 @@ public class RelatorioDeParticipantes extends Relatorio{
 	
 	@Override
 	public String[] getHeaders() {
-		return new String[] {getTipoRelatorio().getNomeRelatório(), "Número de Participantes"};
+		return new String[] {getTipoRelatorio().getTemaRelatório(), "Número de Participantes"};
 	}
 	
 	@Override
 	public String title() {
-		return "Relatório de Participantes por " + getTipoRelatorio();
+		return STR_RELATORIO + STR_PARTICIPANTES + getTipoRelatorio().getTemaRelatório();
 	}
 	public void ordenar() {
 		dados.sort(new Comparator<DadosDeGrafico>() {

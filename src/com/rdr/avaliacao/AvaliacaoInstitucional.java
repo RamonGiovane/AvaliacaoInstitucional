@@ -1,6 +1,7 @@
 package com.rdr.avaliacao;
 
 import java.awt.Component;
+import java.awt.Cursor;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.sql.SQLException;
@@ -34,6 +35,9 @@ public class AvaliacaoInstitucional {
 	//TODO: Fazer método que obtém este objeto
 	private static DAO dao;
 	
+	/**Autoreferência para que todas as classes invocadas por essa possam ter acesso a seus métodos*/
+	private static AvaliacaoInstitucional app;
+	
 	private ExtratorDeDados extrator;
 
 	/**Lista de todas as pesquisas armazenadas no banco. Deve ser feita uma consulta e recuperar
@@ -43,20 +47,15 @@ public class AvaliacaoInstitucional {
 	private List<Pesquisa> pesquisasList;
 	
 	private AvaliacaoInstitucional() {
+		app = this;
+		
 		pesquisasList = new ArrayList<Pesquisa>();
 		
 		try {
 		
 		//Constrói a janela do menu principal
 		IgAvaliacaoInstitucional.getInstance(this);
-		
-		//Salva a referência do banco de dados
-		bd = BancoDeDados.getBancoDeDados();
-		dao = new DAO(bd); //TODO: Transformar DAO em um subclasse de BancoDeDados
-		
-		
-		//Procura por pesquisas no banco
-		obterPesquisasBanco();
+	
 		
 		}catch(Exception e) {
 			e.printStackTrace();
@@ -64,8 +63,16 @@ public class AvaliacaoInstitucional {
 
 	}
 	
-	//Este método só deve ser executado se houver conexão com o banco
+	public static AvaliacaoInstitucional getInstance() {
+		return app;
+	}
+	
+	//TODO: Este método só deve ser executado se houver conexão com o banco
 	private void obterPesquisasBanco() throws SQLException {
+		
+		if(!checarConexaoBancoDeDados())
+			throw new SQLException();
+		
 		Pesquisa pesquisa;
 		Object[][] pesquisas = dao.consultar(new Recuperacao() {
 					@Override
@@ -109,13 +116,9 @@ public class AvaliacaoInstitucional {
 	 * @author Ramon Giovane**/
 	public static void fecharPrograma() {
 		try {
+			//TODO: 
 			System.out.println("Closing everything...");
-			DAO dao = new DAO(bd);
-			
-			//TODO: RESETANDO O BANCO. APAGAR DEPOIS!!
-			//dao.executarFuncao("truncate_tables", "spaadmin");
-			//dao.inserir("pesquisa", new String[] {"codigo", "descricao"}, 1, "aaa");
-			
+
 			bd.fecharConexao();
 		}catch (NullPointerException e) {
 			System.out.println("Banco de Dados não estava conectado.");
@@ -160,9 +163,6 @@ public class AvaliacaoInstitucional {
 		return pesquisasList.size();
 	}
 	
-	public boolean checarConexao() {
-		return BancoDeDados.isConectado();
-	}
 	
 	/**Obtém todas as pesquisas em memória, presentes na lista de pesquisas.
 	 * 
@@ -178,14 +178,37 @@ public class AvaliacaoInstitucional {
 		return strPesquisas;
 	}
 	
-	public static Relatorio gerarRelatorio(Pesquisa pesquisa, TipoRelatorio tipoRelatorio, String tipoGraduacao) throws SQLException {
+	/**Gera uma relatório de acordo com o tipo de pesquisa solicitado de uma pesquisa específica, salvando os dados
+	 * em uma classe que implementa o super tipo abstrato {@link Relatorio}.
+	 * 
+	 * @param pesquisa objeto pesquisa a qual se deseja realizar o relatório.
+	 * O atributo <code>codigo</code> deve estar setado para que a pesquisa seja identificada
+	 * 
+	 * @param tipoRelatorio tipo de relatório a ser gerado de acordo com a <code>enumeração</code> {@link TipoRelatorio}.
+	 * @param tipoGraduacao filtro de pesquisa representado pela descrição de um tipo de graduação de entrevistados
+	 * (uma referência <code>null</code> é permitida). 
+	 * 
+	 * <br><br>
+	 * <b>Nota</b>: Os argumentos passados precisam coincidir com o tipo de relatório informado.
+	 *  Consulte a <code>enumeração</code> {@link TipoRelatorio} para as possíveis combinações.
+	 *
+	 * @return um objeto de uma classe que implementa a classe abstrata {@link Relatorio}.
+	 * @throws SQLException quando ocorre algum problema de comunicação com o banco de dados, onde os dados 
+	 * 		   estão persistidos.
+	 * @throws NullPointerException quando nenhum resultado é encontrado com os parâmetros de pesquisa passados.
+	 * 
+	 * @see Relatorio
+	 * @see TipoRelatorio
+	 */
+	public static Relatorio gerarRelatorio(Pesquisa pesquisa, TipoRelatorio tipoRelatorio, String tipoGraduacao) 
+			throws SQLException, NullPointerException {
 		ExtratorDeDados extrator = new ExtratorDeDados(bd, pesquisa);
 		System.err.println(tipoRelatorio);
 		switch(tipoRelatorio){
-		case POR_CURSO:
+		case PARTICIPANTES_POR_CURSO:
 			 return extrator.gerarDataSetParticipantesCurso(pesquisa, tipoRelatorio);
 			
-		case POR_SEGMENTO:
+		case PARTICIPANTES_POR_SEGMENTO:
 			return extrator.gerarDataSetParticipantesSegmento(pesquisa, tipoRelatorio);
 
 		case CONCEITO_MEDIO_CURSO:
@@ -193,15 +216,10 @@ public class AvaliacaoInstitucional {
 			return extrator.gerarDataSetConceitoMedioAssunto(pesquisa, tipoGraduacao, tipoRelatorio);
 		
 		default:
-			return null;
+			throw new NullPointerException();
 		}
 		
 	}
-	
-
-
-	
-
 	
 	public Pesquisa obterPesquisa(String nomePesquisa) {
 		return pesquisasList.get(pesquisasList.indexOf(new Pesquisa(nomePesquisa)));
@@ -210,4 +228,40 @@ public class AvaliacaoInstitucional {
 	public void importarDados(Component janelaPai, Pesquisa pesquisa) throws FileNotFoundException, IOException {
 		ExtratorDeDados.extrairDados(janelaPai, bd, pesquisa);
 	}
+	
+	/**Inicia uma conexão com o banco de dados, preparando os serviços necessários para a manipulação de dados
+	 * Para isso, utiliza o nome, o usuário e a senha de uma base de dados já existente.
+	 * 
+	 * @param nomeBD nome da base de dados
+	 * @param usuarioBD nome de usuário, proprietário da base.
+	 * @param senhaBD senha do usuário.
+	 * @throws SQLException se todas as tentativas de conexão falharem ou ocorrer um erro.
+	 */
+	public void conectarBancoDados(String nomeBD, String usuarioBD, String senhaBD) throws SQLException {
+		if(bd == null)
+			bd = BancoDeDados.criarConexao(nomeBD, usuarioBD, senhaBD);
+		else {
+			desconectarBancoDeDados();
+			bd = BancoDeDados.criarConexao(nomeBD, usuarioBD, senhaBD);
+			
+		}
+		if(bd == null) throw new SQLException();
+		
+		//Instancia o DAO
+		dao = new DAO(bd);
+		
+		//Se a conexão foi bem sucedida, obtém então as pesquisas armazenadas na base de dado
+		obterPesquisasBanco();
+		
+		
+			
+	}
+	public boolean checarConexaoBancoDeDados() {
+		if(bd == null) return false;
+		return BancoDeDados.isConectado();
+	}
+	public void desconectarBancoDeDados() throws SQLException {
+		bd.fecharConexao();
+	}
+	
 }

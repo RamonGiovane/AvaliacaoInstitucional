@@ -69,15 +69,15 @@ public class IgNovaPesquisa extends JDialog{
 		getContentPane().setLayout(null);
 
 		JLabel lblParaImportarOs = new JLabel(TEXTO_IMPORTAR_DADOS);
-		lblParaImportarOs.setBounds(10, 140, 311, 48);
+		lblParaImportarOs.setBounds(10, 129, 330, 48);
 		getContentPane().add(lblParaImportarOs);
 
 		fieldNomePesquisa = new JTextField();
 		fieldNomePesquisa.setFont(new Font("Tahoma", Font.PLAIN, 11));
-		fieldNomePesquisa.setBounds(128, 51, 193, 20);
+		fieldNomePesquisa.setBounds(128, 51, 212, 20);
 		getContentPane().add(fieldNomePesquisa);
 		fieldNomePesquisa.setColumns(10);
-		setSize(440, 257);
+		setSize(470, 250);
 
 		JLabel lblNomeDaPesquisa = new JLabel("Nome da Pesquisa:");
 		lblNomeDaPesquisa.setBounds(25, 54, 123, 14);
@@ -91,7 +91,7 @@ public class IgNovaPesquisa extends JDialog{
 
 
 		});
-		btnConectar.setBounds(331, 187, 89, 23);
+		btnConectar.setBounds(350, 184, 89, 23);
 		getContentPane().add(btnConectar);
 
 		JLabel label = new JLabel("");
@@ -112,7 +112,7 @@ public class IgNovaPesquisa extends JDialog{
 		fieldCaminhoDados.setFont(new Font("Tahoma", Font.PLAIN, 10));
 
 		fieldCaminhoDados.setColumns(10);
-		fieldCaminhoDados.setBounds(128, 82, 193, 20);
+		fieldCaminhoDados.setBounds(128, 82, 212, 20);
 		getContentPane().add(fieldCaminhoDados);
 
 		JButton btnSelecionar = new JButton("Selecionar...");
@@ -121,7 +121,7 @@ public class IgNovaPesquisa extends JDialog{
 				selecionarArquivo();
 			}
 		});
-		btnSelecionar.setBounds(331, 82, 93, 23);
+		btnSelecionar.setBounds(350, 82, 93, 23);
 		getContentPane().add(btnSelecionar);
 
 		addWindowListener(new WindowAdapter() {

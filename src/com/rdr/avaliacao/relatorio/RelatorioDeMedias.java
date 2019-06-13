@@ -8,8 +8,9 @@ import com.rdr.avaliacao.questionario.Assunto;
 
 public class RelatorioDeMedias extends Relatorio{
 	private List<MediasDeNotas> listaDeMedias;
-	private String cabecalhos[];
 	private TipoRelatorio tipoRelatorio;
+	
+	private final String STR_CONCEITOS_MEDIOS = " Conceitos Médios por "; 
 	
 	public RelatorioDeMedias(TipoRelatorio tipoRelatorio) {
 		super(tipoRelatorio);
@@ -28,8 +29,6 @@ public class RelatorioDeMedias extends Relatorio{
 		Assunto[] assuntos = listaDeMedias.get(0).obterAssuntos();
 		Object[][] matriz = new Object[listaDeMedias.get(0).obterAssuntos().length+1][listaDeMedias.size()+1];
 		
-		cabecalhos = new String[listaDeMedias.size()+1];
-		
 		for(int i = 0; i<assuntos.length; i++) {
 			matriz[i][0] = assuntos[i];
 			for(int c = 0; c < listaDeMedias.size(); c++) {
@@ -47,7 +46,7 @@ public class RelatorioDeMedias extends Relatorio{
 	
 	@Override
 	public String title() {
-		return "Relatório de " + getTipoRelatorio();
+		return STR_RELATORIO + STR_CONCEITOS_MEDIOS + getTipoRelatorio().getTemaRelatório();
 	}
 
 	public String[] getHeaders() {

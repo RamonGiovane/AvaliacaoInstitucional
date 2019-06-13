@@ -3,25 +3,26 @@ package com.rdr.avaliacao.ig;
 import org.jfree.chart.plot.PlotOrientation;
 
 public enum TipoRelatorio {
-	POR_CURSO ("Curso", PlotOrientation.HORIZONTAL), 
-	POR_SEGMENTO ("Segmento", PlotOrientation.VERTICAL),
-	CONCEITO_MEDIO_CURSO("Conceito Médio por Curso", PlotOrientation.HORIZONTAL),
-	CONCEITO_MEDIO_ASSUNTO("Conceito Médio por Assunto", PlotOrientation.HORIZONTAL);
+	PARTICIPANTES_POR_CURSO ("Curso", "Relatório de Participantes por Curso", PlotOrientation.HORIZONTAL), 
+	PARTICIPANTES_POR_SEGMENTO ("Segmento", "Relatório de Participantes por Segmento",  PlotOrientation.VERTICAL),
+	CONCEITO_MEDIO_CURSO ("Conceito Médio por Curso", "Relatório de Conceitos Médios por Curso", PlotOrientation.HORIZONTAL),
+	CONCEITO_MEDIO_ASSUNTO("Conceito Médio por Assunto", "Relatório de Conceitos Médios por Assunto", PlotOrientation.HORIZONTAL);
 
-	private TipoRelatorio(String nomeRelatorio, PlotOrientation orientacaoGrafico) {
-		this.nomeRelatório = nomeRelatorio;
+	private TipoRelatorio(String temaRelatorio, String descricao, PlotOrientation orientacaoGrafico) {
+		this.temaRelatório = temaRelatorio;
 		this.orientacaoGrafico = orientacaoGrafico;
+		this.descricao = descricao;
 	}
 	
-	private String nomeRelatório;
+	private String temaRelatório, descricao;
 	private PlotOrientation orientacaoGrafico;
 
-	public String getNomeRelatório() {
-		return nomeRelatório;
+	public String getTemaRelatório() {
+		return temaRelatório;
 	}
 
-	public void setNomeRelatório(String nomeRelatório) {
-		this.nomeRelatório = nomeRelatório;
+	public void setTemaRelatório(String nomeRelatório) {
+		this.temaRelatório = nomeRelatório;
 	}
 
 	public PlotOrientation getOrientacaoGrafico() {
@@ -31,6 +32,15 @@ public enum TipoRelatorio {
 	public void setOrientacaoGrafico(PlotOrientation orientacao) {
 		this.orientacaoGrafico = orientacao;
 	}
+
+	public String getDescricao() {
+		return descricao;
+	}
+
+	public void setDescricao(String descricao) {
+		this.descricao = descricao;
+	}
+	
 	
 	
 	

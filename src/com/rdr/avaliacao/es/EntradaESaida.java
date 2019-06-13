@@ -22,7 +22,6 @@ import javax.swing.JTextArea;
 import javax.swing.SwingConstants;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.table.JTableHeader;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 
@@ -149,22 +148,14 @@ public class EntradaESaida {
 	}
 
 	/**
-	 * Exibe uma tabela em uma caixa de diálogo com o conteúdo dos arrays arrays <code>linhas</code> e
+	 * Exibe uma tabela em uma caixa de diálogo com o conteúdo dos arrays <code>linhas</code> e
 	 * <code>colunas</code>.
 	 * 
 	 * @param titulo texto a ser exibido na barra de título da caixa de diálogo;
 	 * @param linhas conteúdo a ser exibido nas linhas da tabela;
 	 * @param colunas nomes das colunas da tabela;
-	 * @param larguraColuna define o valor da largura de cada coluna da tabela. Se <code>larguraColuna</code> for <code>null</code> a largura das colunas 
-	 *                 será calculada dividindo o valor <code>larguraTabela</code> pelo número de colunas da matriz <code>linhas</code>;
-	 * @param alinhamentoColuna define o tipo de alinhamento de cada coluna da tabela. Se <code>alinhamentoColuna</code> for <code>null</code> o 
-	 *                  alinhamento à esquerda (<code>SwingConstants.LEFT</code>) será utilizado em todas as colunas da tabela. Os valores válidos para alinhamento, 
-	 *                  definidos na interface <code>SwingConstants</code>, são: <code>LEFT</code>, <code>CENTER</code>, <code>RIGHT</code>, 
-	 *                  <code>LEADING</code> ou <code>TRAILING</code>;
 	 * 
-	 * @see javax.swing.SwingConstants
-	 * 
-	 * @author Prof. Márlon Oliveira da Silva
+	 * @author Ramon Giovane
 	 */
 	public static JTable gerarTabela(Object[][] linhas, String[] colunas) {
 
@@ -199,9 +190,14 @@ public class EntradaESaida {
 		DefaultTableCellRenderer renderer = (DefaultTableCellRenderer) table.getTableHeader().getDefaultRenderer();
 		renderer.setHorizontalAlignment(JLabel.CENTER);
 
-		//Aumentando tamanho das linhas
-		table.setRowHeight(30);
-
+		//Aumentando tamanho das linhas de acordo com o número de linhas
+		if(table.getRowCount() < 10)
+			table.setRowHeight(35);
+		else if(table.getRowCount() < 15)
+			table.setRowHeight(30);
+		else
+			table.setRowHeight(25);
+		
 		//Customizando o cabeçalho
 		table.getTableHeader().setBackground(Color.BLACK);
 		table.getTableHeader().setForeground(Color.BLACK);
