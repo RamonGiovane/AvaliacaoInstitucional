@@ -6,7 +6,7 @@ public abstract class Relatorio {
 	
 	private TipoRelatorio tipoRelatorio;
 	
-	protected final String STR_RELATORIO = "Realtório de ";
+	protected final String STR_RELATORIO = "Relatório de ";
 	
 	public Relatorio(TipoRelatorio tipoRelatorio) {
 		this.tipoRelatorio = tipoRelatorio;

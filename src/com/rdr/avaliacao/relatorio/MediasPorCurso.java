@@ -5,11 +5,11 @@ import com.rdr.avaliacao.questionario.Curso;
 public class MediasPorCurso extends MediasDeNotas {
 	private Curso curso;
 
-	private static final String SEPARADOR_NOME_CURSO = "em";
+	private static final String SEPARADOR_NOME_CURSO = " em ";
 	
 	public MediasPorCurso(Curso curso) {
 		
-		super(quebrarNomeCurso(curso.getDescricao()));
+		super(formatarNomeCurso(curso.getDescricao()));
 		System.err.println(curso.toString());
 		this.curso = curso;
 	}
@@ -18,7 +18,9 @@ public class MediasPorCurso extends MediasDeNotas {
 		return curso;
 	}
 	
-	private static String quebrarNomeCurso(String nomeCurso) {
+	private static String formatarNomeCurso(String nomeCurso) {
+		if(nomeCurso.equals("Técnico"))
+			return "Cursos Técnicos";
 		try{
 			return nomeCurso.split(SEPARADOR_NOME_CURSO)[1].trim();
 		}catch (Exception e) {

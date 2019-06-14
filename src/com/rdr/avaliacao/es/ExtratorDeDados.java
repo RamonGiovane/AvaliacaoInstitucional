@@ -392,11 +392,23 @@ public class ExtratorDeDados {
 	/**Retorna todos os assuntos de uma pesquisa específica em uma lista de Cursos*/
 	private List<Curso> obterCursos(String tipoGraduacao) throws SQLException {
 		List<Curso> cursosList = new ArrayList<Curso>();
-
+		boolean cursosTecnologia = false;
+		String termoDeBuscaSecundario = "";
+		
+		if(tipoGraduacao.equals("Técnicos e Tecnólogos")) {
+			cursosTecnologia = true;
+			tipoGraduacao =  "Tecnologia";
+			termoDeBuscaSecundario = "T_cnico";
+		}
+		
 		StringBuilder strBuilder =
 				new StringBuilder("select codigo, descricao from curso ").append("where descricao ilike '%")
 				.append(tipoGraduacao).append("%'");
+		
+		if(cursosTecnologia)
+			strBuilder.append(" or descricao ilike '%").append(termoDeBuscaSecundario).append("%'");
 
+		System.out.println(strBuilder.toString());
 		Object[][] cursos = dao.consultar(strBuilder.toString());
 
 		for(int i = 0; i<cursos.length; i++) {
@@ -417,15 +429,34 @@ public class ExtratorDeDados {
 						"where assunto_pergunta.codpesquisa = ?", pesquisa.getCodigo());
 
 		for(int i = 0; i<assuntos.length; i++) {
-			assuntosList.add(new Assunto((int)assuntos[i][0], assuntos[i][1].toString()));
+			assuntosList.add(new Assunto((int)assuntos[i][0], 
+					formataraDescricaoAssunto(assuntos[i][1].toString())));
 
 		}
 
 		return assuntosList;
 	}
 
+	
+	private String formataraDescricaoAssunto(String assunto) {
+		String novoAssunto;
+		try{
+			novoAssunto = assunto.split("Das condições \\w{2,3} ")[1].trim();
+		}catch (Exception e) {
+			try {
+				novoAssunto = assunto.split("Em linhas gerais, como você avalia")[1].trim();
+			}catch (Exception e2) {
+				return assunto;
+			}
+		}
+		
+
+		novoAssunto = Character.toUpperCase(novoAssunto.charAt(0)) + novoAssunto.substring(1); 
+		return novoAssunto;
+	}
 	public RelatorioDeMedias gerarDataSetConceitoMedioAssunto(Pesquisa pesquisa, String tipoGraduacao, TipoRelatorio tipoRelatorio) throws SQLException {
 
+		
 		double media;
 		Object[][] resultado;
 

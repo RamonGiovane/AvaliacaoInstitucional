@@ -24,6 +24,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
+import javax.swing.table.TableColumnModel;
 
 
 public class EntradaESaida {
@@ -160,28 +161,54 @@ public class EntradaESaida {
 	public static JTable gerarTabela(Object[][] linhas, String[] colunas) {
 
 		// Cria o componente GUI Swing JTable para exibir a tabela.
-		JTable table = new JTable(linhas, colunas) {
-			//Sobrescrevendo o método prepareRenderer para que as colunas se ajustem de acodo com o tamanho de seu conteúdo
-			@Override
-			public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
-				Component component = super.prepareRenderer(renderer, row, column);
-				int rendererWidth = component.getPreferredSize().width;
-				TableColumn tableColumn = getColumnModel().getColumn(column);
-				tableColumn.setPreferredWidth(Math.max(rendererWidth + getIntercellSpacing().width, tableColumn.getPreferredWidth()));
-				return component;
-			}
-		};
-		table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+		JTable table = new JTable(linhas, colunas) ;//{
+		//			//Sobrescrevendo o método prepareRenderer para que as colunas se ajustem de acodo com o tamanho de seu conteúdo
+		//			@Override
+		//			public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
+		//				Component component = super.prepareRenderer(renderer, row, column);
+		//				int rendererWidth = component.getPreferredSize().width;
+		//				TableColumn tableColumn = getColumnModel().getColumn(column);
+		//				tableColumn.setPreferredWidth(Math.max(rendererWidth + getIntercellSpacing().width, tableColumn.getPreferredWidth()));
+		//				return component;
+		//			}
+		//		};
+
+
+		table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF );
+		
+	        TableColumnModel columnModel = table.getColumnModel();
+	        for (int col = 0; col < table.getColumnCount(); col++) {
+	            int maxWidth = 0;
+	            for (int row = 0; row < table.getRowCount(); row++) {
+	                TableCellRenderer rend = table.getCellRenderer(row, col);
+	                Object value = table.getValueAt(row, col);
+	                Component comp = rend.getTableCellRendererComponent(table, value, false, false, row, col);
+	                maxWidth = Math.max(comp.getPreferredSize().width, maxWidth);
+	            }
+	            TableColumn column = columnModel.getColumn(col);
+	            TableCellRenderer headerRenderer = column.getHeaderRenderer();
+	            if (headerRenderer == null) {
+	                headerRenderer = table.getTableHeader().getDefaultRenderer();
+	            }
+	            Object headerValue = column.getHeaderValue();
+	            Component headerComp = headerRenderer.getTableCellRendererComponent(table, headerValue, false, false, 0, col);
+	            maxWidth = Math.max(maxWidth, headerComp.getPreferredSize().width);
+	            // note some extra padding
+	            column.setPreferredWidth(maxWidth + 6);//IntercellSpacing * 2 + 2 * 2 pixel instead of taking this value from Borders
+	        }
+	        DefaultTableCellRenderer stringRenderer = (DefaultTableCellRenderer) table.getDefaultRenderer(String.class);
+	        stringRenderer.setHorizontalAlignment(SwingConstants.CENTER);
+	        table.setPreferredScrollableViewportSize(table.getPreferredSize());
 
 		//Alinhando o conteúdo das colunas.
 		DefaultTableCellRenderer primeiraColunaCellRenderer = new DefaultTableCellRenderer(), colunasCellRenderer = new DefaultTableCellRenderer();
-		
+
 		primeiraColunaCellRenderer.setHorizontalAlignment(SwingConstants.LEFT);
 		colunasCellRenderer.setHorizontalAlignment(SwingConstants.CENTER);
 
 		//Alinha-se a primeira coluna à esquerda...
 		table.getColumnModel().getColumn(0).setCellRenderer(primeiraColunaCellRenderer);
-		
+
 		//... e as demais ao centro
 		for (int coluna = 1; coluna < colunas.length; coluna++)
 			table.getColumnModel().getColumn(coluna).setCellRenderer(colunasCellRenderer);
@@ -194,14 +221,17 @@ public class EntradaESaida {
 		if(table.getRowCount() < 10)
 			table.setRowHeight(35);
 		else if(table.getRowCount() < 15)
-			table.setRowHeight(30);
+			table.setRowHeight(32);
 		else
-			table.setRowHeight(25);
-		
+			table.setRowHeight(30);
+
 		//Customizando o cabeçalho
 		table.getTableHeader().setBackground(Color.BLACK);
 		table.getTableHeader().setForeground(Color.BLACK);
-		table.getTableHeader().setFont(new Font(Font.DIALOG, Font.BOLD, 11));
+		if(table.getColumnCount() < 5)
+			table.getTableHeader().setFont(new Font(Font.DIALOG, Font.BOLD, 12));
+		else
+			table.getTableHeader().setFont(new Font(Font.DIALOG, Font.BOLD, 10));
 
 		//Fazendo que a tabela não seja editável
 		table.setDefaultEditor(Object.class, null);

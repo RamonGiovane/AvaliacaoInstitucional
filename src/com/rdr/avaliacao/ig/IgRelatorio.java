@@ -10,6 +10,7 @@ import java.awt.Shape;
 import java.awt.Stroke;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
 import java.sql.SQLException;
 
 import javax.swing.ButtonGroup;
@@ -21,6 +22,10 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.SwingConstants;
 import javax.swing.border.TitledBorder;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableColumn;
+import javax.swing.table.TableColumnModel;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
@@ -39,6 +44,8 @@ import org.jfree.chart.renderer.category.CategoryItemRenderer;
 import org.jfree.data.category.DefaultCategoryDataset;
 import org.jfree.ui.TextAnchor;
 
+import com.itextpdf.kernel.pdf.PdfWriter;
+import com.itextpdf.layout.Document;
 import com.rdr.avaliacao.AvaliacaoInstitucional;
 import com.rdr.avaliacao.es.EntradaESaida;
 import com.rdr.avaliacao.questionario.Assunto;
@@ -48,6 +55,7 @@ import com.rdr.avaliacao.relatorio.MediasDeNotas;
 import com.rdr.avaliacao.relatorio.Relatorio;
 import com.rdr.avaliacao.relatorio.RelatorioDeMedias;
 import com.rdr.avaliacao.relatorio.RelatorioDeParticipantes;
+import javax.swing.UIManager;
 
 public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 	private ButtonGroup buttonGroup =  new ButtonGroup();
@@ -62,7 +70,10 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 	private String tipoGraduacao;
 
 	private static IgRelatorio igRelatorio;
-
+	
+	private static ChartPanel graficoPanel;
+	private static JTable tabela;
+	
 	/**Variáveis que guardam informações que povoaram os gráficos e tabelas*/
 	private Relatorio dadosRelatorio;
 
@@ -70,7 +81,12 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 
 
 	private IgRelatorio() {
-	
+//		try {
+//			construirIg();
+//		} catch (SQLException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
 		construtorDeGrafico = new ConstrutorDeGrafico();
 	}
 
@@ -114,13 +130,13 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 		getContentPane().setLayout(null);
 		setSize(850, 630);
 		panelDados = new JPanel();
-		panelDados.setBorder(new TitledBorder(null, "Dados", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+		panelDados.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "Dados", TitledBorder.LEADING, TitledBorder.TOP, null, Color.DARK_GRAY));
 		panelDados.setBounds(10, 11, 824, 504);
 
 		panelDados.setLayout(new BorderLayout(0, 0));
 
 		JPanel panelModoExibicao = new JPanel();
-		panelModoExibicao.setBorder(new TitledBorder(null, "Modo de Exibi\u00E7\u00E3o", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+		panelModoExibicao.setBorder(new TitledBorder(null, "Modo de Exibi\u00E7\u00E3o", TitledBorder.LEADING, TitledBorder.TOP, null, Color.DARK_GRAY));
 		panelModoExibicao.setBounds(10, 526, 824, 64);
 		getContentPane().add(panelModoExibicao);
 		panelModoExibicao.setLayout(null);
@@ -135,10 +151,19 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 		panelModoExibicao.add(radioBtinGrafico);
 
 		JButton btnGerarPdf = new JButton("Gerar PDF");
-		btnGerarPdf.setEnabled(false);
+		btnGerarPdf.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				gerarPdf();
+			}
+		});
 		btnGerarPdf.setBounds(681, 30, 89, 23);
 		panelModoExibicao.add(btnGerarPdf);
 
+		Font fonteTitle = new Font(Font.DIALOG, Font.BOLD, 11);
+		 ((TitledBorder) panelDados.getBorder()).
+	        setTitleFont(fonteTitle);
+		 ((TitledBorder) panelModoExibicao.getBorder()).
+	        setTitleFont(fonteTitle);
 
 		buttonGroup.add(radioBtinGrafico);
 		buttonGroup.add(radioBtnTabela);
@@ -164,8 +189,6 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-
-				System.out.println("Hey");
 				exibirTabela();
 			}
 		});
@@ -203,25 +226,27 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 	/**Constroi e exibe um gráfico a partir dos dados de um relatório*/
 	private void exibirGrafico() {
 		limparPaineis();
-		ChartPanel grafico = null; 
+		graficoPanel = null; 
 		if(dadosRelatorio instanceof RelatorioDeParticipantes)
-			grafico = construtorDeGrafico.gerarGraficoBarra3D(
+			graficoPanel = construtorDeGrafico.gerarGraficoBarra3D(
 					(RelatorioDeParticipantes) dadosRelatorio, 
 					dadosRelatorio.title(),
 					tipoRelatorio.getOrientacaoGrafico());
 
 		else if(dadosRelatorio instanceof RelatorioDeMedias) {
-			grafico = construtorDeGrafico.gerarGraficoLinha((RelatorioDeMedias)dadosRelatorio, dadosRelatorio.title(), 
+			graficoPanel = construtorDeGrafico.gerarGraficoLinha((RelatorioDeMedias)dadosRelatorio, dadosRelatorio.title(), 
 					tipoRelatorio.getOrientacaoGrafico());
 		}
 
-		panelTabela.add(grafico, BorderLayout.CENTER);
+		panelTabela.add(graficoPanel, BorderLayout.CENTER);
 
 		panelDados.add(panelTabela);
 
 		repintarPaineis();
 	}
 
+	
+	
 
 	private void exibirTabela() {
 
@@ -229,14 +254,33 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 
 		System.out.println(dadosRelatorio);
 		System.out.println(tipoRelatorio);
-		JTable tabela = EntradaESaida.gerarTabela(dadosRelatorio.asMatrix(), dadosRelatorio.getHeaders());
+		tabela = EntradaESaida.gerarTabela(dadosRelatorio.asMatrix(), dadosRelatorio.getHeaders());
 
 		panelTabela.add(new JScrollPane(tabela), BorderLayout.CENTER);
 		panelTabela.add(tabela.getTableHeader(), BorderLayout.NORTH);
 		panelTabela.add(tabela);
 		panelDados.add(new JScrollPane(panelTabela));
+		
+		if(tipoRelatorio == TipoRelatorio.CONCEITO_MEDIO_CURSO || tipoRelatorio == TipoRelatorio.CONCEITO_MEDIO_ASSUNTO)
+			costumizarTabela(tabela);
 
 		repintarPaineis();
+	}
+
+	private void costumizarTabela(JTable tabela) {
+//		Color colors[] = {Color.RED, Color.GREEN, Color.BLUE, Color.ORANGE, Color.MAGENTA};
+//		TableColumn column;
+//		int colorIndex = 0;
+//		TableCellRenderer renderer;
+//		for(int i = 1; i<tabela.getColumnCount(); i++, colorIndex++) {
+//			column = tabela.getColumnModel().getColumn(i);
+//			renderer = tabela.getDefaultRenderer(column.getClass());
+//			if(colorIndex >= colors.length)
+//				colorIndex = 0;
+//			renderer.setForeground(colors[colorIndex]);
+//			column.setCellRenderer(renderer);
+//		}
+		
 	}
 
 	/**Necessário para limpar o conteúdo dos painéis antes de exibir um novo componente*/
@@ -257,6 +301,10 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 		panelTabela.setVisible(true);
 		panelDados.setVisible(true);
 
+	}
+	
+	public void gerarPdf() {
+		//construtorDeGrafico.gerarPDF(tabela, graficoPanel);
 	}
 
 	@Override
@@ -304,11 +352,10 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 
 //			BarRenderer3D barRenderer = (BarRenderer3D) plot.getRenderer();
 
-			categoryP.getDomainAxis().setMaximumCategoryLabelWidthRatio(10);
+			//categoryP.getDomainAxis().setMaximumCategoryLabelWidthRatio(-10);
 			//plot.getDomainAxis().setCategoryMargin(2);
 
 		
-			CategoryItemLabelGenerator generator = new StandardCategoryItemLabelGenerator();
 
 
 			for(int i = 0; i<dataset.getRowCount(); i++) {
@@ -321,11 +368,14 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 			CategoryAxis domainAxis = categoryP.getDomainAxis();
 			domainAxis.setCategoryLabelPositions(
 					CategoryLabelPositions.createUpRotationLabelPositions(
-							Math.PI / 7.0));
+							Math.PI / 6.0));
 			
-			domainAxis.setMinorTickMarksVisible(true);
-			domainAxis.setTickLabelsVisible(true);
-			domainAxis.setAxisLineVisible(true);
+			Font font3 = new Font("Dialog", Font.PLAIN, 50); 
+			domainAxis.setLabelFont(font3);
+			
+//			domainAxis.setMinorTickMarksVisible(true);
+//			domainAxis.setTickLabelsVisible(true);
+//			domainAxis.setAxisLineVisible(true);
 
 			
 			//Colorindo o plot
@@ -338,13 +388,22 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 
 			
 			renderer.setBaseItemLabelPaint(Color.BLACK);
-			renderer.setBaseItemLabelFont(new Font(Font.DIALOG, Font.BOLD, 14));
+			//renderer.setBaseItemLabelFont(new Font(Font.DIALOG, Font.BOLD, 14));
 
 			ChartPanel panel = new ChartPanel(chart);
+//			int x = 854, y = 480 ;
+//			ChartPanel panel = new ChartPanel(chart,x, y, x, y, x, y, 
+//					true, true, true, true, true, true, true);
 
 			return panel;
 
 
+		}
+
+		public void gerarPDF(File localDeSalvamento, JTable tabela, ChartPanel graficoPanel) {
+			
+			
+			
 		}
 
 		public ChartPanel gerarGraficoBarra3D(RelatorioDeParticipantes dadosRelatorio, 

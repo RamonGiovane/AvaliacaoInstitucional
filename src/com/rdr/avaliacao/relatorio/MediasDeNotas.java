@@ -45,13 +45,14 @@ public abstract class MediasDeNotas{
 	}
 
 	/**Retorna a média de notas dos assuntos do curso*/
-	public double obterMediaGeral() {
+	public int obterMediaGeral() {
 		double soma = 0;
 		for (Map.Entry<Assunto, Double> entry : mediasPorAssunto.entrySet()) {
 			soma += entry.getValue();
 		}
-		
-		return soma / (double) mediasPorAssunto.size();
+		double media = soma/mediasPorAssunto.size();
+		System.out.println(Math.round(2.5));
+		return(int)  Math.round(media);
 	}
 
 	public String getDescricao() {

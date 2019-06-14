@@ -211,6 +211,7 @@ public class AvaliacaoInstitucional {
 			throws SQLException, NullPointerException {
 		ExtratorDeDados extrator = new ExtratorDeDados(bd, pesquisa);
 		System.err.println(tipoRelatorio);
+		
 		switch(tipoRelatorio){
 		case PARTICIPANTES_POR_CURSO:
 			 return extrator.gerarDataSetParticipantesCurso(pesquisa, tipoRelatorio);
@@ -219,7 +220,6 @@ public class AvaliacaoInstitucional {
 			return extrator.gerarDataSetParticipantesSegmento(pesquisa, tipoRelatorio);
 
 		case CONCEITO_MEDIO_CURSO:
-			 
 			return extrator.gerarDataSetConceitoMedioAssunto(pesquisa, tipoGraduacao, tipoRelatorio);
 		
 		default:

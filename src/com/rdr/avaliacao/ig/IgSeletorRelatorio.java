@@ -37,7 +37,7 @@ public class IgSeletorRelatorio extends JDialog implements PropriedadesDeJanela{
 	private TipoRelatorio tipoRelatorio;
 	private JLabel lblDadosASerem;
 	private JLabel lblNomeDaPesquisa;
-	private final String[] TIPOS_GRADUACAO = {"Bacharelado", "Licenciatura", "Tecnólogo"};
+	private final String[] TIPOS_GRADUACAO = {"Bacharelado", "Licenciatura", "Técnicos e Tecnólogos"};
 
 	private IgSeletorRelatorio(AvaliacaoInstitucional avaliacaoInstitucional, TipoRelatorio tipoRelatorio) {
 		this.tipoRelatorio = tipoRelatorio;
@@ -203,6 +203,7 @@ public class IgSeletorRelatorio extends JDialog implements PropriedadesDeJanela{
 
 		setVisible(false);
 	}
+	
 
 	private void abrirRelatorio() {
 		//Esconde a janela de seleção de relatório
