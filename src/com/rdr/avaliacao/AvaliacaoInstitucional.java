@@ -39,6 +39,8 @@ public class AvaliacaoInstitucional {
 	private static AvaliacaoInstitucional app;
 	
 	private ExtratorDeDados extrator;
+	
+	private static Pesquisa pesquisaAtiva;
 
 	/**Lista de todas as pesquisas armazenadas no banco. Deve ser feita uma consulta e recuperar
 	 * todas as pesquisas existentes no início. Se uma pesquisa for adicionada, deve ser adicionado 
@@ -86,6 +88,8 @@ public class AvaliacaoInstitucional {
 			}
 		});
 		
+		if(pesquisas.length == 0) return;
+		
 		for(int i=0; i<pesquisas.length; i++){
 			pesquisa = new Pesquisa();
 			pesquisa.setCodigo((int)pesquisas[i][0]);
@@ -93,7 +97,8 @@ public class AvaliacaoInstitucional {
 			
 			pesquisasList.add(pesquisa);
 		}
-				
+		
+		pesquisaAtiva = pesquisasList.get(pesquisasList.size()-1);
 		
 	}
 
@@ -142,6 +147,8 @@ public class AvaliacaoInstitucional {
 		Object resultadoBruto[][] = dao.consultar(pesquisa);
 		
 		pesquisa.setCodigo((int)resultadoBruto[0][0]);
+		
+		pesquisaAtiva = pesquisa;
 		
 		pesquisasList.add(pesquisa);
 		
@@ -221,7 +228,7 @@ public class AvaliacaoInstitucional {
 		
 	}
 	
-	public Pesquisa obterPesquisa(String nomePesquisa) {
+	public Pesquisa obterPesquisa(String nomePesquisa) throws IndexOutOfBoundsException {
 		return pesquisasList.get(pesquisasList.indexOf(new Pesquisa(nomePesquisa)));
 	}
 	
@@ -256,6 +263,18 @@ public class AvaliacaoInstitucional {
 		
 			
 	}
+	
+	public void setPesquisaAtiva(String nomePesquisa) {
+		Pesquisa pesquisa = obterPesquisa(nomePesquisa);
+		if(pesquisasList.contains(pesquisa))
+			pesquisaAtiva = pesquisa;
+	}
+	
+	public Pesquisa getPesquisaAtiva() {
+		return pesquisaAtiva;
+	}
+	
+	
 	public boolean checarConexaoBancoDeDados() {
 		if(bd == null) return false;
 		return BancoDeDados.isConectado();

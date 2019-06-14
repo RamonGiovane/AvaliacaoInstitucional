@@ -1,5 +1,6 @@
 package com.rdr.avaliacao.relatorio;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -38,7 +39,9 @@ public abstract class MediasDeNotas{
 
 	/**Retorna um array de {@link Assunto}, com todos os temas avaliados na pesquisa por esse curso**/
 	public Assunto[] obterAssuntos() {
-		return mediasPorAssunto.keySet().toArray(new Assunto[0]);
+		Assunto[] assunto = mediasPorAssunto.keySet().toArray(new Assunto[0]);
+		Arrays.sort(assunto);
+		return assunto;
 	}
 
 	/**Retorna a média de notas dos assuntos do curso*/

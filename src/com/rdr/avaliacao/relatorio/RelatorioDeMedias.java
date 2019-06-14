@@ -8,7 +8,6 @@ import com.rdr.avaliacao.questionario.Assunto;
 
 public class RelatorioDeMedias extends Relatorio{
 	private List<MediasDeNotas> listaDeMedias;
-	private TipoRelatorio tipoRelatorio;
 	
 	private final String STR_CONCEITOS_MEDIOS = " Conceitos Médios por "; 
 	
@@ -19,6 +18,10 @@ public class RelatorioDeMedias extends Relatorio{
 	
 	public void adicionar(MediasDeNotas medias) {
 		listaDeMedias.add(medias);
+	}
+	
+	public MediasDeNotas obter(int indice) {
+		return listaDeMedias.get(indice);
 	}
 
 	@Override
@@ -46,6 +49,7 @@ public class RelatorioDeMedias extends Relatorio{
 	
 	@Override
 	public String title() {
+		System.out.println(getTipoRelatorio());
 		return STR_RELATORIO + STR_CONCEITOS_MEDIOS + getTipoRelatorio().getTemaRelatório();
 	}
 
@@ -65,13 +69,6 @@ public class RelatorioDeMedias extends Relatorio{
 		return listaDeMedias.size();
 	}
 
-	public TipoRelatorio getTipoRelatorio() {
-		return tipoRelatorio;
-	}
-
-	public void setTipoRelatorio(TipoRelatorio tipoRelatorio) {
-		this.tipoRelatorio = tipoRelatorio;
-	}
 
 	
 }

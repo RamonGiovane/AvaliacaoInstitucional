@@ -1,10 +1,13 @@
 package com.rdr.avaliacao.ig;
 
+import java.awt.BasicStroke;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Font;
+import java.awt.Shape;
+import java.awt.Stroke;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.SQLException;
@@ -22,12 +25,15 @@ import javax.swing.border.TitledBorder;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.axis.CategoryAxis;
+import org.jfree.chart.axis.CategoryLabelPositions;
 import org.jfree.chart.labels.CategoryItemLabelGenerator;
 import org.jfree.chart.labels.ItemLabelAnchor;
 import org.jfree.chart.labels.ItemLabelPosition;
 import org.jfree.chart.labels.StandardCategoryItemLabelGenerator;
 import org.jfree.chart.plot.CategoryPlot;
 import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.category.BarRenderer3D;
 import org.jfree.chart.renderer.category.CategoryItemRenderer;
 import org.jfree.data.category.DefaultCategoryDataset;
@@ -35,9 +41,12 @@ import org.jfree.ui.TextAnchor;
 
 import com.rdr.avaliacao.AvaliacaoInstitucional;
 import com.rdr.avaliacao.es.EntradaESaida;
+import com.rdr.avaliacao.questionario.Assunto;
 import com.rdr.avaliacao.questionario.Pesquisa;
 import com.rdr.avaliacao.relatorio.DadosDeGrafico;
+import com.rdr.avaliacao.relatorio.MediasDeNotas;
 import com.rdr.avaliacao.relatorio.Relatorio;
+import com.rdr.avaliacao.relatorio.RelatorioDeMedias;
 import com.rdr.avaliacao.relatorio.RelatorioDeParticipantes;
 
 public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
@@ -61,13 +70,13 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 
 
 	private IgRelatorio() {
-		
+	
 		construtorDeGrafico = new ConstrutorDeGrafico();
 	}
 
 	private void definriParametrosRelatorio(TipoRelatorio tipoPesquisa, Pesquisa pesquisa, String tipoGraduacao) {
 		System.out.println("def param - pesqu " + pesquisa );
-		this.tipoRelatorio = tipoPesquisa;
+		IgRelatorio.tipoRelatorio = tipoPesquisa;
 		IgRelatorio.pesquisa = pesquisa;
 		this.tipoGraduacao = tipoGraduacao;
 
@@ -103,31 +112,31 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 		setResizable(false);
 		setTitle("Relat\u00F3rio de Autoavalia\u00E7\u00E3o Institucional");
 		getContentPane().setLayout(null);
-		setSize(800, 583);
+		setSize(850, 630);
 		panelDados = new JPanel();
 		panelDados.setBorder(new TitledBorder(null, "Dados", TitledBorder.LEADING, TitledBorder.TOP, null, null));
-		panelDados.setBounds(10, 11, 774, 458);
+		panelDados.setBounds(10, 11, 824, 504);
 
 		panelDados.setLayout(new BorderLayout(0, 0));
 
 		JPanel panelModoExibicao = new JPanel();
 		panelModoExibicao.setBorder(new TitledBorder(null, "Modo de Exibi\u00E7\u00E3o", TitledBorder.LEADING, TitledBorder.TOP, null, null));
-		panelModoExibicao.setBounds(10, 481, 774, 64);
+		panelModoExibicao.setBounds(10, 526, 824, 64);
 		getContentPane().add(panelModoExibicao);
 		panelModoExibicao.setLayout(null);
 
 		radioBtnTabela = new JRadioButton("Tabela");
 		radioBtnTabela.setSelected(true);
-		radioBtnTabela.setBounds(196, 19, 109, 23);
+		radioBtnTabela.setBounds(208, 19, 109, 23);
 		panelModoExibicao.add(radioBtnTabela);
 
 		radioBtinGrafico = new JRadioButton("Gr\u00E1fico");
-		radioBtinGrafico.setBounds(458, 19, 109, 23);
+		radioBtinGrafico.setBounds(470, 19, 109, 23);
 		panelModoExibicao.add(radioBtinGrafico);
 
 		JButton btnGerarPdf = new JButton("Gerar PDF");
 		btnGerarPdf.setEnabled(false);
-		btnGerarPdf.setBounds(649, 30, 89, 23);
+		btnGerarPdf.setBounds(681, 30, 89, 23);
 		panelModoExibicao.add(btnGerarPdf);
 
 
@@ -142,6 +151,9 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 		getContentPane().add(panelDados);
 		panelDados.add(panelTabela, BorderLayout.CENTER);
 		panelDados.add(panelTabela);	
+		
+		setModal(true);
+		
 		gerarDadosRelatorio();
 		exibirTabela();
 	}
@@ -173,7 +185,7 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 
 	/**Gera e armazena os dados de um relatório a ser exibido*/
 	private void gerarDadosRelatorio() throws SQLException {
-		
+
 		dadosRelatorio = AvaliacaoInstitucional.gerarRelatorio(pesquisa, tipoRelatorio, tipoGraduacao);
 		IgAvaliacaoInstitucional.mudarCursor(Cursor.DEFAULT_CURSOR);
 
@@ -191,13 +203,20 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 	/**Constroi e exibe um gráfico a partir dos dados de um relatório*/
 	private void exibirGrafico() {
 		limparPaineis();
+		ChartPanel grafico = null; 
 		if(dadosRelatorio instanceof RelatorioDeParticipantes)
-			panelTabela.add(construtorDeGrafico.gerarGraficoBarra3D(
+			grafico = construtorDeGrafico.gerarGraficoBarra3D(
 					(RelatorioDeParticipantes) dadosRelatorio, 
 					dadosRelatorio.title(),
-					tipoRelatorio.getOrientacaoGrafico()), BorderLayout.CENTER);
+					tipoRelatorio.getOrientacaoGrafico());
 
-	
+		else if(dadosRelatorio instanceof RelatorioDeMedias) {
+			grafico = construtorDeGrafico.gerarGraficoLinha((RelatorioDeMedias)dadosRelatorio, dadosRelatorio.title(), 
+					tipoRelatorio.getOrientacaoGrafico());
+		}
+
+		panelTabela.add(grafico, BorderLayout.CENTER);
+
 		panelDados.add(panelTabela);
 
 		repintarPaineis();
@@ -262,11 +281,77 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 	}
 
 	private class ConstrutorDeGrafico {
-		public <T extends DadosDeGrafico> ChartPanel gerarGraficoBarra3D(RelatorioDeParticipantes dadosRelatorio, 
+		public ChartPanel gerarGraficoLinha(RelatorioDeMedias dadosRelatorio, String titulo, PlotOrientation orientacao) {
+			DefaultCategoryDataset dataset = new DefaultCategoryDataset();
+			MediasDeNotas medias;
+			Assunto assuntos[]; 
+			for(int i = 0; i<dadosRelatorio.size(); i++) {
+				medias = dadosRelatorio.obter(i);
+				assuntos = medias.obterAssuntos();
+				for(Assunto assunto : assuntos) {
+					dataset.addValue(medias.obterNota(assunto), medias.getDescricao(), assunto.getDescricao());
+				}
+			}
+
+
+			JFreeChart chart = ChartFactory.createLineChart(titulo, null, null, 
+					dataset, PlotOrientation.VERTICAL, true, true, true);
+
+			CategoryPlot categoryP = chart.getCategoryPlot();
+			CategoryItemRenderer renderer = categoryP.getRenderer();
+
+
+
+//			BarRenderer3D barRenderer = (BarRenderer3D) plot.getRenderer();
+
+			categoryP.getDomainAxis().setMaximumCategoryLabelWidthRatio(10);
+			//plot.getDomainAxis().setCategoryMargin(2);
+
+		
+			CategoryItemLabelGenerator generator = new StandardCategoryItemLabelGenerator();
+
+
+			for(int i = 0; i<dataset.getRowCount(); i++) {
+				renderer.setSeriesStroke(i, new BasicStroke(2));
+
+			}
+
+			
+			//Organizando o posicionamento das legendas abaixo do gráfico
+			CategoryAxis domainAxis = categoryP.getDomainAxis();
+			domainAxis.setCategoryLabelPositions(
+					CategoryLabelPositions.createUpRotationLabelPositions(
+							Math.PI / 7.0));
+			
+			domainAxis.setMinorTickMarksVisible(true);
+			domainAxis.setTickLabelsVisible(true);
+			domainAxis.setAxisLineVisible(true);
+
+			
+			//Colorindo o plot
+			categoryP.setBackgroundPaint(Color.WHITE);
+			categoryP.setDomainGridlinePaint(Color.DARK_GRAY);
+			categoryP.setRangeGridlinePaint(Color.DARK_GRAY);
+			categoryP.setOutlineVisible(true);
+			categoryP.setDomainGridlinesVisible(true);
+			//plot.setRangeMinorGridlinesVisible(true);
+
+			
+			renderer.setBaseItemLabelPaint(Color.BLACK);
+			renderer.setBaseItemLabelFont(new Font(Font.DIALOG, Font.BOLD, 14));
+
+			ChartPanel panel = new ChartPanel(chart);
+
+			return panel;
+
+
+		}
+
+		public ChartPanel gerarGraficoBarra3D(RelatorioDeParticipantes dadosRelatorio, 
 				String titulo, PlotOrientation orientacao) {
 
 			DefaultCategoryDataset dataset = new DefaultCategoryDataset( );
-			
+
 			for(int i  = 0; i<dadosRelatorio.size(); i++) {
 				dataset.addValue(dadosRelatorio.obter(i).getValorLinha(), dadosRelatorio.obter(i).getValorColuna(), 
 						dadosRelatorio.obter(i).getValorColuna());
@@ -283,7 +368,6 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 			BarRenderer3D barRenderer = (BarRenderer3D) plot.getRenderer();
 
 			plot.getDomainAxis().setMaximumCategoryLabelWidthRatio(10);
-			//plot.getDomainAxis().setCategoryMargin(2);
 
 			barRenderer.setItemMargin(-1.07);
 			CategoryItemLabelGenerator generator = new StandardCategoryItemLabelGenerator();
@@ -302,13 +386,6 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 				barRenderer.setItemLabelAnchorOffset(15);
 
 			}
-
-
-			//TODO: Isso deixa as legendas deitadas
-			//		 CategoryAxis domainAxis = plot.getDomainAxis();
-			//	        domainAxis.setCategoryLabelPositions(
-			//	                CategoryLabelPositions.createUpRotationLabelPositions(
-			//	                        Math.PI / 6.0));
 
 			//Retirando legendas inferiores
 			renderer.setBaseSeriesVisibleInLegend(false);

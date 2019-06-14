@@ -58,21 +58,56 @@ public class IgSeletorRelatorio extends JDialog implements PropriedadesDeJanela{
 		}
 	}
 
-	public void exibir(Component janelaPai) {
+	/**Define o título da janela de acordo com o tipo de relatório ativo*/
+	private void definirTituloJanela() {
 		setTitle(tipoRelatorio.getDescricao());
+	}
+	
+	/**Realiza alterações necesárias na janela e exibe na tela a caixa de diálogo de seleção de relatórios.*/
+	@Override
+	public void exibir(Component janelaPai) {
+		
+		//Checa se há o mínimo de requisitos necessários para gerar relatório 
+		if(!checarDadosDisponiveis()) return;
+		
+		//Alterando o título da janela
+		definirTituloJanela();
+		
+		//Define a pesquisa ativa como item de pesquisa selecionado
+		definirPesquisaAtiva();
+		
+		//Exibe de fato
+		setVisible(true);
+	}
+
+	/**Define a pesquisa selecionada como a ativa a partir deste momento.*/
+	private void definirPesquisaAtiva() {
+		comboNomePesquisa.setSelectedItem(avaliacao.getPesquisaAtiva().getNome());
+	}
+
+	/**Checa se existe uma conexão com o  banco de dados e há pesquisas disponíveis para gerar relatórios.
+	 * Exibe mensagens de informação ao usuário quanto a esses quesitos.
+	 * @return false se não houver dados disponíveis, true se há.
+	 */
+	private boolean checarDadosDisponiveis() {
+
 		if(!avaliacao.checarConexaoBancoDeDados()) {
-			EntradaESaida.msgInfo(janelaPai, MSG_RELATORIO_SEM_CONEXAO, InterfaceConstraints.TITULO_PROGRAMA);
-			return;
+			EntradaESaida.msgInfo(this, MSG_RELATORIO_SEM_CONEXAO, InterfaceConstraints.TITULO_PROGRAMA);
+			return false;
 		}
 
-		if(avaliacao.numeroPesquisas() == 0)
+		if(avaliacao.numeroPesquisas() == 0) {
 			EntradaESaida.msgInfo(this, MSG_NAO_HA_PESQUISAS,InterfaceConstraints.TITULO_PROGRAMA);
-		setVisible(true);
+			return false;
+		}
+		
+		return true;
 	}
 
 	private void resetar(TipoRelatorio tipoPesquisa) {
 		this.tipoRelatorio = tipoPesquisa;
 		popularCombosBoxes();
+		comboNomePesquisa.setSelectedItem(avaliacao.getPesquisaAtiva());
 	}
 	
 
@@ -100,6 +135,7 @@ public class IgSeletorRelatorio extends JDialog implements PropriedadesDeJanela{
 			public void actionPerformed(ActionEvent arg0) {
 				IgAvaliacaoInstitucional.mudarCursor(Cursor.WAIT_CURSOR);
 				abrirRelatorio();
+				avaliacao.setPesquisaAtiva(comboNomePesquisa.getSelectedItem().toString());
 			}
 
 		});

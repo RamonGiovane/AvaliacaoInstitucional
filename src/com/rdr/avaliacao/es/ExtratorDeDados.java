@@ -52,6 +52,7 @@ public class ExtratorDeDados {
 	private IgBarraDeProgresso barraDeProgresso;
 
 	private Component janelaPai;
+	private long numeroDeLinhas;
 
 
 	private ExtratorDeDados(Component janelaPai, BancoDeDados bd, Pesquisa pesquisa) {
@@ -114,6 +115,7 @@ public class ExtratorDeDados {
 
 	private void extrairDados() throws IOException {
 		abrirArquivo();
+		numeroDeLinhas = contarLinhas();
 
 		try {
 			extrairPerguntas();
@@ -130,7 +132,7 @@ public class ExtratorDeDados {
 		IgAvaliacaoInstitucional.desativarInterface();
 		barraDeProgresso = new IgBarraDeProgresso(janelaPai, 
 				InterfaceConstraints.TITULO_PROGRAMA, 
-				"Lendo pesquisa...", "Isto pode levar alguns minutos...", "Quase lá...", contarLinhas());
+				"Lendo pesquisa...", "Isto pode levar alguns minutos...", "Quase lá...", numeroDeLinhas);
 		
 	}
 
@@ -175,7 +177,7 @@ public class ExtratorDeDados {
 				 * Se ocorrer uma exceção no momento de extrair o tema, significa que não há tema, apenas uma pergunta.
 				 * Ou um tema sem pergunta. Em outras palavras, eles deverão ser o mesmo.
 				 */
-				tema = TEMA_INDEFINIDO;
+				tema = strPerguntas[indice];
 				questao = strPerguntas[indice];
 			}
 
@@ -195,7 +197,6 @@ public class ExtratorDeDados {
 		int i = 0;
 		for(; arquivo.lerLinha() != null; i++);
 		resetarArquivo();
-		obterCabecalho();
 		return i;
 	}
 	
@@ -477,6 +478,7 @@ public class ExtratorDeDados {
 
 		return listaDeMedias;
 	}
+
 
 	private double arredondarMedia(double media) {
 		return (double) Math.round(media * 10) /10;

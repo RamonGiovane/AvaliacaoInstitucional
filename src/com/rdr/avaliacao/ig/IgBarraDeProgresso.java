@@ -1,15 +1,13 @@
 package com.rdr.avaliacao.ig;
 
-import javax.swing.JDialog;
-import javax.swing.JProgressBar;
-import java.awt.BorderLayout;
 import java.awt.Component;
-import java.awt.FlowLayout;
-import javax.swing.JLabel;
 import java.awt.Font;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
+import javax.swing.JDialog;
+import javax.swing.JLabel;
+import javax.swing.JProgressBar;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 
@@ -70,7 +68,7 @@ public class IgBarraDeProgresso extends JDialog{
 		});
 		
 		progressBar.setIndeterminate(false);
-		setLocationRelativeTo(getParent().getParent());
+		setLocationRelativeTo(janelaPai);
 		setVisible(true);
 		
 	}

@@ -1,6 +1,6 @@
 package com.rdr.avaliacao.questionario;
 
-public class Assunto {
+public class Assunto implements Comparable<Assunto> {
 	private int codigo;
 	private String descricao;
 	
@@ -26,6 +26,15 @@ public class Assunto {
 	@Override
 	public String toString() {
 		return String.format("%s", descricao);
+	}
+
+	@Override
+	public int compareTo(Assunto assunto) {
+		try{
+			return -Integer.compare(assunto.codigo, codigo);
+		}catch (Exception e) {
+			return assunto.getDescricao().compareTo(descricao);
+		}
 	}
 	
 	
