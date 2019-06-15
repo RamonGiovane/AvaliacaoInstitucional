@@ -4,8 +4,8 @@ import static com.rdr.avaliacao.es.EntradaESaida.dialogoAbrirArquivo;
 import static com.rdr.avaliacao.es.EntradaESaida.msgErro;
 import static com.rdr.avaliacao.ig.InterfaceConstraints.CAMINHO_IMPORT_ICON;
 import static com.rdr.avaliacao.ig.InterfaceConstraints.COR_BACKGROUND;
-import static com.rdr.avaliacao.ig.InterfaceConstraints.DESCRICOES_EXTENSOES;
-import static com.rdr.avaliacao.ig.InterfaceConstraints.EXTENSOES;
+import static com.rdr.avaliacao.ig.InterfaceConstraints.DESCRICOES_EXTENSOES_CSV;
+import static com.rdr.avaliacao.ig.InterfaceConstraints.EXTENSOES_CSV;
 import static com.rdr.avaliacao.ig.InterfaceConstraints.MSG_ARQUIVO_NAO_ENCONTRADO;
 import static com.rdr.avaliacao.ig.InterfaceConstraints.MSG_CAMINHO_DADOS_VAZIO;
 import static com.rdr.avaliacao.ig.InterfaceConstraints.MSG_NOME_PESQUISA_VAZIO;
@@ -201,7 +201,7 @@ public class IgNovaPesquisa extends JDialog{
 	}
 
 	private void selecionarArquivo() {
-		String nomeArquivo = dialogoAbrirArquivo(this, TITULO_ABRIR_ARQUIVO, DESCRICOES_EXTENSOES, EXTENSOES);
+		String nomeArquivo = dialogoAbrirArquivo(this, TITULO_ABRIR_ARQUIVO, DESCRICOES_EXTENSOES_CSV, EXTENSOES_CSV);
 		fieldCaminhoDados.setText(nomeArquivo);
 
 	}

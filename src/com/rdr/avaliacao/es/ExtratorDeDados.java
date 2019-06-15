@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
+import com.rdr.avaliacao.AvaliacaoInstitucional;
 import com.rdr.avaliacao.es.bd.BancoDeDados;
 import com.rdr.avaliacao.es.bd.DAO;
 import com.rdr.avaliacao.ig.IgAvaliacaoInstitucional;
@@ -21,7 +22,8 @@ import com.rdr.avaliacao.questionario.Pesquisa;
 import com.rdr.avaliacao.relatorio.MediasPorCurso;
 import com.rdr.avaliacao.relatorio.RelatorioDeMedias;
 import com.rdr.avaliacao.relatorio.RelatorioDeParticipantes;
-
+import static com.rdr.avaliacao.es.bd.constraints.FuncoesSQL.*;
+import static com.rdr.avaliacao.ig.InterfaceConstraints.*;
 /**
  * Esta classe realiza o intermédio entre os dispositivos de armazenamento e as classes e objetos.
  * É responsável por todo o trabalho pesado: ler arquivos de texto, fazer requisões e chamadas
@@ -54,7 +56,7 @@ public class ExtratorDeDados {
 	private Component janelaPai;
 	private long numeroDeLinhas;
 
-
+	private AvaliacaoInstitucional app; 
 	private ExtratorDeDados(Component janelaPai, BancoDeDados bd, Pesquisa pesquisa) {
 		super();
 		this.bd = bd;
@@ -64,6 +66,8 @@ public class ExtratorDeDados {
 		arquivo = new ArquivoTexto();
 		this.janelaPai = janelaPai;
 		this.pesquisa = pesquisa;
+		
+		app = AvaliacaoInstitucional.getInstance();
 	}
 
 	public ExtratorDeDados(BancoDeDados bd, Pesquisa pesquisa) {
@@ -71,6 +75,7 @@ public class ExtratorDeDados {
 		this.separador = SEPARADOR_PADRAO;
 		arquivo = new ArquivoTexto();
 		this.pesquisa = pesquisa;
+		app = AvaliacaoInstitucional.getInstance();
 	}
 
 	public ExtratorDeDados(BancoDeDados bd, Pesquisa pesquisa, String separador) {
@@ -105,7 +110,7 @@ public class ExtratorDeDados {
 
 	private String[] quebrarTexto(String texto) throws IOException {
 
-		return texto.split(";"); 
+		return texto.split(separador); 
 
 	}
 
@@ -145,11 +150,9 @@ public class ExtratorDeDados {
 
 	//TODO: Verificar o nome da pesquisa no banco de dados. Salvar se não existe, sinalizar se já existe
 	public static void extrairDados(Component janelaPai, BancoDeDados banco, Pesquisa pesquisa) throws IOException{
-		Calendar inicio = Calendar.getInstance();
 
 		new ExtratorDeDados(janelaPai, banco, pesquisa).extrairDados();
 
-		Calendar fim = Calendar.getInstance();
 
 	}
 
@@ -164,6 +167,10 @@ public class ExtratorDeDados {
 		String tema, questao;
 		Object[][] retorno;
 		for(; indice<strPerguntas.length; indice++) {
+			if(strPerguntas[indice].isEmpty()) {
+				cancelarImportacao(MSG_PERGUNTA_VAZIA);
+				throw new IOException(MSG_PERGUNTA_VAZIA);
+			}
 			strPerguntas[indice] = strPerguntas[indice].replace(" - ", ".");
 			strPerguntas[indice] = strPerguntas[indice].replaceAll("\\d{1,}[.]", "").trim();
 			try{
@@ -174,23 +181,39 @@ public class ExtratorDeDados {
 						strPerguntas[indice].indexOf(']')).trim();
 			}catch(StringIndexOutOfBoundsException e) {
 				/*
-				 * Se ocorrer uma exceção no momento de extrair o tema, significa que não há tema, apenas uma pergunta.
+				 * Se ocorrer esta exceção no momento de extrair o tema, significa que não há tema, apenas uma pergunta.
 				 * Ou um tema sem pergunta. Em outras palavras, eles deverão ser o mesmo.
 				 */
 				tema = strPerguntas[indice];
 				questao = strPerguntas[indice];
 			}
-
 			try {
-				retorno = dao.executarFuncao("inserir_pergunta", pesquisa.getCodigo(), questao, tema);
+				retorno = dao.executarFuncao(FUNCTION_INSERIR_PERGUNTA, pesquisa.getCodigo(), questao, tema);
 
 				indicesPerguntas[indice-3] = new IndicePergunta((int)retorno[0][0], (int) retorno[0][1]);
+				System.out.println(tema);
 
 			} catch (SQLException e) {
-				System.out.println(e.getErrorCode() + " " + e.getMessage());
+				cancelarImportacao(InterfaceConstraints.MSG_PERGUNTA_REPETIDA);
+				throw new IOException(InterfaceConstraints.MSG_PERGUNTA_REPETIDA);
 			}
 		}
+		System.out.println(indicesPerguntas.length);
+	}
 
+	private void cancelarImportacao(String mensagemDeErro) {
+		EntradaESaida.msgErro(janelaPai, mensagemDeErro, InterfaceConstraints.TITULO_IMPORTAR_DADOS);
+		app.apagarPesquisa(pesquisa);
+		try {
+			apagarPesquisaBanco();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+
+
+	private void apagarPesquisaBanco() throws SQLException {
+		dao.consultar("delete from pesquisa cascade where codigo = ?", pesquisa.getCodigo());
 	}
 
 	private int contarLinhas() throws IOException {
@@ -239,7 +262,7 @@ public class ExtratorDeDados {
 
 					}while(linha != null);
 				} catch (IOException | SQLException e) {
-					// TODO Auto-generated catch block
+					Thread.currentThread().interrupt();
 					e.printStackTrace();
 				}
 				terminarBarraDeProgresso();
@@ -262,8 +285,11 @@ public class ExtratorDeDados {
 
 
 		while(true){
-			dao.executarFuncao("inserir_resposta", pesquisa.getCodigo(), word.trim(), indicesPerguntas[i].getIndiceAssunto(),
-					indicesPerguntas[i].getIndicePergunta(), codigoEntrevistado);
+			System.out.println(i + " " + indicesPerguntas[i].getIndiceAssunto());
+			
+			//Tenta inserir uma resposta por meio da storded function inserir_pergunta. Incrementa a vaiável i
+			dao.executarFuncao(FUNCTION_INSERIR_RESPOSTA, pesquisa.getCodigo(), word.trim(), indicesPerguntas[i].getIndiceAssunto(),
+					indicesPerguntas[i++].getIndicePergunta(), codigoEntrevistado);
 
 			textoLinha = textoLinha.substring(textoLinha.indexOf(";") + 1) + " ";
 
@@ -272,14 +298,15 @@ public class ExtratorDeDados {
 				word = textoLinha.substring(0,textoLinha.indexOf(";"));
 
 			}catch (Exception e) {
-				dao.executarFuncao("inserir_resposta", pesquisa.getCodigo(), textoLinha.trim(), indicesPerguntas[i].getIndiceAssunto(),
+				System.out.println(i + " " + indicesPerguntas[i].getIndiceAssunto());
+				dao.executarFuncao(FUNCTION_INSERIR_RESPOSTA, pesquisa.getCodigo(), textoLinha.trim(), indicesPerguntas[i].getIndiceAssunto(),
 						indicesPerguntas[i].getIndicePergunta(), codigoEntrevistado);
 				break;
 			}
 
 
 
-			i++;
+			//i++;
 		}
 
 	}
@@ -431,6 +458,7 @@ public class ExtratorDeDados {
 		for(int i = 0; i<assuntos.length; i++) {
 			assuntosList.add(new Assunto((int)assuntos[i][0], 
 					formataraDescricaoAssunto(assuntos[i][1].toString())));
+			
 
 		}
 
@@ -478,7 +506,8 @@ public class ExtratorDeDados {
 
 			notas = new MediasPorCurso(curso);
 
-
+			int i = 0;
+			System.out.println(assuntosList.size());
 			for(Assunto assunto : assuntosList) {
 
 				//Obtendo a média de nota de cada tema avaliado por entrevistados de um curso
@@ -487,7 +516,7 @@ public class ExtratorDeDados {
 						"inner join entrevistado on (entrevistado.codigo = resposta.codentrevistado) " + 
 						"where entrevistado.codcurso = ? and resposta.codassunto = ? and resposta.codpesquisa = ?", 
 						curso.getCodigo(), assunto.getCodigo(), pesquisa.getCodigo());
-				
+				System.err.printf("\n%s: %s", i++, assunto.getCodigo());
 				if(resultado[0][0] != null) {
 					media = ((BigDecimal)resultado[0][0]).doubleValue();
 

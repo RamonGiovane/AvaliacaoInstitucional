@@ -14,6 +14,7 @@ public interface InterfaceConstraints {
 
 			TITULO_ABRIR_ARQUIVO = "Abrir aquivo",
 			TITULO_IMPORTAR_DADOS = "Importar Novos Dados...",
+			TITULO_SALVAR_PDF = "Salvar como PDF",
 			TEXTO_IMPORTAR_DADOS = "<html>Defina uma breve descrição para sua pesquisa que a diferencie de outras. Em seguida, escolha o caminho dos dados a serem importados.</html>",
 			MSG_ERRO_BUILD_UI = "Ocorreu um problema desconhecido durante a contrução da interface gráfica.\n "
 					+ "A funcionalidade do programa não será afetada, mas os componentes visuais podem não estar  corretos.",
@@ -49,7 +50,14 @@ public interface InterfaceConstraints {
 
 	//Filtros de extensão de arquivos
 	public final static String[] 
-			DESCRICOES_EXTENSOES = new String[] {"Arquivo CSV - Comma Separeted Values Database (*.csv)"},
-			EXTENSOES = new String[]{"csv"};
+			DESCRICOES_EXTENSOES_CSV = new String[] {"Arquivo CSV - Comma Separeted Values Database (*.csv)"},
+			DESCRICOES_EXTENSOES_PDF = new String[] {"Arquivo PDF (*.pdf)"},
+			EXTENSOES_CSV = new String[]{"csv"}, EXTENSOES_PDF = new String[] {"pdf"};
+
+	public static final String MSG_CHECAR_CABECALHO = "Por favor, verifique os dados da pesquisa e certifique\nque estejam de acordo com o padrão correto.";
+
+	public static final String MSG_PERGUNTA_VAZIA = "ERRO: Coluna vazia detectada no cabeçalho do arquivo fornecido.\n" + MSG_CHECAR_CABECALHO;
+
+	public static final String MSG_PERGUNTA_REPETIDA =  "ERRO: Informações repetidas foram detectadas no cabeçalho do arquivo fornecido.\n" + MSG_CHECAR_CABECALHO;;
 
 }

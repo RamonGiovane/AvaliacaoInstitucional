@@ -51,8 +51,7 @@ public abstract class MediasDeNotas{
 			soma += entry.getValue();
 		}
 		double media = soma/mediasPorAssunto.size();
-		System.out.println(Math.round(2.5));
-		return(int)  Math.round(media);
+		return (int)  Math.round(media);
 	}
 
 	public String getDescricao() {

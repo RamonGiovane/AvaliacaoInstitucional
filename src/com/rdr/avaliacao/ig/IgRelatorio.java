@@ -6,11 +6,15 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Font;
-import java.awt.Shape;
-import java.awt.Stroke;
+import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.sql.SQLException;
 
 import javax.swing.ButtonGroup;
@@ -20,12 +24,8 @@ import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
-import javax.swing.SwingConstants;
+import javax.swing.UIManager;
 import javax.swing.border.TitledBorder;
-import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.table.TableCellRenderer;
-import javax.swing.table.TableColumn;
-import javax.swing.table.TableColumnModel;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
@@ -38,31 +38,31 @@ import org.jfree.chart.labels.ItemLabelPosition;
 import org.jfree.chart.labels.StandardCategoryItemLabelGenerator;
 import org.jfree.chart.plot.CategoryPlot;
 import org.jfree.chart.plot.PlotOrientation;
-import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.category.BarRenderer3D;
 import org.jfree.chart.renderer.category.CategoryItemRenderer;
 import org.jfree.data.category.DefaultCategoryDataset;
 import org.jfree.ui.TextAnchor;
 
-import com.itextpdf.kernel.pdf.PdfWriter;
-import com.itextpdf.layout.Document;
+import com.itextpdf.text.Document;
+import com.itextpdf.text.DocumentException;
+import com.itextpdf.text.pdf.PdfPTable;
+import com.itextpdf.text.pdf.PdfWriter;
 import com.rdr.avaliacao.AvaliacaoInstitucional;
 import com.rdr.avaliacao.es.EntradaESaida;
 import com.rdr.avaliacao.questionario.Assunto;
 import com.rdr.avaliacao.questionario.Pesquisa;
-import com.rdr.avaliacao.relatorio.DadosDeGrafico;
 import com.rdr.avaliacao.relatorio.MediasDeNotas;
 import com.rdr.avaliacao.relatorio.Relatorio;
 import com.rdr.avaliacao.relatorio.RelatorioDeMedias;
 import com.rdr.avaliacao.relatorio.RelatorioDeParticipantes;
-import javax.swing.UIManager;
+import static com.rdr.avaliacao.ig.InterfaceConstraints.*;
 
 public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 	private ButtonGroup buttonGroup =  new ButtonGroup();
 	private JRadioButton radioBtnTabela;
 	private JRadioButton radioBtinGrafico;
 	private static JPanel panelDados;
-	private static JPanel panelTabela;
+	private static JPanel panelTabela, panelGrafico;
 
 	private static TipoRelatorio tipoRelatorio;
 	private static Pesquisa pesquisa;
@@ -70,7 +70,7 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 	private String tipoGraduacao;
 
 	private static IgRelatorio igRelatorio;
-	
+	private JScrollPane scrollPane;
 	private static ChartPanel graficoPanel;
 	private static JTable tabela;
 	
@@ -172,6 +172,10 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 
 		panelTabela = new JPanel();
 		panelTabela.setLayout(new BorderLayout());
+		
+		panelGrafico = new JPanel();
+		panelGrafico.setLayout(new BorderLayout());
+		
 		definirComportamentoRadioButtons();
 		getContentPane().add(panelDados);
 		panelDados.add(panelTabela, BorderLayout.CENTER);
@@ -238,9 +242,9 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 					tipoRelatorio.getOrientacaoGrafico());
 		}
 
-		panelTabela.add(graficoPanel, BorderLayout.CENTER);
+		panelGrafico.add(graficoPanel, BorderLayout.CENTER);
 
-		panelDados.add(panelTabela);
+		panelDados.add(panelGrafico);
 
 		repintarPaineis();
 	}
@@ -255,37 +259,21 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 		System.out.println(dadosRelatorio);
 		System.out.println(tipoRelatorio);
 		tabela = EntradaESaida.gerarTabela(dadosRelatorio.asMatrix(), dadosRelatorio.getHeaders());
-
-		panelTabela.add(new JScrollPane(tabela), BorderLayout.CENTER);
+		scrollPane = new JScrollPane(tabela);
+		panelTabela.add(scrollPane, BorderLayout.CENTER);
 		panelTabela.add(tabela.getTableHeader(), BorderLayout.NORTH);
 		panelTabela.add(tabela);
 		panelDados.add(new JScrollPane(panelTabela));
 		
-		if(tipoRelatorio == TipoRelatorio.CONCEITO_MEDIO_CURSO || tipoRelatorio == TipoRelatorio.CONCEITO_MEDIO_ASSUNTO)
-			costumizarTabela(tabela);
 
 		repintarPaineis();
 	}
 
-	private void costumizarTabela(JTable tabela) {
-//		Color colors[] = {Color.RED, Color.GREEN, Color.BLUE, Color.ORANGE, Color.MAGENTA};
-//		TableColumn column;
-//		int colorIndex = 0;
-//		TableCellRenderer renderer;
-//		for(int i = 1; i<tabela.getColumnCount(); i++, colorIndex++) {
-//			column = tabela.getColumnModel().getColumn(i);
-//			renderer = tabela.getDefaultRenderer(column.getClass());
-//			if(colorIndex >= colors.length)
-//				colorIndex = 0;
-//			renderer.setForeground(colors[colorIndex]);
-//			column.setCellRenderer(renderer);
-//		}
-		
-	}
+
 
 	/**Necessário para limpar o conteúdo dos painéis antes de exibir um novo componente*/
 	private void limparPaineis() {
-
+		panelGrafico.removeAll();
 		panelTabela.removeAll();
 		panelDados.removeAll();
 
@@ -295,6 +283,10 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 	private void repintarPaineis() {
 		panelTabela.revalidate();
 		panelTabela.repaint();
+		
+		panelGrafico.revalidate();
+		panelGrafico.repaint();
+		
 		panelDados.revalidate();
 		panelDados.repaint();
 
@@ -304,7 +296,19 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 	}
 	
 	public void gerarPdf() {
-		//construtorDeGrafico.gerarPDF(tabela, graficoPanel);
+		String caminhoArquivo = EntradaESaida.dialogoGravarArquivo(this, TITULO_SALVAR_PDF);
+		try {
+			construtorDeGrafico.gerarPDF(caminhoArquivo, tabela, graficoPanel);
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (DocumentException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	@Override
@@ -339,8 +343,9 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 				for(Assunto assunto : assuntos) {
 					dataset.addValue(medias.obterNota(assunto), medias.getDescricao(), assunto.getDescricao());
 				}
+				dataset.addValue(medias.obterMediaGeral(), medias.getDescricao(), "Conceito Médio Geral");
 			}
-
+			
 
 			JFreeChart chart = ChartFactory.createLineChart(titulo, null, null, 
 					dataset, PlotOrientation.VERTICAL, true, true, true);
@@ -400,10 +405,37 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 
 		}
 
-		public void gerarPDF(File localDeSalvamento, JTable tabela, ChartPanel graficoPanel) {
+		public void gerarPDF(String localDeSalvamento, JTable tabela, ChartPanel graficoPanel) throws DocumentException, IOException {
 			
+			FileOutputStream outputStream = new FileOutputStream(localDeSalvamento);
 			
+			Document documento = new Document();
 			
+			 
+			
+			PdfWriter pdfWriter = PdfWriter.getInstance(documento, outputStream);
+			documento.open();
+			
+			  BufferedImage image = new BufferedImage(panelTabela.getWidth(), panelTabela.getHeight(), BufferedImage.TYPE_INT_RGB);
+					 
+		      panelTabela.paint(image.getGraphics());
+		      
+		     com.itextpdf.text.Image img = com.itextpdf.text.Image.getInstance(pdfWriter, image, 1);
+		    
+		     img.scalePercent(65);
+		     documento.add(img);
+		    
+		     
+////		     BufferedImage image1 = new BufferedImage(graficoPanel.getWidth(), graficoPanel.getHeight(), BufferedImage.TYPE_INT_RGB);
+////			 
+////		      graficoPanel.paint(image.getGraphics());
+////		      
+////		     com.itextpdf.text.Image img1 = com.itextpdf.text.Image.getInstance(pdfWriter, image1, 1);
+////		    
+////		     img1.scalePercent(65);
+//		     documento.add(img1);
+		     
+            documento.close();
 		}
 
 		public ChartPanel gerarGraficoBarra3D(RelatorioDeParticipantes dadosRelatorio, 

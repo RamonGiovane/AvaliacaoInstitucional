@@ -282,5 +282,9 @@ public class AvaliacaoInstitucional {
 	public void desconectarBancoDeDados() throws SQLException {
 		bd.fecharConexao();
 	}
+
+	public void apagarPesquisa(Pesquisa pesquisa) {
+		pesquisasList.remove(pesquisa);
+	}
 	
 }
