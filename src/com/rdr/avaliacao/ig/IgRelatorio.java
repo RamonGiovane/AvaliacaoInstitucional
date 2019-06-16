@@ -54,8 +54,11 @@ import com.itextpdf.text.Document;
 import com.itextpdf.text.DocumentException;
 import com.itextpdf.text.Element;
 import com.itextpdf.text.Paragraph;
+import com.itextpdf.text.Phrase;
 import com.itextpdf.text.pdf.BaseFont;
 import com.itextpdf.text.pdf.PdfContentByte;
+import com.itextpdf.text.pdf.PdfPCell;
+import com.itextpdf.text.pdf.PdfPTable;
 import com.itextpdf.text.pdf.PdfTemplate;
 import com.itextpdf.text.pdf.PdfWriter;
 import com.rdr.avaliacao.AvaliacaoInstitucional;
@@ -250,7 +253,7 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 		}
 
 		panelGrafico.add(graficoPanel, BorderLayout.CENTER);
-		
+
 
 	}
 
@@ -289,12 +292,12 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 
 	/**Necessário para limpar o conteúdo dos painéis antes de exibir um novo componente*/
 	private void limparPaineis() {
-//		panelGrafico.removeAll();
-//		panelTabela.removeAll();
+		//		panelGrafico.removeAll();
+		//		panelTabela.removeAll();
 		panelDados.removeAll();
 
 	}
-	
+
 	private void limparTudo() {
 		panelGrafico.removeAll();
 		panelTabela.removeAll();
@@ -335,7 +338,7 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 	public void exibir(Component janelaPai) {
 		gerarGrafico();
 		gerarTabela();
-		
+
 		setTitle(tipoRelatorio.getDescricao());
 		if(tipoRelatorio == TipoRelatorio.CONCEITO_MEDIO_CURSO)
 			((TitledBorder) panelDados.getBorder()).setTitle("Dados de " + tipoGraduacao + "s");
@@ -429,7 +432,7 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 				JComponent componente, int escala, boolean renderizado) throws IOException, DocumentException {
 
 			System.out.println(componente);
-			BufferedImage image = EntradaESaida.componenteToImage(componente, renderizado);
+			BufferedImage image = EntradaESaida.componentToImage(componente, renderizado);
 
 			//EntradaESaida.msgInfo(this, image, "dw");
 			com.itextpdf.text.Image img = com.itextpdf.text.Image.getInstance(pdfWriter, image, 1);
@@ -451,25 +454,130 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 			Document documento = new Document();
 
 			PdfWriter pdfWriter = PdfWriter.getInstance(documento, outputStream);
-			
+
 			documento.open();
-			
+
 			adicionarTitulo(documento, titulo);
-			
+			//PASSAR O TAMANHO DA TELA COMO PARAMETRO
 			if(checarPainelVazio(panelTabela)) gerarTabela();
-			
-			adicionarComoImgem(documento, pdfWriter, panelTabela, 60, radioBtnTabela.isSelected());
-			
+
+			System.out.println(radioBtnTabela.isSelected());
+			tabela.setSize(1000, 100);
+			adicionarComoImgem(documento, pdfWriter, tabela, 60, radioBtnTabela.isSelected());
+
 			novaLinha(documento);
-			
+
 			if(checarPainelVazio(panelGrafico)) gerarGrafico();
-			
+
 			adicionarComoImgem(documento, pdfWriter, panelGrafico, 65, radioBtnGrafico.isSelected());
 
-			
+
 			documento.close();
+
+			tabelaToPDF();
 		}
 
+
+		public void tabelaToPDF() throws DocumentException, IOException {
+			JTable table = tabela;
+			Document doc = new Document();
+			PdfWriter.getInstance(doc, new FileOutputStream("table.pdf"));
+			doc.open();
+			PdfPTable pdfTable = new PdfPTable(table.getColumnCount());
+			pdfTable.setWidthPercentage(100);
+			pdfTable.setHorizontalAlignment(Element.ALIGN_CENTER);
+			pdfTable.getDefaultCell().setHorizontalAlignment(Element.ALIGN_CENTER);
+			pdfTable.getDefaultCell().setVerticalAlignment(Element.ALIGN_MIDDLE);
+
+			int tamanhoFonte = 9;
+			com.itextpdf.text.Font fontePretaNegrito = new  com.itextpdf.text.Font(com.itextpdf.text.Font.FontFamily.HELVETICA, tamanhoFonte, 
+					Font.BOLD, BaseColor.BLACK);
+
+			com.itextpdf.text.Font fontePreta = new  com.itextpdf.text.Font(com.itextpdf.text.Font.FontFamily.HELVETICA, tamanhoFonte, 
+					Font.PLAIN, BaseColor.BLACK);
+
+			//Criar fontes
+			BaseColor colors[] = new BaseColor[] {BaseColor.BLACK, BaseColor.BLUE, new BaseColor(64, 132, 36), BaseColor.RED, new BaseColor(236, 156, 17),
+					BaseColor.MAGENTA}; 
+			com.itextpdf.text.Font fontesColoridas[] = new com.itextpdf.text.Font[6];
+			
+			for(int i = 0; i<fontesColoridas.length; i++) {
+				fontesColoridas[i] = new com.itextpdf.text.Font(com.itextpdf.text.Font.FontFamily.HELVETICA, tamanhoFonte, Font.BOLD, colors[i]);
+			}
+			
+
+			//Array que guarda as larguras das colunas
+			int larguras[] = new int[table.getColumnCount()];
+			
+			for (int i = 0, indexFonte = 0; i < table.getColumnCount(); i++, indexFonte++) {
+				if(indexFonte >= fontesColoridas.length) indexFonte = 0;
+				if(i == 0) {
+					pdfTable.addCell(new Phrase(table.getColumnName(i), fontePretaNegrito));
+					larguras[i] = (int) (table.getColumnName(i).length() * 1.5);
+				}
+				else {
+					pdfTable.addCell(new Phrase(table.getColumnName(i), fontesColoridas[indexFonte]));
+					larguras[i] = table.getColumnName(i).length() + 5;
+				}
+			}
+			
+			pdfTable.setWidths(larguras);
+
+			com.itextpdf.text.Font fonte;
+			PdfPCell celula;
+			//Extraindo os dados do JTable. Percorrendo as linhas
+			for (int rows = 0; rows < table.getRowCount(); rows++) {
+
+				//Percorrendo as colunas
+				for (int cols = 0, fontesIndex = 0; cols < table.getColumnCount(); cols++, fontesIndex++) {
+					
+					//Reseta o indice do array de fontes, se todas ja tiverem sido usadas
+					if(fontesIndex >= colors.length) fontesIndex = 0;
+
+					if(cols == 0) {
+						//Se for a primeira linha da primeira coluna
+						if(rows == table.getRowCount()-1)
+							fonte = fontePretaNegrito;
+						//Se for a primeira linha de qualquer coluna
+						else
+							fonte = fontePreta;
+					}
+					
+					
+					
+					//Em nenhum dos casos acima, usa a fonte colorida no indice de fonte atual
+					else fonte = fontesColoridas[fontesIndex];
+					
+					
+					//Adiciona o texto e a fonte no phrase
+					celula = new PdfPCell(new Phrase(table.getModel().getValueAt(rows, cols).toString(), fonte));
+					
+					//Define a cor de fundo de uma célua
+					if(rows % 2 != 0 || rows == table.getRowCount())
+						celula.setBackgroundColor(new BaseColor(242, 242, 242));
+					
+					//Define o alinhamento das linhas
+					celula.setVerticalAlignment(Element.ALIGN_MIDDLE);
+					if(cols != 0) {
+						celula.setHorizontalAlignment(Element.ALIGN_CENTER);
+					}
+					
+//					if(table.getColumnCount() <= 4)
+//						celula.setFixedHeight(27);
+//					else
+//						celula.setFixedHeight(35);
+					
+					
+					//Adiciona o phrase na tabela
+					pdfTable.addCell(celula);
+
+				}
+			}
+			doc.add(pdfTable);
+			doc.close();
+			System.out.println("done");
+
+		}
 
 		public ChartPanel gerarGraficoBarra3D(RelatorioDeParticipantes dadosRelatorio, 
 				String titulo, PlotOrientation orientacao) {

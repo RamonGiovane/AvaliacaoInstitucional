@@ -407,39 +407,50 @@ public class EntradaESaida {
 		}
 	}
 
-	//	public static BufferedImage componentToImage(Component component, boolean visible) {
-	//		if (visible) {
-	//			BufferedImage img = new BufferedImage(component.getWidth(), component.getHeight(), BufferedImage.TRANSLUCENT);
-	//			Graphics2D g2d = (Graphics2D) img.getGraphics();
-	//			g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-	//			component.paintAll(g2d);
-	//			return img;
-	//		} else {
-	//			component.setSize(component.getPreferredSize());
-	//			layoutComponent(component);
-	//			BufferedImage img = new BufferedImage(1000, 1000, BufferedImage.TRANSLUCENT);
-	//			CellRendererPane crp = new CellRendererPane();
-	//			crp.add(component);
-	//			crp.paintComponent(img.createGraphics(), component, crp, component.getBounds());
-	//			return img;
-	//		}
-	//	}
-
-	public static BufferedImage componenteToImage(JComponent c, boolean cdwf) {
-
-		Dimension size = c.getSize();
-		if (size.width <= 0 || size.height <= 0) {
-			size = c.getPreferredSize();
-		}
-
-		BufferedImage snapshot =
-				new BufferedImage(size.width, size.height,
-						BufferedImage.TYPE_INT_ARGB);
-
-		drawComponent(c, snapshot);
-
-		return snapshot;
+	public static BufferedImage componentToImage(Component component, boolean visible) {
+	    if (visible) {
+	        BufferedImage img = new BufferedImage(1000 /*component.getWidth()*/, 1000 /*component.getHeight()*/, BufferedImage.TRANSLUCENT);
+	        Graphics2D g2d = (Graphics2D) img.getGraphics();
+	        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+	        component.paintAll(g2d);
+	        return img;
+	    } else {
+	        component.setSize(component.getPreferredSize());
+	        layoutComponent(component);
+	        BufferedImage img = new BufferedImage(1000 /*component.getWidth()*/, 1000 /*component.getHeight()*/, BufferedImage.TRANSLUCENT);
+	        CellRendererPane crp = new CellRendererPane();
+	        crp.add(component);
+	        crp.paintComponent(img.createGraphics(), component, crp, component.getBounds());
+	        return img;
+	    }
 	}
+
+	private static void layoutComponent(Component c) {
+	    synchronized (c.getTreeLock()) {
+	        c.doLayout();
+	        if (c instanceof Container) {
+	            for (Component child : ((Container) c).getComponents()) {
+	                layoutComponent(child);
+	            }
+	        }
+	    }
+	}
+
+//	public static BufferedImage componentToImage(JComponent c, boolean cdwf) {
+//
+//		Dimension size = c.getSize();
+//		if (size.width <= 0 || size.height <= 0) {
+//			size = c.getPreferredSize();
+//		}
+//
+//		BufferedImage snapshot =
+//				new BufferedImage(size.width, size.height,
+//						BufferedImage.TYPE_INT_ARGB);
+//
+//		drawComponent(c, snapshot);
+//
+//		return snapshot;
+//	}
 
 	private static void drawComponent(JComponent c,
 			BufferedImage destination) {
@@ -457,15 +468,6 @@ public class EntradaESaida {
 	}
 
 
-	private static void layoutComponent(Component c) {
-		synchronized (c.getTreeLock()) {
-			c.doLayout();
-			if (c instanceof Container) 
-				for (Component child : ((Container) c).getComponents()) 
-					layoutComponent(child);
-
-		}
-	}
 
 
 } // class EntradaESaida
