@@ -120,6 +120,7 @@ public class IgBancoDeDados extends JDialog implements PropriedadesDeJanela{
 		fieldSenha.setText(SENHA_BD_PADRAO);
 		filedUsuario.setText(USUARIO_BD_PADRAO);
 
+		Aparencia.definirBotaoPrincipal(this, btnConectar);
 	}
 
 

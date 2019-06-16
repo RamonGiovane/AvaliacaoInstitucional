@@ -1,24 +1,27 @@
 package com.rdr.avaliacao.ig;
 
+import static com.rdr.avaliacao.ig.InterfaceConstraints.TITULO_SALVAR_PDF;
+
 import java.awt.BasicStroke;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Font;
-import java.awt.Image;
+import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.sql.SQLException;
 
 import javax.swing.ButtonGroup;
+import javax.swing.CellRendererPane;
 import javax.swing.JButton;
+import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
@@ -43,9 +46,17 @@ import org.jfree.chart.renderer.category.CategoryItemRenderer;
 import org.jfree.data.category.DefaultCategoryDataset;
 import org.jfree.ui.TextAnchor;
 
+import com.itextpdf.awt.PdfGraphics2D;
+import com.itextpdf.text.BadElementException;
+import com.itextpdf.text.BaseColor;
+import com.itextpdf.text.Chunk;
 import com.itextpdf.text.Document;
 import com.itextpdf.text.DocumentException;
-import com.itextpdf.text.pdf.PdfPTable;
+import com.itextpdf.text.Element;
+import com.itextpdf.text.Paragraph;
+import com.itextpdf.text.pdf.BaseFont;
+import com.itextpdf.text.pdf.PdfContentByte;
+import com.itextpdf.text.pdf.PdfTemplate;
 import com.itextpdf.text.pdf.PdfWriter;
 import com.rdr.avaliacao.AvaliacaoInstitucional;
 import com.rdr.avaliacao.es.EntradaESaida;
@@ -55,12 +66,13 @@ import com.rdr.avaliacao.relatorio.MediasDeNotas;
 import com.rdr.avaliacao.relatorio.Relatorio;
 import com.rdr.avaliacao.relatorio.RelatorioDeMedias;
 import com.rdr.avaliacao.relatorio.RelatorioDeParticipantes;
-import static com.rdr.avaliacao.ig.InterfaceConstraints.*;
+
+import sun.font.FontFamily;
 
 public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 	private ButtonGroup buttonGroup =  new ButtonGroup();
 	private JRadioButton radioBtnTabela;
-	private JRadioButton radioBtinGrafico;
+	private JRadioButton radioBtnGrafico;
 	private static JPanel panelDados;
 	private static JPanel panelTabela, panelGrafico;
 
@@ -73,20 +85,17 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 	private JScrollPane scrollPane;
 	private static ChartPanel graficoPanel;
 	private static JTable tabela;
-	
+
 	/**Variáveis que guardam informações que povoaram os gráficos e tabelas*/
 	private Relatorio dadosRelatorio;
+
+	private boolean graficoDesenhado, tabelaDesenhada;
 
 	private static ConstrutorDeGrafico construtorDeGrafico;
 
 
 	private IgRelatorio() {
-//		try {
-//			construirIg();
-//		} catch (SQLException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
+
 		construtorDeGrafico = new ConstrutorDeGrafico();
 	}
 
@@ -146,9 +155,9 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 		radioBtnTabela.setBounds(208, 19, 109, 23);
 		panelModoExibicao.add(radioBtnTabela);
 
-		radioBtinGrafico = new JRadioButton("Gr\u00E1fico");
-		radioBtinGrafico.setBounds(470, 19, 109, 23);
-		panelModoExibicao.add(radioBtinGrafico);
+		radioBtnGrafico = new JRadioButton("Gr\u00E1fico");
+		radioBtnGrafico.setBounds(470, 19, 109, 23);
+		panelModoExibicao.add(radioBtnGrafico);
 
 		JButton btnGerarPdf = new JButton("Gerar PDF");
 		btnGerarPdf.addActionListener(new ActionListener() {
@@ -160,29 +169,29 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 		panelModoExibicao.add(btnGerarPdf);
 
 		Font fonteTitle = new Font(Font.DIALOG, Font.BOLD, 11);
-		 ((TitledBorder) panelDados.getBorder()).
-	        setTitleFont(fonteTitle);
-		 ((TitledBorder) panelModoExibicao.getBorder()).
-	        setTitleFont(fonteTitle);
+		((TitledBorder) panelDados.getBorder()).
+		setTitleFont(fonteTitle);
+		((TitledBorder) panelModoExibicao.getBorder()).
+		setTitleFont(fonteTitle);
 
-		buttonGroup.add(radioBtinGrafico);
+		buttonGroup.add(radioBtnGrafico);
 		buttonGroup.add(radioBtnTabela);
 
 		definirComportamentoRadioButtons();
 
 		panelTabela = new JPanel();
 		panelTabela.setLayout(new BorderLayout());
-		
+
 		panelGrafico = new JPanel();
 		panelGrafico.setLayout(new BorderLayout());
-		
+
 		definirComportamentoRadioButtons();
 		getContentPane().add(panelDados);
 		panelDados.add(panelTabela, BorderLayout.CENTER);
 		panelDados.add(panelTabela);	
-		
+
 		setModal(true);
-		
+
 		gerarDadosRelatorio();
 		exibirTabela();
 	}
@@ -197,7 +206,7 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 			}
 		});
 
-		radioBtinGrafico.addActionListener(new ActionListener() {
+		radioBtnGrafico.addActionListener(new ActionListener() {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -221,15 +230,13 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 	private void atualizarTelaRelatorio() throws SQLException {
 		igRelatorio.gerarDadosRelatorio();
 
-		if(radioBtinGrafico.isSelected())
+		if(radioBtnGrafico.isSelected())
 			exibirGrafico();
 		else
 			exibirTabela();
 	}
 
-	/**Constroi e exibe um gráfico a partir dos dados de um relatório*/
-	private void exibirGrafico() {
-		limparPaineis();
+	private void gerarGrafico() {
 		graficoPanel = null; 
 		if(dadosRelatorio instanceof RelatorioDeParticipantes)
 			graficoPanel = construtorDeGrafico.gerarGraficoBarra3D(
@@ -243,28 +250,37 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 		}
 
 		panelGrafico.add(graficoPanel, BorderLayout.CENTER);
+		
+
+	}
+
+	/**Constroi e exibe um gráfico a partir dos dados de um relatório*/
+	private void exibirGrafico() {
+		limparPaineis();
+
+		gerarGrafico();
 
 		panelDados.add(panelGrafico);
 
 		repintarPaineis();
 	}
 
-	
-	
 
-	private void exibirTabela() {
-
-		limparPaineis();
-
-		System.out.println(dadosRelatorio);
-		System.out.println(tipoRelatorio);
+	private void gerarTabela() {
 		tabela = EntradaESaida.gerarTabela(dadosRelatorio.asMatrix(), dadosRelatorio.getHeaders());
 		scrollPane = new JScrollPane(tabela);
 		panelTabela.add(scrollPane, BorderLayout.CENTER);
 		panelTabela.add(tabela.getTableHeader(), BorderLayout.NORTH);
 		panelTabela.add(tabela);
 		panelDados.add(new JScrollPane(panelTabela));
-		
+
+	}
+
+	private void exibirTabela() {
+
+		limparPaineis();
+
+		gerarTabela();
 
 		repintarPaineis();
 	}
@@ -273,20 +289,26 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 
 	/**Necessário para limpar o conteúdo dos painéis antes de exibir um novo componente*/
 	private void limparPaineis() {
+//		panelGrafico.removeAll();
+//		panelTabela.removeAll();
+		panelDados.removeAll();
+
+	}
+	
+	private void limparTudo() {
 		panelGrafico.removeAll();
 		panelTabela.removeAll();
 		panelDados.removeAll();
-
 	}
 
 	/**Necessário para atualizar os painéis depois de mudar*/
 	private void repintarPaineis() {
 		panelTabela.revalidate();
 		panelTabela.repaint();
-		
+
 		panelGrafico.revalidate();
 		panelGrafico.repaint();
-		
+
 		panelDados.revalidate();
 		panelDados.repaint();
 
@@ -294,25 +316,26 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 		panelDados.setVisible(true);
 
 	}
-	
+
 	public void gerarPdf() {
 		String caminhoArquivo = EntradaESaida.dialogoGravarArquivo(this, TITULO_SALVAR_PDF);
 		try {
-			construtorDeGrafico.gerarPDF(caminhoArquivo, tabela, graficoPanel);
+			construtorDeGrafico.gerarPDF(caminhoArquivo, tipoRelatorio.getDescricao());
+			//construtorDeGrafico.writeChartToPDF(graficoPanel.getChart(), 550, 500, caminhoArquivo);
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (DocumentException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
 
 	@Override
 	public void exibir(Component janelaPai) {
+		gerarGrafico();
+		gerarTabela();
+		
 		setTitle(tipoRelatorio.getDescricao());
 		if(tipoRelatorio == TipoRelatorio.CONCEITO_MEDIO_CURSO)
 			((TitledBorder) panelDados.getBorder()).setTitle("Dados de " + tipoGraduacao + "s");
@@ -324,12 +347,17 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 
 	@Override
 	public void esconder() {
+		limparTudo();
 		setVisible(false);
 	}
 
 	@Override
 	public void fechar() {
 		dispose();
+	}
+
+	private boolean checarPainelVazio(JPanel painel) {
+		return painel.getWidth() == 0 ? true : false;
 	}
 
 	private class ConstrutorDeGrafico {
@@ -345,7 +373,7 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 				}
 				dataset.addValue(medias.obterMediaGeral(), medias.getDescricao(), "Conceito Médio Geral");
 			}
-			
+
 
 			JFreeChart chart = ChartFactory.createLineChart(titulo, null, null, 
 					dataset, PlotOrientation.VERTICAL, true, true, true);
@@ -353,90 +381,95 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 			CategoryPlot categoryP = chart.getCategoryPlot();
 			CategoryItemRenderer renderer = categoryP.getRenderer();
 
-
-
-//			BarRenderer3D barRenderer = (BarRenderer3D) plot.getRenderer();
-
-			//categoryP.getDomainAxis().setMaximumCategoryLabelWidthRatio(-10);
-			//plot.getDomainAxis().setCategoryMargin(2);
-
-		
-
-
 			for(int i = 0; i<dataset.getRowCount(); i++) {
 				renderer.setSeriesStroke(i, new BasicStroke(2));
 
 			}
 
-			
+
 			//Organizando o posicionamento das legendas abaixo do gráfico
 			CategoryAxis domainAxis = categoryP.getDomainAxis();
 			domainAxis.setCategoryLabelPositions(
 					CategoryLabelPositions.createUpRotationLabelPositions(
 							Math.PI / 6.0));
-			
-			Font font3 = new Font("Dialog", Font.PLAIN, 50); 
-			domainAxis.setLabelFont(font3);
-			
-//			domainAxis.setMinorTickMarksVisible(true);
-//			domainAxis.setTickLabelsVisible(true);
-//			domainAxis.setAxisLineVisible(true);
 
-			
+			Font font3 = new Font(Font.DIALOG, Font.PLAIN, 50); 
+			domainAxis.setLabelFont(font3);
+
 			//Colorindo o plot
 			categoryP.setBackgroundPaint(Color.WHITE);
 			categoryP.setDomainGridlinePaint(Color.DARK_GRAY);
 			categoryP.setRangeGridlinePaint(Color.DARK_GRAY);
 			categoryP.setOutlineVisible(true);
 			categoryP.setDomainGridlinesVisible(true);
-			//plot.setRangeMinorGridlinesVisible(true);
 
-			
+
 			renderer.setBaseItemLabelPaint(Color.BLACK);
 			//renderer.setBaseItemLabelFont(new Font(Font.DIALOG, Font.BOLD, 14));
 
 			ChartPanel panel = new ChartPanel(chart);
-//			int x = 854, y = 480 ;
-//			ChartPanel panel = new ChartPanel(chart,x, y, x, y, x, y, 
-//					true, true, true, true, true, true, true);
 
 			return panel;
 
-
 		}
 
-		public void gerarPDF(String localDeSalvamento, JTable tabela, ChartPanel graficoPanel) throws DocumentException, IOException {
-			
+		private void adicionarTitulo(Document documento, String textoTitulo) throws DocumentException {
+			BaseColor corTitulo = new BaseColor(134, 148, 196), corFundo = new BaseColor(219, 229, 241);
+			com.itextpdf.text.Font fonte = new com.itextpdf.text.Font(com.itextpdf.text.Font.FontFamily.HELVETICA, 18, Font.BOLD, corTitulo);
+			Chunk chunk = new Chunk(textoTitulo, fonte);
+
+			chunk.setBackground(corFundo);
+			Paragraph titulo = new Paragraph(chunk);
+			titulo.setAlignment(Element.ALIGN_CENTER);
+
+			documento.add(titulo);
+		}
+
+		private void adicionarComoImgem(Document documento, PdfWriter pdfWriter, 
+				JComponent componente, int escala, boolean renderizado) throws IOException, DocumentException {
+
+			System.out.println(componente);
+			BufferedImage image = EntradaESaida.componenteToImage(componente, renderizado);
+
+			//EntradaESaida.msgInfo(this, image, "dw");
+			com.itextpdf.text.Image img = com.itextpdf.text.Image.getInstance(pdfWriter, image, 1);
+
+			img.scalePercent(escala);
+
+			documento.add(img);
+		}
+
+		private void novaLinha(Document documento) throws DocumentException {
+			documento.add(new Paragraph("\n\n"));
+		}
+
+		public void gerarPDF(String localDeSalvamento, String titulo) throws DocumentException, IOException {
+
+
 			FileOutputStream outputStream = new FileOutputStream(localDeSalvamento);
-			
+
 			Document documento = new Document();
-			
-			 
-			
+
 			PdfWriter pdfWriter = PdfWriter.getInstance(documento, outputStream);
+			
 			documento.open();
 			
-			  BufferedImage image = new BufferedImage(panelTabela.getWidth(), panelTabela.getHeight(), BufferedImage.TYPE_INT_RGB);
-					 
-		      panelTabela.paint(image.getGraphics());
-		      
-		     com.itextpdf.text.Image img = com.itextpdf.text.Image.getInstance(pdfWriter, image, 1);
-		    
-		     img.scalePercent(65);
-		     documento.add(img);
-		    
-		     
-////		     BufferedImage image1 = new BufferedImage(graficoPanel.getWidth(), graficoPanel.getHeight(), BufferedImage.TYPE_INT_RGB);
-////			 
-////		      graficoPanel.paint(image.getGraphics());
-////		      
-////		     com.itextpdf.text.Image img1 = com.itextpdf.text.Image.getInstance(pdfWriter, image1, 1);
-////		    
-////		     img1.scalePercent(65);
-//		     documento.add(img1);
-		     
-            documento.close();
+			adicionarTitulo(documento, titulo);
+			
+			if(checarPainelVazio(panelTabela)) gerarTabela();
+			
+			adicionarComoImgem(documento, pdfWriter, panelTabela, 60, radioBtnTabela.isSelected());
+			
+			novaLinha(documento);
+			
+			if(checarPainelVazio(panelGrafico)) gerarGrafico();
+			
+			adicionarComoImgem(documento, pdfWriter, panelGrafico, 65, radioBtnGrafico.isSelected());
+
+			
+			documento.close();
 		}
+
 
 		public ChartPanel gerarGraficoBarra3D(RelatorioDeParticipantes dadosRelatorio, 
 				String titulo, PlotOrientation orientacao) {
@@ -501,7 +534,33 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 		}
 
 
+		public void writeChartToPDF(JFreeChart chart, int width, int height, String fileName) {
+			PdfWriter writer = null;
 
+			Document document = new Document();
+
+			try {
+				writer = PdfWriter.getInstance(document, new FileOutputStream(
+						fileName));
+				document.open();
+
+				PdfContentByte contentByte = writer.getDirectContent();
+				PdfGraphics2D pdfGraphics2D = new PdfGraphics2D(contentByte, width, height);
+
+				PdfTemplate template = contentByte.createTemplate(width, height);
+				Rectangle2D rectangle2d = new Rectangle2D.Double(0, 0, width,
+						height);
+
+				chart.draw(pdfGraphics2D, rectangle2d);
+
+				pdfGraphics2D.dispose();
+				contentByte.addTemplate(template, 0, 0);
+
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			document.close();
+		}
 	}
 }
 

@@ -1,6 +1,10 @@
 package com.rdr.avaliacao.es;
 
 import java.awt.Component;
+import java.awt.Container;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
+import java.awt.image.BufferedImage;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -8,6 +12,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+
+import javax.swing.CellRendererPane;
 
 import com.rdr.avaliacao.AvaliacaoInstitucional;
 import com.rdr.avaliacao.es.bd.BancoDeDados;
@@ -66,7 +72,7 @@ public class ExtratorDeDados {
 		arquivo = new ArquivoTexto();
 		this.janelaPai = janelaPai;
 		this.pesquisa = pesquisa;
-		
+
 		app = AvaliacaoInstitucional.getInstance();
 	}
 
@@ -138,7 +144,7 @@ public class ExtratorDeDados {
 		barraDeProgresso = new IgBarraDeProgresso(janelaPai, 
 				InterfaceConstraints.TITULO_PROGRAMA, 
 				"Lendo pesquisa...", "Isto pode levar alguns minutos...", "Quase lá...", numeroDeLinhas);
-		
+
 	}
 
 	private void terminarBarraDeProgresso() {
@@ -222,7 +228,7 @@ public class ExtratorDeDados {
 		resetarArquivo();
 		return i;
 	}
-	
+
 	private void extrairRespostas() throws IOException, SQLException {
 
 		Thread thread = new Thread(new Runnable() {
@@ -232,11 +238,11 @@ public class ExtratorDeDados {
 				int codigoEntrevistado;
 				String linha, respostas[];
 				int contador = 0;
-				
+
 				try {
-					
+
 					iniciarBarraDeProgresso();
-				
+
 					do {
 
 						/* 	Obtendo uma linha do arquivo, capturando a exceção e saindo do loop
@@ -266,7 +272,7 @@ public class ExtratorDeDados {
 					e.printStackTrace();
 				}
 				terminarBarraDeProgresso();
-				
+
 			}
 		});
 		thread.start();
@@ -286,7 +292,7 @@ public class ExtratorDeDados {
 
 		while(true){
 			System.out.println(i + " " + indicesPerguntas[i].getIndiceAssunto());
-			
+
 			//Tenta inserir uma resposta por meio da storded function inserir_pergunta. Incrementa a vaiável i
 			dao.executarFuncao(FUNCTION_INSERIR_RESPOSTA, pesquisa.getCodigo(), word.trim(), indicesPerguntas[i].getIndiceAssunto(),
 					indicesPerguntas[i++].getIndicePergunta(), codigoEntrevistado);
@@ -421,17 +427,17 @@ public class ExtratorDeDados {
 		List<Curso> cursosList = new ArrayList<Curso>();
 		boolean cursosTecnologia = false;
 		String termoDeBuscaSecundario = "";
-		
+
 		if(tipoGraduacao.equals("Técnicos e Tecnólogos")) {
 			cursosTecnologia = true;
 			tipoGraduacao =  "Tecnologia";
 			termoDeBuscaSecundario = "T_cnico";
 		}
-		
+
 		StringBuilder strBuilder =
 				new StringBuilder("select codigo, descricao from curso ").append("where descricao ilike '%")
 				.append(tipoGraduacao).append("%'");
-		
+
 		if(cursosTecnologia)
 			strBuilder.append(" or descricao ilike '%").append(termoDeBuscaSecundario).append("%'");
 
@@ -458,14 +464,14 @@ public class ExtratorDeDados {
 		for(int i = 0; i<assuntos.length; i++) {
 			assuntosList.add(new Assunto((int)assuntos[i][0], 
 					formataraDescricaoAssunto(assuntos[i][1].toString())));
-			
+
 
 		}
 
 		return assuntosList;
 	}
 
-	
+
 	private String formataraDescricaoAssunto(String assunto) {
 		String novoAssunto;
 		try{
@@ -477,14 +483,14 @@ public class ExtratorDeDados {
 				return assunto;
 			}
 		}
-		
+
 
 		novoAssunto = Character.toUpperCase(novoAssunto.charAt(0)) + novoAssunto.substring(1); 
 		return novoAssunto;
 	}
 	public RelatorioDeMedias gerarDataSetConceitoMedioAssunto(Pesquisa pesquisa, String tipoGraduacao, TipoRelatorio tipoRelatorio) throws SQLException {
 
-		
+
 		double media;
 		Object[][] resultado;
 
@@ -532,7 +538,7 @@ public class ExtratorDeDados {
 			}
 
 		}
-		
+
 		if(listaDeMedias.size() == 0)
 			throw new NullPointerException("Nenhum dado de relatório encontrado com os parâmetros passados.");
 
@@ -562,4 +568,5 @@ public class ExtratorDeDados {
 		}
 
 	}
+
 }

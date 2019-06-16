@@ -10,16 +10,26 @@ import static javax.swing.JOptionPane.showMessageDialog;
 
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Container;
+import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.Toolkit;
+import java.awt.image.BufferedImage;
 import java.io.File;
 
+import javax.swing.CellRendererPane;
+import javax.swing.JComponent;
 import javax.swing.JFileChooser;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellRenderer;
@@ -175,30 +185,30 @@ public class EntradaESaida {
 
 
 		table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF );
-		
-	        TableColumnModel columnModel = table.getColumnModel();
-	        for (int col = 0; col < table.getColumnCount(); col++) {
-	            int maxWidth = 0;
-	            for (int row = 0; row < table.getRowCount(); row++) {
-	                TableCellRenderer rend = table.getCellRenderer(row, col);
-	                Object value = table.getValueAt(row, col);
-	                Component comp = rend.getTableCellRendererComponent(table, value, false, false, row, col);
-	                maxWidth = Math.max(comp.getPreferredSize().width, maxWidth);
-	            }
-	            TableColumn column = columnModel.getColumn(col);
-	            TableCellRenderer headerRenderer = column.getHeaderRenderer();
-	            if (headerRenderer == null) {
-	                headerRenderer = table.getTableHeader().getDefaultRenderer();
-	            }
-	            Object headerValue = column.getHeaderValue();
-	            Component headerComp = headerRenderer.getTableCellRendererComponent(table, headerValue, false, false, 0, col);
-	            maxWidth = Math.max(maxWidth, headerComp.getPreferredSize().width);
-	            // note some extra padding
-	            column.setPreferredWidth(maxWidth + 6);//IntercellSpacing * 2 + 2 * 2 pixel instead of taking this value from Borders
-	        }
-	        DefaultTableCellRenderer stringRenderer = (DefaultTableCellRenderer) table.getDefaultRenderer(String.class);
-	        stringRenderer.setHorizontalAlignment(SwingConstants.CENTER);
-	        table.setPreferredScrollableViewportSize(table.getPreferredSize());
+
+		TableColumnModel columnModel = table.getColumnModel();
+		for (int col = 0; col < table.getColumnCount(); col++) {
+			int maxWidth = 0;
+			for (int row = 0; row < table.getRowCount(); row++) {
+				TableCellRenderer rend = table.getCellRenderer(row, col);
+				Object value = table.getValueAt(row, col);
+				Component comp = rend.getTableCellRendererComponent(table, value, false, false, row, col);
+				maxWidth = Math.max(comp.getPreferredSize().width, maxWidth);
+			}
+			TableColumn column = columnModel.getColumn(col);
+			TableCellRenderer headerRenderer = column.getHeaderRenderer();
+			if (headerRenderer == null) {
+				headerRenderer = table.getTableHeader().getDefaultRenderer();
+			}
+			Object headerValue = column.getHeaderValue();
+			Component headerComp = headerRenderer.getTableCellRendererComponent(table, headerValue, false, false, 0, col);
+			maxWidth = Math.max(maxWidth, headerComp.getPreferredSize().width);
+			// note some extra padding
+			column.setPreferredWidth(maxWidth + 6);//IntercellSpacing * 2 + 2 * 2 pixel instead of taking this value from Borders
+		}
+		DefaultTableCellRenderer stringRenderer = (DefaultTableCellRenderer) table.getDefaultRenderer(String.class);
+		stringRenderer.setHorizontalAlignment(SwingConstants.CENTER);
+		table.setPreferredScrollableViewportSize(table.getPreferredSize());
 
 		//Alinhando o conteúdo das colunas.
 		DefaultTableCellRenderer primeiraColunaCellRenderer = new DefaultTableCellRenderer(), colunasCellRenderer = new DefaultTableCellRenderer();
@@ -394,6 +404,66 @@ public class EntradaESaida {
 			fileChooser.addChoosableFileFilter(filter);
 
 			fileChooser.setFileFilter(filter);
+		}
+	}
+
+	//	public static BufferedImage componentToImage(Component component, boolean visible) {
+	//		if (visible) {
+	//			BufferedImage img = new BufferedImage(component.getWidth(), component.getHeight(), BufferedImage.TRANSLUCENT);
+	//			Graphics2D g2d = (Graphics2D) img.getGraphics();
+	//			g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+	//			component.paintAll(g2d);
+	//			return img;
+	//		} else {
+	//			component.setSize(component.getPreferredSize());
+	//			layoutComponent(component);
+	//			BufferedImage img = new BufferedImage(1000, 1000, BufferedImage.TRANSLUCENT);
+	//			CellRendererPane crp = new CellRendererPane();
+	//			crp.add(component);
+	//			crp.paintComponent(img.createGraphics(), component, crp, component.getBounds());
+	//			return img;
+	//		}
+	//	}
+
+	public static BufferedImage componenteToImage(JComponent c, boolean cdwf) {
+
+		Dimension size = c.getSize();
+		if (size.width <= 0 || size.height <= 0) {
+			size = c.getPreferredSize();
+		}
+
+		BufferedImage snapshot =
+				new BufferedImage(size.width, size.height,
+						BufferedImage.TYPE_INT_ARGB);
+
+		drawComponent(c, snapshot);
+
+		return snapshot;
+	}
+
+	private static void drawComponent(JComponent c,
+			BufferedImage destination) {
+
+		JFrame frame = new JFrame();
+
+		Graphics g = destination.createGraphics();
+
+		SwingUtilities.paintComponent(g, c, frame.getContentPane(),
+				0, 0, destination.getWidth(), destination.getHeight());
+
+		g.dispose();
+
+		frame.dispose();
+	}
+
+
+	private static void layoutComponent(Component c) {
+		synchronized (c.getTreeLock()) {
+			c.doLayout();
+			if (c instanceof Container) 
+				for (Component child : ((Container) c).getComponents()) 
+					layoutComponent(child);
+
 		}
 	}
 

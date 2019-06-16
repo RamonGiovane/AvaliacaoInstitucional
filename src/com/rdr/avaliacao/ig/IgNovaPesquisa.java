@@ -83,16 +83,16 @@ public class IgNovaPesquisa extends JDialog{
 		lblNomeDaPesquisa.setBounds(25, 54, 123, 14);
 		getContentPane().add(lblNomeDaPesquisa);
 
-		JButton btnConectar = new JButton("OK");
-		btnConectar.addActionListener(new ActionListener() {
+		JButton btnOK = new JButton("OK");
+		btnOK.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				comecarImportacao();
 			}
 
 
 		});
-		btnConectar.setBounds(350, 184, 89, 23);
-		getContentPane().add(btnConectar);
+		btnOK.setBounds(350, 184, 89, 23);
+		getContentPane().add(btnOK);
 
 		JLabel label = new JLabel("");
 		label.setIcon(new ImageIcon(IgNovaPesquisa.class.getResource(CAMINHO_IMPORT_ICON)));
@@ -132,6 +132,8 @@ public class IgNovaPesquisa extends JDialog{
 			}
 
 		});
+		
+		Aparencia.definirBotaoPrincipal(this, btnOK);
 
 	}
 

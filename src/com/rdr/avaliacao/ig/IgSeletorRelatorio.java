@@ -24,6 +24,8 @@ import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
+import javax.swing.JRootPane;
+import javax.swing.SwingUtilities;
 
 import com.rdr.avaliacao.AvaliacaoInstitucional;
 import com.rdr.avaliacao.es.EntradaESaida;
@@ -130,8 +132,8 @@ public class IgSeletorRelatorio extends JDialog implements PropriedadesDeJanela{
 
 
 
-		JButton btnConectar = new JButton("OK");
-		btnConectar.addActionListener(new ActionListener() {
+		JButton btnOK = new JButton("OK");
+		btnOK.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				IgAvaliacaoInstitucional.mudarCursor(Cursor.WAIT_CURSOR);
 				abrirRelatorio();
@@ -139,9 +141,11 @@ public class IgSeletorRelatorio extends JDialog implements PropriedadesDeJanela{
 			}
 
 		});
-		btnConectar.setBounds(331, 89, 89, 23);
-		getContentPane().add(btnConectar);
+		btnOK.setBounds(331, 89, 89, 23);
+		getContentPane().add(btnOK);
 
+		Aparencia.definirBotaoPrincipal(this, btnOK);
+		
 		JLabel label = new JLabel("");
 		label.setIcon(new ImageIcon(IgSeletorRelatorio.class.getResource(CAMINHO_ICON_GRAPHIC)));
 		label.setBounds(10, 11, 37, 32);
@@ -177,11 +181,9 @@ public class IgSeletorRelatorio extends JDialog implements PropriedadesDeJanela{
 
 	private void popularCombosBoxes() {
 		popularComboBoxNomePesquisa();
-		if(tipoRelatorio.getTemaRelatório().equals(TipoRelatorio.CONCEITO_MEDIO_CURSO.getTemaRelatório())) {
+		if(tipoRelatorio  == TipoRelatorio.CONCEITO_MEDIO_CURSO) {
 			comboTipoGraduacao.setVisible(true);
 			lblDadosASerem.setVisible(true);
-
-
 
 		}
 		else {
