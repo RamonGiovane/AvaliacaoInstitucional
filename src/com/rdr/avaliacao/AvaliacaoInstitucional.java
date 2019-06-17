@@ -185,7 +185,7 @@ public class AvaliacaoInstitucional {
 		return strPesquisas;
 	}
 	
-	/**Gera uma relatório de acordo com o tipo de pesquisa solicitado de uma pesquisa específica, salvando os dados
+	/** Gera uma relatório de acordo com o tipo de pesquisa solicitado de uma pesquisa específica, salvando os dados
 	 * em uma classe que implementa o super tipo abstrato {@link Relatorio}.
 	 * 
 	 * @param pesquisa objeto pesquisa a qual se deseja realizar o relatório.
@@ -221,6 +221,9 @@ public class AvaliacaoInstitucional {
 
 		case CONCEITO_MEDIO_CURSO:
 			return extrator.gerarDataSetConceitoMedioAssunto(pesquisa, tipoGraduacao, tipoRelatorio);
+		
+		case CONCEITO_MEDIO_ASSUNTO:
+			return extrator.gerarDataSetConceitoMedioAssuntoSegmento(pesquisa, tipoRelatorio);
 		
 		default:
 			throw new NullPointerException();

@@ -27,6 +27,7 @@ import com.rdr.avaliacao.questionario.Curso;
 import com.rdr.avaliacao.questionario.Pesquisa;
 import com.rdr.avaliacao.questionario.Segmento;
 import com.rdr.avaliacao.relatorio.MediasPorCurso;
+import com.rdr.avaliacao.relatorio.MediasPorSegmento;
 import com.rdr.avaliacao.relatorio.RelatorioDeMedias;
 import com.rdr.avaliacao.relatorio.RelatorioDeParticipantes;
 import static com.rdr.avaliacao.es.bd.constraints.FuncoesSQL.*;
@@ -51,7 +52,6 @@ public class ExtratorDeDados {
 	private BancoDeDados bd;
 	private String separador;
 	private ArquivoTexto arquivo; 
-	private final String TEMA_INDEFINIDO = "Geral";
 	private DAO dao;
 
 	private IndicePergunta indicesPerguntas[];
@@ -62,6 +62,8 @@ public class ExtratorDeDados {
 
 	private Component janelaPai;
 	private long numeroDeLinhas;
+
+	private static String STR_CURSOS_TECNICOS = "Cursos Técnicos", STR_TECNICO = "Técnico";
 
 	private AvaliacaoInstitucional app; 
 	private ExtratorDeDados(Component janelaPai, BancoDeDados bd, Pesquisa pesquisa) {
@@ -374,20 +376,22 @@ public class ExtratorDeDados {
 		RelatorioDeParticipantes dataSet = new RelatorioDeParticipantes(tipoRelatorio);
 
 		//Consulta 1: Seleciona todos os cursos
-		Object[][] objetos = dao.consultar("select codigo, descricao from curso");
+		List<Curso> cursos = obterCursos(null);
 
-		Curso curso;
-		int i = 0;
 		Object[][] resultado = new Object[0][0];
 
-		for(; i<objetos.length; i++) {
-			curso = new Curso((int)objetos[i][0], objetos[i][1].toString());
+		for(Curso curso : cursos) {
 
 			//Consulta 2: obtém o número de entrevistados de todos cursos
 			resultado = dao.consultar("select count(codcurso) from entrevistado where codcurso = ? and codpesquisa = ?", curso.getCodigo(), pesquisa.getCodigo());
 
+			
+			//Adiciona a quantidade entrevistados a partir do resultado da consulta
 			curso.setQuantidadeEntrevistados((long)resultado[0][0]);
 
+			//Formata o nome do curso se possível
+			formatarNomeCursoTecnico(curso);
+			
 			//Adiciona um curso no dataSet
 			dataSet.adicionar(curso);
 		}
@@ -399,24 +403,21 @@ public class ExtratorDeDados {
 	public RelatorioDeParticipantes gerarDataSetParticipantesSegmento(Pesquisa pesquisa, TipoRelatorio tipoRelatorio) throws SQLException{
 		RelatorioDeParticipantes dataSet = new RelatorioDeParticipantes(tipoRelatorio);
 
-		//Consulta 1: Seleciona todos os cursos
-		Object[][] objetos = dao.consultar("select codigo, descricao from segmento");
+		//Consulta 1: Seleciona todos os segmentos
+		List<Segmento> objetos = obterSegmentos(pesquisa);
 
-		Segmento curso; //TODO: Trocar pra segmento
-		int i = 0;
 		Object[][] resultado = new Object[0][0];
 
-		for(; i<objetos.length; i++) {
-			curso = new Segmento((int)objetos[i][0], objetos[i][1].toString());
+		for(Segmento segmento : objetos) {
 
 			//Consulta 2: obtém o número de entrevistados de todos cursos
 			resultado = dao.consultar("select count(codsegmento) from entrevistado where codsegmento = ? and codpesquisa = ?",
-					curso.getCodigo(), pesquisa.getCodigo());
+					segmento.getCodigo(), pesquisa.getCodigo());
 
-			curso.setQuantidadeEntrevistados((long)resultado[0][0]);
+			segmento.setQuantidadeEntrevistados((long)resultado[0][0]);
 
 			//Adiciona um curso no dataSet
-			dataSet.adicionar(curso);
+			dataSet.adicionar(segmento);
 		}
 
 
@@ -426,7 +427,7 @@ public class ExtratorDeDados {
 	private List<Segmento> obterSegmentos(Pesquisa pesquisa) throws SQLException {
 		List<Segmento> segmentosList = new ArrayList<Segmento>();
 
-		Object[][] segmentos = dao.consultar("select codigo, descricao from segmento  where codpesquisa = ?", pesquisa.getCodigo());
+		Object[][] segmentos = dao.consultar("select codigo, descricao from segmento");
 
 		for(int i = 0; i<segmentos.length; i++) {
 			segmentosList.add(new Segmento((int)segmentos[i][0], segmentos[i][1].toString()));
@@ -440,21 +441,27 @@ public class ExtratorDeDados {
 		List<Curso> cursosList = new ArrayList<Curso>();
 		boolean cursosTecnologia = false;
 		String termoDeBuscaSecundario = "";
+		
+		//Preparando a query básica
+		StringBuilder strBuilder = 	new StringBuilder("select codigo, descricao from curso");
+		
+		//Se for passado um tipo de graduação, adiciona este filtro na query
+		if(tipoGraduacao != null) {
+			if(tipoGraduacao.equals("Técnicos e Tecnólogos")) {
+				cursosTecnologia = true;
+				tipoGraduacao =  "Tecnologia";
+				termoDeBuscaSecundario = "T_cnico";
+			}
 
-		if(tipoGraduacao.equals("Técnicos e Tecnólogos")) {
-			cursosTecnologia = true;
-			tipoGraduacao =  "Tecnologia";
-			termoDeBuscaSecundario = "T_cnico";
+				strBuilder.append(" where descricao ilike '%")
+					.append(tipoGraduacao).append("%'");
+
+			if(cursosTecnologia)
+				strBuilder.append(" or descricao ilike '%").append(termoDeBuscaSecundario).append("%'");
 		}
+		
 
-		StringBuilder strBuilder =
-				new StringBuilder("select codigo, descricao from curso").append(" where descricao ilike '%")
-				.append(tipoGraduacao).append("%'");
-
-		if(cursosTecnologia)
-			strBuilder.append(" or descricao ilike '%").append(termoDeBuscaSecundario).append("%'");
-
-		System.out.println(strBuilder.toString());
+		//Realiza a consulta
 		Object[][] cursos = dao.consultar(strBuilder.toString());
 
 		for(int i = 0; i<cursos.length; i++) {
@@ -559,7 +566,7 @@ public class ExtratorDeDados {
 	}
 
 
-	public RelatorioDeMedias gerarDataSetConceitoMedioAssuntoSegmento(Pesquisa pesquisa, String tipoGraduacao, TipoRelatorio tipoRelatorio) throws SQLException {
+	public RelatorioDeMedias gerarDataSetConceitoMedioAssuntoSegmento(Pesquisa pesquisa, TipoRelatorio tipoRelatorio) throws SQLException {
 
 
 		double media;
@@ -577,11 +584,11 @@ public class ExtratorDeDados {
 		RelatorioDeMedias listaDeMedias = new RelatorioDeMedias(tipoRelatorio);
 
 
-		MediasPorCurso notas;
+		MediasPorSegmento notas;
 
 		for(Segmento curso : segmentosList) {
 
-			notas = null;// new MediasPorCurso(curso);
+			notas = new MediasPorSegmento(curso);
 
 			int i = 0;
 			System.out.println(assuntosList.size());
@@ -591,7 +598,7 @@ public class ExtratorDeDados {
 				resultado = dao.consultar("select cast(avg(conceito.valor) as decimal) from conceito " + 
 						"inner join resposta on (conceito.codigo = resposta.codconceito) " + 
 						"inner join entrevistado on (entrevistado.codigo = resposta.codentrevistado) " + 
-						"where entrevistado.codcurso = ? and resposta.codassunto = ? and resposta.codpesquisa = ?", 
+						"where entrevistado.codsegmento = ? and resposta.codassunto = ? and resposta.codpesquisa = ?", 
 						curso.getCodigo(), assunto.getCodigo(), pesquisa.getCodigo());
 				System.err.printf("\n%s: %s", i++, assunto.getCodigo());
 				if(resultado[0][0] != null) {
@@ -638,6 +645,11 @@ public class ExtratorDeDados {
 			return indicePergunta;
 		}
 
+	}
+
+	public static void formatarNomeCursoTecnico(Curso curso) {
+		if(curso.getDescricao().equals(STR_TECNICO))
+			curso.setDescricao(STR_CURSOS_TECNICOS);
 	}
 
 }

@@ -62,5 +62,4 @@ public abstract class MediasDeNotas{
 		this.descricao = descricao;
 	}
 	
-	
 }
