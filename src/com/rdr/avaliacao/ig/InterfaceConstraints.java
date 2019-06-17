@@ -48,11 +48,14 @@ public interface InterfaceConstraints {
 			SENHA_BD_PADRAO = "SPA#Barbacena@IFSudesteMG";
 
 
-	//Filtros de extensão de arquivos
+	/**Filtros de extensão de arquivos*/
 	public final static String[] 
 			DESCRICOES_EXTENSOES_CSV = new String[] {"Arquivo CSV - Comma Separeted Values Database (*.csv)"},
 			DESCRICOES_EXTENSOES_PDF = new String[] {"Arquivo PDF (*.pdf)"},
 			EXTENSOES_CSV = new String[]{"csv"}, EXTENSOES_PDF = new String[] {"pdf"};
+	
+	/**Ponto final, separador de nomes de arquivos e extensões*/
+	public static final String PONTO = ".";
 
 	public static final String MSG_CHECAR_CABECALHO = "Por favor, verifique os dados da pesquisa e certifique\nque estejam de acordo com o padrão correto.";
 

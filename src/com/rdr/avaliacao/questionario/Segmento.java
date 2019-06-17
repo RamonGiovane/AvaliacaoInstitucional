@@ -1,19 +1,28 @@
 package com.rdr.avaliacao.questionario;
 
+import com.rdr.avaliacao.relatorio.DadosDeGrafico;
+
 /**Enumeração que representa os tipos de segmentos dos entrevistados.
  * 
  * @author Ramon Giovane
  *
  */
-public enum Segmento {
-	DISCENTE("Discente"), DOCENTE("Docente"), TECNICO_ADMINISTRATIVO("Técnico Administrativo da Educação");
+public class Segmento implements DadosDeGrafico {
+	public static String DISCENTE = "Discente";
 
+	private int codigo;
 	private String descricao;
 
-	private Segmento(String descricao) {
+	private long quantidadeEntrevistados;
+
+	public Segmento(int codigo, String descricao) {
+		super();
+		this.codigo = codigo;
 		this.descricao = descricao;
+	}
 
-
+	public Segmento(String descricao) {
+		this.descricao = descricao;
 	}
 
 	public String getDescricao() {
@@ -24,23 +33,38 @@ public enum Segmento {
 		this.descricao = descricao;
 	}
 
-	/**Retorna um segmento que coincida com a descrição do segmento passda por parâmetro.
-	 * @param descricao descrição do segmento
-	 * @return um objeto enum de com.rdr.avaliacao.{@link Segmento}*/
-	public static Segmento parseSegmento(String descricao) {
-		for (Segmento segmento : Segmento.values()) {
-			if (segmento.descricao.equalsIgnoreCase(descricao)) {
-				return segmento;
-			}
-		}
-		return null;
+	public int getCodigo() {
+		return codigo;
 	}
 
-
+	public void setCodigo(int codigo) {
+		this.codigo = codigo;
+	}
+	
 	@Override
 	public String toString() {
 		return descricao;
 	}
 
+	public void setQuantidadeEntrevistados(long quantidadeEntrevistados) {
+		this.quantidadeEntrevistados = quantidadeEntrevistados;
+	}
 
+	public void setQuatidadeEntrevistados(long quatidadeEntrevistados) {
+		this.quantidadeEntrevistados = quatidadeEntrevistados;
+	}
+
+	@Override
+	public Number getValorLinha() {
+		return quantidadeEntrevistados;
+	}
+
+	@Override
+	public String getValorColuna() {
+		return descricao;
+	}
+	
+	
+	
 }
+

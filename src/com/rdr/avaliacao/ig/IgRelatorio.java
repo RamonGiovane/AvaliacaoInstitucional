@@ -8,20 +8,14 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Font;
-import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.geom.Rectangle2D;
-import java.awt.image.BufferedImage;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.sql.SQLException;
 
 import javax.swing.ButtonGroup;
-import javax.swing.CellRendererPane;
 import javax.swing.JButton;
-import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
@@ -45,23 +39,10 @@ import org.jfree.chart.renderer.category.BarRenderer3D;
 import org.jfree.chart.renderer.category.CategoryItemRenderer;
 import org.jfree.data.category.DefaultCategoryDataset;
 import org.jfree.ui.TextAnchor;
-
-import com.itextpdf.awt.PdfGraphics2D;
-import com.itextpdf.text.BadElementException;
-import com.itextpdf.text.BaseColor;
-import com.itextpdf.text.Chunk;
-import com.itextpdf.text.Document;
+import static com.rdr.avaliacao.ig.InterfaceConstraints.*;
 import com.itextpdf.text.DocumentException;
-import com.itextpdf.text.Element;
-import com.itextpdf.text.Paragraph;
-import com.itextpdf.text.Phrase;
-import com.itextpdf.text.pdf.BaseFont;
-import com.itextpdf.text.pdf.PdfContentByte;
-import com.itextpdf.text.pdf.PdfPCell;
-import com.itextpdf.text.pdf.PdfPTable;
-import com.itextpdf.text.pdf.PdfTemplate;
-import com.itextpdf.text.pdf.PdfWriter;
 import com.rdr.avaliacao.AvaliacaoInstitucional;
+import com.rdr.avaliacao.es.ArquivoPDF;
 import com.rdr.avaliacao.es.EntradaESaida;
 import com.rdr.avaliacao.questionario.Assunto;
 import com.rdr.avaliacao.questionario.Pesquisa;
@@ -70,40 +51,49 @@ import com.rdr.avaliacao.relatorio.Relatorio;
 import com.rdr.avaliacao.relatorio.RelatorioDeMedias;
 import com.rdr.avaliacao.relatorio.RelatorioDeParticipantes;
 
-import sun.font.FontFamily;
-
 public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
+
+	/**
+	 * Componentes da interface, salvos de forma a serem mais acessíveis durante o 
+	 * funcionamento da classe
+	 */
 	private ButtonGroup buttonGroup =  new ButtonGroup();
 	private JRadioButton radioBtnTabela;
 	private JRadioButton radioBtnGrafico;
 	private static JPanel panelDados;
 	private static JPanel panelTabela, panelGrafico;
-
-	private static TipoRelatorio tipoRelatorio;
-	private static Pesquisa pesquisa;
-
-	private String tipoGraduacao;
-
 	private static IgRelatorio igRelatorio;
-	private JScrollPane scrollPane;
 	private static ChartPanel graficoPanel;
 	private static JTable tabela;
 
-	/**Variáveis que guardam informações que povoaram os gráficos e tabelas*/
+	/**
+	 * Parâmteros de pesquisa que variam de acordo com cada chamada da instância da janela
+	 */
+	private static TipoRelatorio tipoRelatorio;
+	private static Pesquisa pesquisa;
+	private String tipoGraduacao;
+
+
+	private static ArquivoPDF arquivoPDF;
+
+	/**Variáveis que guardam informações que povoarão os gráficos e tabelas*/
 	private Relatorio dadosRelatorio;
 
-	private boolean graficoDesenhado, tabelaDesenhada;
 
-	private static ConstrutorDeGrafico construtorDeGrafico;
+	private static GeradorDeArtefatosDeRelatorio artefatosDeRelatorio;
 
 
+	/**
+	 * Instancia objetos que serão únicos durante todo o tempo que a classe estiver sendo usada.
+	 */
 	private IgRelatorio() {
 
-		construtorDeGrafico = new ConstrutorDeGrafico();
+		artefatosDeRelatorio = new GeradorDeArtefatosDeRelatorio();
+		arquivoPDF = new ArquivoPDF();
 	}
 
-	private void definriParametrosRelatorio(TipoRelatorio tipoPesquisa, Pesquisa pesquisa, String tipoGraduacao) {
-		System.out.println("def param - pesqu " + pesquisa );
+	/**Guarda os parâmtros passados, que podem ser variáveis a cada chamada de uma instância da janela.*/
+	private void guardarParametros(TipoRelatorio tipoPesquisa, Pesquisa pesquisa, String tipoGraduacao) {
 		IgRelatorio.tipoRelatorio = tipoPesquisa;
 		IgRelatorio.pesquisa = pesquisa;
 		this.tipoGraduacao = tipoGraduacao;
@@ -112,30 +102,68 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 	}
 
 
-	private static IgRelatorio instanciar(TipoRelatorio tipoPesquisa, Pesquisa pesquisa, String tipoGraduacao) throws SQLException {
+	/**Instancia a classe e construir a interface se ainda não os fez. Do contrário atualiza os dados dos relatórios com os
+	 * parâmetros recebidos da forma apropriada. Retorna uma autoreferência.
+	 * 
+	 * @param tipoRelatorio tipo do relatório passado pelo método getInstance.
+	 * @param pesquisa valor também passado do método getInstance.
+	 * @param tipoGraduacao idem. <i>Porém, aceita <code>null</code></i>, se a o relatório não utiliar deste filtro.
+	 * @return uma atoreferência, sempre única.
+	 * @throws SQLException
+	 */
+	private static IgRelatorio instanciar(TipoRelatorio tipoRelatorio, Pesquisa pesquisa, String tipoGraduacao) throws SQLException {
 
 		if(igRelatorio == null) {
 			igRelatorio = new IgRelatorio();
-			igRelatorio.definriParametrosRelatorio(tipoPesquisa, pesquisa, tipoGraduacao);
+			igRelatorio.guardarParametros(tipoRelatorio, pesquisa, tipoGraduacao);
 			igRelatorio.construirIg();
 		}
 		else {
-			igRelatorio.definriParametrosRelatorio(tipoPesquisa, pesquisa, tipoGraduacao);
+			igRelatorio.guardarParametros(tipoRelatorio, pesquisa, tipoGraduacao);
 			igRelatorio.atualizarTelaRelatorio();
 		}
 		return igRelatorio;
 	}
 
-	public static IgRelatorio getInstance(TipoRelatorio tipoPesquisa, Pesquisa pesquisa) throws SQLException {
-		return instanciar(tipoPesquisa, pesquisa, null);
+	/**Prepara a janela de relatórios para ser exibida. A janela será construída obtendo dados do banco de dados a 
+	 * partir da classe principal {@link AvaliacaoInstitucional}. Os dados passados como parâmetro serão usados para 
+	 * definir a forma como os relatórios serão gerados e futuramente exibidos.
+	 * <b>Nota:</b> Para exibir os dados, consulte o método <code>exibir</code>.
+	 * @param tipoRelatorio define se qual o tipo de relatório será gerado
+	 * @param pesquisa identifica os dados de qual pesquisa serão obtidos do banco
+	 * @return uma instânica única desta classe.
+	 * @throws SQLException se ocorrer um erro ao gerar o relatório.
+	 * 
+	 * @see IgRelatorio#exibir()
+	 */
+	public static IgRelatorio getInstance(TipoRelatorio tipoRelatorio, Pesquisa pesquisa) throws SQLException {
+		return instanciar(tipoRelatorio, pesquisa, null);
 	}
 
-	public static IgRelatorio getInstance(TipoRelatorio tipoPesquisa, Pesquisa pesquisa, String tipoGraduacao) throws SQLException {
-		return instanciar(tipoPesquisa, pesquisa, tipoGraduacao);
+	/**Prepara a janela de relatórios para ser exibida. A janela será construída obtendo dados do banco de dados a 
+	 * partir da classe principal {@link AvaliacaoInstitucional}. Os dados passados como parâmetro serão usados para 
+	 * definir a forma como os relatórios serão gerados e futuramente exibidos.
+	 * <b>Nota:</b> Para exibir os dados, consulte o método <code>exibir</code>.
+	 * @param tipoRelatorio define se qual o tipo de relatório será gerado
+	 * @param pesquisa identifica os dados de qual pesquisa serão obtidos do banco
+	 * @param tipoGraduacao descreve a modalidade dos cursos que serão gerados no relatório. Para que o relatório gerado não
+	 * filtre os cursos pelo tipo de graduação, utilize a versão sobrecaregada deste método.
+	 * @return uma instânica única desta classe.
+	 * @throws SQLException se ocorrer um erro ao gerar o relatório.
+	 * 
+	 * @see IgRelatorio#exibir()
+	 * @see IgRelatorio#getInstance()
+	 */
+	public static IgRelatorio getInstance(TipoRelatorio tipoRelatorio, Pesquisa pesquisa, String tipoGraduacao) throws SQLException {
+		return instanciar(tipoRelatorio, pesquisa, tipoGraduacao);
 
 	}
 
 
+	/**Constrói a interface gráfica. <b>Não a exibe</b>. Este método deve ser chamado apenas uma vez em toda a aplicação.
+	 * Ele desenha todos os componentes e define seus comportamentos.
+	 * @throws SQLException se ocorrer um erro quando pela primeira vez estiver estiver gerando os dados do usuário.
+	 */
 	private void construirIg() throws SQLException {
 		setResizable(false);
 		setTitle("Relat\u00F3rio de Autoavalia\u00E7\u00E3o Institucional");
@@ -195,11 +223,16 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 
 		setModal(true);
 
+		Aparencia.definirBotaoPrincipal(this, btnGerarPdf);
+		
 		gerarDadosRelatorio();
 		exibirTabela();
 	}
 
 
+	/**
+	 * Define a operação que cada um dos {@link JRadioButton} (<code>Tabela</code> e <code>Gráfico</code>) realiza quando acionado.
+	 */
 	private void definirComportamentoRadioButtons() {
 		radioBtnTabela.addActionListener(new ActionListener() {
 
@@ -239,17 +272,18 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 			exibirTabela();
 	}
 
-	private void gerarGrafico() {
+	/**Constrói um gráfico de acordo com o tipo de relatório informado na exibição da janela.
+	 */
+	private void construirGrafico() {
 		graficoPanel = null; 
 		if(dadosRelatorio instanceof RelatorioDeParticipantes)
-			graficoPanel = construtorDeGrafico.gerarGraficoBarra3D(
+			graficoPanel = artefatosDeRelatorio.gerarGrafico(
 					(RelatorioDeParticipantes) dadosRelatorio, 
 					dadosRelatorio.title(),
 					tipoRelatorio.getOrientacaoGrafico());
 
 		else if(dadosRelatorio instanceof RelatorioDeMedias) {
-			graficoPanel = construtorDeGrafico.gerarGraficoLinha((RelatorioDeMedias)dadosRelatorio, dadosRelatorio.title(), 
-					tipoRelatorio.getOrientacaoGrafico());
+			graficoPanel = artefatosDeRelatorio.gerarGrafico((RelatorioDeMedias)dadosRelatorio, dadosRelatorio.title());
 		}
 
 		panelGrafico.add(graficoPanel, BorderLayout.CENTER);
@@ -261,7 +295,7 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 	private void exibirGrafico() {
 		limparPaineis();
 
-		gerarGrafico();
+		construirGrafico();
 
 		panelDados.add(panelGrafico);
 
@@ -269,21 +303,30 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 	}
 
 
-	private void gerarTabela() {
-		tabela = EntradaESaida.gerarTabela(dadosRelatorio.asMatrix(), dadosRelatorio.getHeaders());
-		scrollPane = new JScrollPane(tabela);
-		panelTabela.add(scrollPane, BorderLayout.CENTER);
+
+	/**
+	 * Constrói uma tabela de acordo com o tipo de relatório informado na exibição da janela e adiciona nos painéis.
+	 */
+	private void construirTabela() {
+		tabela = artefatosDeRelatorio.gerarTabela(dadosRelatorio);
+
+
+		panelTabela.add(tabela, BorderLayout.CENTER);
 		panelTabela.add(tabela.getTableHeader(), BorderLayout.NORTH);
 		panelTabela.add(tabela);
+
 		panelDados.add(new JScrollPane(panelTabela));
 
 	}
 
+	/**
+	 * Exibe de fato uma tabela, antes preparando a tela para tal.
+	 */
 	private void exibirTabela() {
 
 		limparPaineis();
 
-		gerarTabela();
+		construirTabela();
 
 		repintarPaineis();
 	}
@@ -292,17 +335,12 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 
 	/**Necessário para limpar o conteúdo dos painéis antes de exibir um novo componente*/
 	private void limparPaineis() {
-		//		panelGrafico.removeAll();
-		//		panelTabela.removeAll();
-		panelDados.removeAll();
-
-	}
-
-	private void limparTudo() {
 		panelGrafico.removeAll();
 		panelTabela.removeAll();
 		panelDados.removeAll();
+
 	}
+
 
 	/**Necessário para atualizar os painéis depois de mudar*/
 	private void repintarPaineis() {
@@ -320,11 +358,36 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 
 	}
 
+
+	/**
+	 * Exibe uma caixa de diálogo solicitando o usuário que informe o local onde o pdf gerado será salvo.
+	 * Adiciona a terminação .pdf, caso o usuário não tenha inserido
+	 * 
+	 * @return uma string com o caminho + o nome do arquivo
+	 * 
+	 * @throws NullPointerException se o usuário cancelar na escolha do local
+	 */
+	public String dialogoSalvarArquivoPdf() throws NullPointerException{
+		String caminhoArquivo = EntradaESaida.dialogoGravarArquivo(this, TITULO_SALVAR_PDF, DESCRICOES_EXTENSOES_PDF, EXTENSOES_PDF);
+
+		if (caminhoArquivo == null) throw new NullPointerException("Operação cancelada.");
+
+		if(!caminhoArquivo.endsWith(PONTO + EXTENSOES_PDF[0]))
+			caminhoArquivo += PONTO + EXTENSOES_PDF[0];
+
+		return caminhoArquivo;
+	}
+
 	public void gerarPdf() {
-		String caminhoArquivo = EntradaESaida.dialogoGravarArquivo(this, TITULO_SALVAR_PDF);
+
 		try {
-			construtorDeGrafico.gerarPDF(caminhoArquivo, tipoRelatorio.getDescricao());
-			//construtorDeGrafico.writeChartToPDF(graficoPanel.getChart(), 550, 500, caminhoArquivo);
+			//Mostrando ao usuário a janela para salvar o arquivo PDF
+			String caminhoArquivo = dialogoSalvarArquivoPdf();
+
+			artefatosDeRelatorio.gerarPDF(caminhoArquivo, tipoRelatorio.getDescricao(), dadosRelatorio instanceof RelatorioDeMedias);
+
+		} catch (NullPointerException e) {
+			e.printStackTrace();
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		} catch (DocumentException e) {
@@ -332,12 +395,13 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+
 	}
 
 	@Override
 	public void exibir(Component janelaPai) {
-		gerarGrafico();
-		gerarTabela();
+		construirGrafico();
+		construirTabela();
 
 		setTitle(tipoRelatorio.getDescricao());
 		if(tipoRelatorio == TipoRelatorio.CONCEITO_MEDIO_CURSO)
@@ -350,7 +414,6 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 
 	@Override
 	public void esconder() {
-		limparTudo();
 		setVisible(false);
 	}
 
@@ -359,36 +422,79 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 		dispose();
 	}
 
-	private boolean checarPainelVazio(JPanel painel) {
-		return painel.getWidth() == 0 ? true : false;
-	}
+	/**Classe interna responsável por gerar artefatos de relatório, como gráfico de linha, de barra, tabela e exportá-los como PDF.
+	 * 
+	 * @author RamonGiovane
+	 *
+	 */
+	private class GeradorDeArtefatosDeRelatorio {
 
-	private class ConstrutorDeGrafico {
-		public ChartPanel gerarGraficoLinha(RelatorioDeMedias dadosRelatorio, String titulo, PlotOrientation orientacao) {
-			DefaultCategoryDataset dataset = new DefaultCategoryDataset();
-			MediasDeNotas medias;
-			Assunto assuntos[]; 
-			for(int i = 0; i<dadosRelatorio.size(); i++) {
-				medias = dadosRelatorio.obter(i);
-				assuntos = medias.obterAssuntos();
-				for(Assunto assunto : assuntos) {
-					dataset.addValue(medias.obterNota(assunto), medias.getDescricao(), assunto.getDescricao());
-				}
-				dataset.addValue(medias.obterMediaGeral(), medias.getDescricao(), "Conceito Médio Geral");
-			}
+		/**Gera um gráfico de barra 3D para representar um {@link RelatorioDeParticipantes} da avaliação.
+		 * 
+		 * @param dadosRelatorio dados do relatório encapsulados em um {@link Relatorio}.
+		 * @param titulo a ser exibido no topo do gráfico
+		 * @param orientacao orientação do gráfico. Utilizar os valores estáticos da classe {@link PlotOrientation}: <code>VERTICAL</code> ou
+		 *  <code>HORIZONTAL</code>
+		 * @return um {@link ChartPanel}, pronto para ser exibido da forma como quiser.
+		 */
+		public ChartPanel gerarGrafico(RelatorioDeParticipantes dadosRelatorio, 
+				String titulo, PlotOrientation orientacao) {
+
+			DefaultCategoryDataset dataset = gerarDataSet(dadosRelatorio);
+
+			//Gerando o gráfico
+			JFreeChart chart = ChartFactory.createBarChart3D(titulo, null, null, 
+					dataset, orientacao, true, false, false);
+
+			//Customizando o grafico
+			customizarGraficoBarra(chart, dataset, orientacao);
+
+			ChartPanel panel = new ChartPanel(chart);
+
+			return panel;
+		}
 
 
+
+		public JTable gerarTabela(Relatorio dadosRelatorio) {
+			return EntradaESaida.gerarTabela(dadosRelatorio.asMatrix(), dadosRelatorio.getHeaders());
+
+		}
+
+
+
+		/**Gera um gráfico de linha para representar um {@link RelatorioDeMedias} da avaliação.
+		 * 
+		 * @param dadosRelatorio dados do relatório encapsulados em um {@link Relatorio}.
+		 * @param titulo a ser exibido no topo do gráfico
+		 * @return um {@link ChartPanel}, pronto para ser exibido da forma como quiser.
+		 */
+		public ChartPanel gerarGrafico(RelatorioDeMedias dadosRelatorio, String titulo) {
+			DefaultCategoryDataset dataset = gerarDataSet(dadosRelatorio);
+
+			//Gerando gráfico
 			JFreeChart chart = ChartFactory.createLineChart(titulo, null, null, 
 					dataset, PlotOrientation.VERTICAL, true, true, true);
 
+
+			//Formatando, colorindo e customizando o grafico
+			customizarGraficoLinha(chart, dataset);
+
+
+
+			return new ChartPanel(chart);
+
+		}
+
+		/**Formata, colore, customize o gráfico de linha*/
+		private void customizarGraficoLinha(JFreeChart chart, DefaultCategoryDataset dataset) {
 			CategoryPlot categoryP = chart.getCategoryPlot();
 			CategoryItemRenderer renderer = categoryP.getRenderer();
 
+			//Deixando as linhas mais grossas
 			for(int i = 0; i<dataset.getRowCount(); i++) {
 				renderer.setSeriesStroke(i, new BasicStroke(2));
-
 			}
-
 
 			//Organizando o posicionamento das legendas abaixo do gráfico
 			CategoryAxis domainAxis = categoryP.getDomainAxis();
@@ -408,190 +514,11 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 
 
 			renderer.setBaseItemLabelPaint(Color.BLACK);
-			//renderer.setBaseItemLabelFont(new Font(Font.DIALOG, Font.BOLD, 14));
-
-			ChartPanel panel = new ChartPanel(chart);
-
-			return panel;
 
 		}
 
-		private void adicionarTitulo(Document documento, String textoTitulo) throws DocumentException {
-			BaseColor corTitulo = new BaseColor(134, 148, 196), corFundo = new BaseColor(219, 229, 241);
-			com.itextpdf.text.Font fonte = new com.itextpdf.text.Font(com.itextpdf.text.Font.FontFamily.HELVETICA, 18, Font.BOLD, corTitulo);
-			Chunk chunk = new Chunk(textoTitulo, fonte);
-
-			chunk.setBackground(corFundo);
-			Paragraph titulo = new Paragraph(chunk);
-			titulo.setAlignment(Element.ALIGN_CENTER);
-
-			documento.add(titulo);
-		}
-
-		private void adicionarComoImgem(Document documento, PdfWriter pdfWriter, 
-				JComponent componente, int escala, boolean renderizado) throws IOException, DocumentException {
-
-			System.out.println(componente);
-			BufferedImage image = EntradaESaida.componentToImage(componente, renderizado);
-
-			//EntradaESaida.msgInfo(this, image, "dw");
-			com.itextpdf.text.Image img = com.itextpdf.text.Image.getInstance(pdfWriter, image, 1);
-
-			img.scalePercent(escala);
-
-			documento.add(img);
-		}
-
-		private void novaLinha(Document documento) throws DocumentException {
-			documento.add(new Paragraph("\n\n"));
-		}
-
-		public void gerarPDF(String localDeSalvamento, String titulo) throws DocumentException, IOException {
-
-
-			FileOutputStream outputStream = new FileOutputStream(localDeSalvamento);
-
-			Document documento = new Document();
-
-			PdfWriter pdfWriter = PdfWriter.getInstance(documento, outputStream);
-
-			documento.open();
-
-			adicionarTitulo(documento, titulo);
-			//PASSAR O TAMANHO DA TELA COMO PARAMETRO
-			if(checarPainelVazio(panelTabela)) gerarTabela();
-
-			System.out.println(radioBtnTabela.isSelected());
-			tabela.setSize(1000, 100);
-			adicionarComoImgem(documento, pdfWriter, tabela, 60, radioBtnTabela.isSelected());
-
-			novaLinha(documento);
-
-			if(checarPainelVazio(panelGrafico)) gerarGrafico();
-
-			adicionarComoImgem(documento, pdfWriter, panelGrafico, 65, radioBtnGrafico.isSelected());
-
-
-			documento.close();
-
-			tabelaToPDF();
-		}
-
-
-		public void tabelaToPDF() throws DocumentException, IOException {
-			JTable table = tabela;
-			Document doc = new Document();
-			PdfWriter.getInstance(doc, new FileOutputStream("table.pdf"));
-			doc.open();
-			PdfPTable pdfTable = new PdfPTable(table.getColumnCount());
-			pdfTable.setWidthPercentage(100);
-			pdfTable.setHorizontalAlignment(Element.ALIGN_CENTER);
-			pdfTable.getDefaultCell().setHorizontalAlignment(Element.ALIGN_CENTER);
-			pdfTable.getDefaultCell().setVerticalAlignment(Element.ALIGN_MIDDLE);
-
-			int tamanhoFonte = 9;
-			com.itextpdf.text.Font fontePretaNegrito = new  com.itextpdf.text.Font(com.itextpdf.text.Font.FontFamily.HELVETICA, tamanhoFonte, 
-					Font.BOLD, BaseColor.BLACK);
-
-			com.itextpdf.text.Font fontePreta = new  com.itextpdf.text.Font(com.itextpdf.text.Font.FontFamily.HELVETICA, tamanhoFonte, 
-					Font.PLAIN, BaseColor.BLACK);
-
-			//Criar fontes
-			BaseColor colors[] = new BaseColor[] {BaseColor.BLACK, BaseColor.BLUE, new BaseColor(64, 132, 36), BaseColor.RED, new BaseColor(236, 156, 17),
-					BaseColor.MAGENTA}; 
-			com.itextpdf.text.Font fontesColoridas[] = new com.itextpdf.text.Font[6];
-			
-			for(int i = 0; i<fontesColoridas.length; i++) {
-				fontesColoridas[i] = new com.itextpdf.text.Font(com.itextpdf.text.Font.FontFamily.HELVETICA, tamanhoFonte, Font.BOLD, colors[i]);
-			}
-			
-
-			//Array que guarda as larguras das colunas
-			int larguras[] = new int[table.getColumnCount()];
-			
-			for (int i = 0, indexFonte = 0; i < table.getColumnCount(); i++, indexFonte++) {
-				if(indexFonte >= fontesColoridas.length) indexFonte = 0;
-				if(i == 0) {
-					pdfTable.addCell(new Phrase(table.getColumnName(i), fontePretaNegrito));
-					larguras[i] = (int) (table.getColumnName(i).length() * 1.5);
-				}
-				else {
-					pdfTable.addCell(new Phrase(table.getColumnName(i), fontesColoridas[indexFonte]));
-					larguras[i] = table.getColumnName(i).length() + 5;
-				}
-			}
-			
-			pdfTable.setWidths(larguras);
-
-			com.itextpdf.text.Font fonte;
-			PdfPCell celula;
-			//Extraindo os dados do JTable. Percorrendo as linhas
-			for (int rows = 0; rows < table.getRowCount(); rows++) {
-
-				//Percorrendo as colunas
-				for (int cols = 0, fontesIndex = 0; cols < table.getColumnCount(); cols++, fontesIndex++) {
-					
-					//Reseta o indice do array de fontes, se todas ja tiverem sido usadas
-					if(fontesIndex >= colors.length) fontesIndex = 0;
-
-					if(cols == 0) {
-						//Se for a primeira linha da primeira coluna
-						if(rows == table.getRowCount()-1)
-							fonte = fontePretaNegrito;
-						//Se for a primeira linha de qualquer coluna
-						else
-							fonte = fontePreta;
-					}
-					
-					
-					
-					//Em nenhum dos casos acima, usa a fonte colorida no indice de fonte atual
-					else fonte = fontesColoridas[fontesIndex];
-					
-					
-					//Adiciona o texto e a fonte no phrase
-					celula = new PdfPCell(new Phrase(table.getModel().getValueAt(rows, cols).toString(), fonte));
-					
-					//Define a cor de fundo de uma célua
-					if(rows % 2 != 0 || rows == table.getRowCount())
-						celula.setBackgroundColor(new BaseColor(242, 242, 242));
-					
-					//Define o alinhamento das linhas
-					celula.setVerticalAlignment(Element.ALIGN_MIDDLE);
-					if(cols != 0) {
-						celula.setHorizontalAlignment(Element.ALIGN_CENTER);
-					}
-					
-//					if(table.getColumnCount() <= 4)
-//						celula.setFixedHeight(27);
-//					else
-//						celula.setFixedHeight(35);
-					
-					
-					//Adiciona o phrase na tabela
-					pdfTable.addCell(celula);
-
-				}
-			}
-			doc.add(pdfTable);
-			doc.close();
-			System.out.println("done");
-
-		}
-
-		public ChartPanel gerarGraficoBarra3D(RelatorioDeParticipantes dadosRelatorio, 
-				String titulo, PlotOrientation orientacao) {
-
-			DefaultCategoryDataset dataset = new DefaultCategoryDataset( );
-
-			for(int i  = 0; i<dadosRelatorio.size(); i++) {
-				dataset.addValue(dadosRelatorio.obter(i).getValorLinha(), dadosRelatorio.obter(i).getValorColuna(), 
-						dadosRelatorio.obter(i).getValorColuna());
-			}
-
-			JFreeChart chart = ChartFactory.createBarChart3D(titulo, null, null, 
-					dataset, orientacao, true, false, false);
-
+		/**Formata, colore, customize o gráfico de barra 3D*/
+		private void customizarGraficoBarra(JFreeChart chart, DefaultCategoryDataset dataset, PlotOrientation orientation) {
 			CategoryPlot plot = chart.getCategoryPlot();
 			CategoryItemRenderer renderer = plot.getRenderer();
 
@@ -601,6 +528,7 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 
 			plot.getDomainAxis().setMaximumCategoryLabelWidthRatio(10);
 
+			//Deixando a barra mais larga. Não muito, pois dá errado se houver poucas séries no gráfico
 			barRenderer.setItemMargin(-1.07);
 			CategoryItemLabelGenerator generator = new StandardCategoryItemLabelGenerator();
 
@@ -608,7 +536,7 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 			for(int i = 0; i<dataset.getRowCount(); i++) {
 				barRenderer.setSeriesItemLabelGenerator(i, generator);
 				barRenderer.setSeriesItemLabelsVisible(i, true);
-				if(orientacao == PlotOrientation.HORIZONTAL)
+				if(orientation == PlotOrientation.HORIZONTAL)
 					barRenderer.setSeriesPositiveItemLabelPosition(i, new ItemLabelPosition(ItemLabelAnchor.OUTSIDE3,
 							TextAnchor.CENTER_LEFT));
 				else
@@ -632,43 +560,81 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 			renderer.setBaseItemLabelPaint(Color.BLACK);
 			renderer.setBaseItemLabelFont(new Font(Font.DIALOG, Font.BOLD, 14));
 
+		}
+
+		/**Gera um PDF, contendo uma tablela <code>JTable</code> e um gráfico de barra ou de linha (<code>JFreeChart</code>).
+		 * 
+		 * @param nomeArquivo caminho do arquivo de onde será gravado o PDF.
+		 * @param titulo título do arquivo.
+		 * @param usarCoresCustomizadas indica se as cores do relatório serão padrões (<code>false</code>) ou customizadas(<code>true</code>).
+		 * As customizadas são adequadas para os relatórios de médias.
+
+		 * @throws DocumentException 
+		 * @throws IOException
+		 */
+
+		public void gerarPDF(String nomeArquivo, String titulo, boolean usarCoresCustomizadas) throws DocumentException, IOException {
+
+			arquivoPDF.open(nomeArquivo);
+
+			arquivoPDF.adicionarTitulo(titulo);
+
+			//Separa o titulo do proximo conteudo
+			arquivoPDF.novaLinha();
+
+			//Adiciona o JTable
+			arquivoPDF.adicionarJTable(tabela, usarCoresCustomizadas);
+
+			arquivoPDF.novaLinha();
+
+			//Adiciona o gráfico
+			arquivoPDF.adicionarGrafico(graficoPanel.getChart(), panelDados.getWidth(), panelDados.getHeight());
 
 
+			arquivoPDF.close();
 
 
-			ChartPanel panel = new ChartPanel(chart);
-
-			return panel;
 		}
 
 
-		public void writeChartToPDF(JFreeChart chart, int width, int height, String fileName) {
-			PdfWriter writer = null;
+		/**Insere o conteúdo encapsulado em um {@link RelatorioDeParticipantes} dentro de um dataset compatível com o {@link JFreeChart}
+		 * para ser usado como gráfico de barra.
+		 * 
+		 * @param dadosRelatorio dados a serem plotados no gráfico.
+		 * @return um dataset ({@link DefaultCategoryDataset}), contendo os dados que popularam o gráfico.
+		 */
+		public DefaultCategoryDataset gerarDataSet(RelatorioDeParticipantes dadosRelatorio) {
+			DefaultCategoryDataset dataset = new DefaultCategoryDataset( );
 
-			Document document = new Document();
-
-			try {
-				writer = PdfWriter.getInstance(document, new FileOutputStream(
-						fileName));
-				document.open();
-
-				PdfContentByte contentByte = writer.getDirectContent();
-				PdfGraphics2D pdfGraphics2D = new PdfGraphics2D(contentByte, width, height);
-
-				PdfTemplate template = contentByte.createTemplate(width, height);
-				Rectangle2D rectangle2d = new Rectangle2D.Double(0, 0, width,
-						height);
-
-				chart.draw(pdfGraphics2D, rectangle2d);
-
-				pdfGraphics2D.dispose();
-				contentByte.addTemplate(template, 0, 0);
-
-			} catch (Exception e) {
-				e.printStackTrace();
+			for(int i  = 0; i<dadosRelatorio.size(); i++) {
+				dataset.addValue(dadosRelatorio.obter(i).getValorLinha(), dadosRelatorio.obter(i).getValorColuna(), 
+						dadosRelatorio.obter(i).getValorColuna());
 			}
-			document.close();
+
+			return dataset;
 		}
+
+		/**Insere o conteúdo encapsulado em um {@link RelatorioDeMedias} dentro de um dataset compatível com o {@link JFreeChart}
+		 * para ser usado como gráfico de linha.
+		 * 
+		 * @param dadosRelatorio dados a serem plotados no gráfico.
+		 * @return um dataset ({@link DefaultCategoryDataset}), contendo os dados que popularam o gráfico.
+		 */
+		public DefaultCategoryDataset gerarDataSet(RelatorioDeMedias dadosRelatorio) {
+			DefaultCategoryDataset dataset = new DefaultCategoryDataset();
+			MediasDeNotas medias;
+			Assunto assuntos[]; 
+			for(int i = 0; i<dadosRelatorio.size(); i++) {
+				medias = dadosRelatorio.obter(i);
+				assuntos = medias.obterAssuntos();
+				for(Assunto assunto : assuntos) {
+					dataset.addValue(medias.obterNota(assunto), medias.getDescricao(), assunto.getDescricao());
+				}
+				dataset.addValue(medias.obterMediaGeral(), medias.getDescricao(), "Conceito Médio Geral");
+			}
+			return dataset;
+		}
+
 	}
 }
 

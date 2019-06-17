@@ -10,26 +10,16 @@ import static javax.swing.JOptionPane.showMessageDialog;
 
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Container;
-import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.RenderingHints;
 import java.awt.Toolkit;
-import java.awt.image.BufferedImage;
 import java.io.File;
 
-import javax.swing.CellRendererPane;
-import javax.swing.JComponent;
 import javax.swing.JFileChooser;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.SwingConstants;
-import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellRenderer;
@@ -313,7 +303,50 @@ public class EntradaESaida {
 	public static String dialogoAbrirArquivo(Component janelaPai, String titulo) {
 		return dialogoAbrirArquivo(janelaPai, titulo, null, null);
 	}
+	/** 
+	 * Exibe uma caixa de diálogo <code>javax.swing.JFileChooser</code> para o usuário indicar o
+	 * nome do diretório onde será gravado o arquivo e o nome do arquivo.
+	 * 
+	 * @param janelaPai objeto <code>java.awt.Component</code> que identifica a janela pai 
+	 * sobre a qual a janela <code>JFileChooser</code> será exibida.
+	 *   
+	 * @param titulo <code>String</code> com o nome da barra de título da caixa de diálogo.
+	 * 
+	 * @param descricoesExtensoes array de objetos <code>String</code> contendo as descrições das 
+	 * extensões que podem ser filtradas pela caixa de diálogo. Por exemplo: "Arquivo de Texto".
+	 * 
+	 * @param extensoes array de objetos <code>String</code> contendo as extensões que podem ser
+	 * filtradas pela caixa de diálogo. Por exemplo: "txt", "png", "doc".     
+	 * @return <code>String</code> com o nome do arquivo a ser gravado.  Se o usuário cancelar 
+	 * a operação (clicar no botão "Cancelar") será retornado <code>null</code>.
+	 *         
+	 * @see java.awt.Component
+	 * @see javax.swing.JFileChooser
+	 * 
+	 * @author Prof. Márlon Oliveira da Silva
+	 */
+	public static String dialogoGravarArquivo(Component janelaPai, String titulo, String[] descricoesExtensoes,
+			String[] extensoes) {
+		JFileChooser dialogoGravar = new JFileChooser();
 
+		if(extensoes != null && descricoesExtensoes != null)
+			definirExtensoesJFileChooser(dialogoGravar, descricoesExtensoes, extensoes);
+
+		// Indica que o usuário poderá selecionar apenas nomes de arquivos. 
+		dialogoGravar.setFileSelectionMode(JFileChooser.FILES_ONLY);
+
+		// Define o título do diálogo. 
+		dialogoGravar.setDialogTitle(titulo);
+
+		// Define qual é o diretório default de gravação.
+		dialogoGravar.setCurrentDirectory(new File("." + File.separator + "arquivos"));
+
+		// Exibe o diálogo.
+		int opcao = dialogoGravar.showSaveDialog(janelaPai);
+
+		// Verifica se o usuário cancelou a operação (clicou no botão Cancelar); se não, obtém o nome do arquivo digitado ou selecionado pelo usuário no diálogo.
+		return (opcao == JFileChooser.CANCEL_OPTION) ? null : dialogoGravar.getSelectedFile().getPath();
+	}
 	/** 
 	 * Exibe uma caixa de diálogo <code>javax.swing.JFileChooser</code> para o usuário indicar o
 	 * nome do diretório onde será gravado o arquivo e o nome do arquivo.
@@ -332,22 +365,7 @@ public class EntradaESaida {
 	 * @author Prof. Márlon Oliveira da Silva
 	 */
 	public static String dialogoGravarArquivo(Component janelaPai, String titulo) {
-		JFileChooser dialogoGravar = new JFileChooser();
-
-		// Indica que o usuário poderá selecionar apenas nomes de arquivos. 
-		dialogoGravar.setFileSelectionMode(JFileChooser.FILES_ONLY);
-
-		// Define o título do diálogo. 
-		dialogoGravar.setDialogTitle(titulo);
-
-		// Define qual é o diretório default de gravação.
-		dialogoGravar.setCurrentDirectory(new File("." + File.separator + "arquivos"));
-
-		// Exibe o diálogo.
-		int opcao = dialogoGravar.showSaveDialog(janelaPai);
-
-		// Verifica se o usuário cancelou a operação (clicou no botão Cancelar); se não, obtém o nome do arquivo digitado ou selecionado pelo usuário no diálogo.
-		return (opcao == JFileChooser.CANCEL_OPTION) ? null : dialogoGravar.getSelectedFile().getPath();
+		return dialogoAbrirArquivo(janelaPai, titulo, null, null);
 	} 
 
 	/** 
@@ -406,67 +424,6 @@ public class EntradaESaida {
 			fileChooser.setFileFilter(filter);
 		}
 	}
-
-	public static BufferedImage componentToImage(Component component, boolean visible) {
-	    if (visible) {
-	        BufferedImage img = new BufferedImage(1000 /*component.getWidth()*/, 1000 /*component.getHeight()*/, BufferedImage.TRANSLUCENT);
-	        Graphics2D g2d = (Graphics2D) img.getGraphics();
-	        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-	        component.paintAll(g2d);
-	        return img;
-	    } else {
-	        component.setSize(component.getPreferredSize());
-	        layoutComponent(component);
-	        BufferedImage img = new BufferedImage(1000 /*component.getWidth()*/, 1000 /*component.getHeight()*/, BufferedImage.TRANSLUCENT);
-	        CellRendererPane crp = new CellRendererPane();
-	        crp.add(component);
-	        crp.paintComponent(img.createGraphics(), component, crp, component.getBounds());
-	        return img;
-	    }
-	}
-
-	private static void layoutComponent(Component c) {
-	    synchronized (c.getTreeLock()) {
-	        c.doLayout();
-	        if (c instanceof Container) {
-	            for (Component child : ((Container) c).getComponents()) {
-	                layoutComponent(child);
-	            }
-	        }
-	    }
-	}
-
-//	public static BufferedImage componentToImage(JComponent c, boolean cdwf) {
-//
-//		Dimension size = c.getSize();
-//		if (size.width <= 0 || size.height <= 0) {
-//			size = c.getPreferredSize();
-//		}
-//
-//		BufferedImage snapshot =
-//				new BufferedImage(size.width, size.height,
-//						BufferedImage.TYPE_INT_ARGB);
-//
-//		drawComponent(c, snapshot);
-//
-//		return snapshot;
-//	}
-
-	private static void drawComponent(JComponent c,
-			BufferedImage destination) {
-
-		JFrame frame = new JFrame();
-
-		Graphics g = destination.createGraphics();
-
-		SwingUtilities.paintComponent(g, c, frame.getContentPane(),
-				0, 0, destination.getWidth(), destination.getHeight());
-
-		g.dispose();
-
-		frame.dispose();
-	}
-
 
 
 

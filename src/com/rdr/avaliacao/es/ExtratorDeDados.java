@@ -25,6 +25,7 @@ import com.rdr.avaliacao.ig.TipoRelatorio;
 import com.rdr.avaliacao.questionario.Assunto;
 import com.rdr.avaliacao.questionario.Curso;
 import com.rdr.avaliacao.questionario.Pesquisa;
+import com.rdr.avaliacao.questionario.Segmento;
 import com.rdr.avaliacao.relatorio.MediasPorCurso;
 import com.rdr.avaliacao.relatorio.RelatorioDeMedias;
 import com.rdr.avaliacao.relatorio.RelatorioDeParticipantes;
@@ -401,12 +402,12 @@ public class ExtratorDeDados {
 		//Consulta 1: Seleciona todos os cursos
 		Object[][] objetos = dao.consultar("select codigo, descricao from segmento");
 
-		Curso curso; //TODO: Trocar pra segmento
+		Segmento curso; //TODO: Trocar pra segmento
 		int i = 0;
 		Object[][] resultado = new Object[0][0];
 
 		for(; i<objetos.length; i++) {
-			curso = new Curso((int)objetos[i][0], objetos[i][1].toString());
+			curso = new Segmento((int)objetos[i][0], objetos[i][1].toString());
 
 			//Consulta 2: obtém o número de entrevistados de todos cursos
 			resultado = dao.consultar("select count(codsegmento) from entrevistado where codsegmento = ? and codpesquisa = ?",
@@ -422,8 +423,20 @@ public class ExtratorDeDados {
 		return dataSet;
 	}
 
+	private List<Segmento> obterSegmentos(Pesquisa pesquisa) throws SQLException {
+		List<Segmento> segmentosList = new ArrayList<Segmento>();
+
+		Object[][] segmentos = dao.consultar("select codigo, descricao from segmento  where codpesquisa = ?", pesquisa.getCodigo());
+
+		for(int i = 0; i<segmentos.length; i++) {
+			segmentosList.add(new Segmento((int)segmentos[i][0], segmentos[i][1].toString()));
+
+		}
+		return segmentosList;
+	}
+
 	/**Retorna todos os assuntos de uma pesquisa específica em uma lista de Cursos*/
-	private List<Curso> obterCursos(String tipoGraduacao) throws SQLException {
+	private List<Curso> obterCursos( String tipoGraduacao) throws SQLException {
 		List<Curso> cursosList = new ArrayList<Curso>();
 		boolean cursosTecnologia = false;
 		String termoDeBuscaSecundario = "";
@@ -435,7 +448,7 @@ public class ExtratorDeDados {
 		}
 
 		StringBuilder strBuilder =
-				new StringBuilder("select codigo, descricao from curso ").append("where descricao ilike '%")
+				new StringBuilder("select codigo, descricao from curso").append(" where descricao ilike '%")
 				.append(tipoGraduacao).append("%'");
 
 		if(cursosTecnologia)
@@ -511,6 +524,64 @@ public class ExtratorDeDados {
 		for(Curso curso : cursosList) {
 
 			notas = new MediasPorCurso(curso);
+
+			int i = 0;
+			System.out.println(assuntosList.size());
+			for(Assunto assunto : assuntosList) {
+
+				//Obtendo a média de nota de cada tema avaliado por entrevistados de um curso
+				resultado = dao.consultar("select cast(avg(conceito.valor) as decimal) from conceito " + 
+						"inner join resposta on (conceito.codigo = resposta.codconceito) " + 
+						"inner join entrevistado on (entrevistado.codigo = resposta.codentrevistado) " + 
+						"where entrevistado.codcurso = ? and resposta.codassunto = ? and resposta.codpesquisa = ?", 
+						curso.getCodigo(), assunto.getCodigo(), pesquisa.getCodigo());
+				System.err.printf("\n%s: %s", i++, assunto.getCodigo());
+				if(resultado[0][0] != null) {
+					media = ((BigDecimal)resultado[0][0]).doubleValue();
+
+					//Adicionando a media associada a um assunto
+					notas.adicionar(assunto, arredondarMedia(media));
+				}
+
+			}
+
+			if(notas.tamanho() > 0) {
+				//Adicionando as médias de um curso numa lista
+				listaDeMedias.adicionar(notas);
+			}
+
+		}
+
+		if(listaDeMedias.size() == 0)
+			throw new NullPointerException("Nenhum dado de relatório encontrado com os parâmetros passados.");
+
+		return listaDeMedias;
+	}
+
+
+	public RelatorioDeMedias gerarDataSetConceitoMedioAssuntoSegmento(Pesquisa pesquisa, String tipoGraduacao, TipoRelatorio tipoRelatorio) throws SQLException {
+
+
+		double media;
+		Object[][] resultado;
+
+		//Obtendo todos os assuntos avaliados na pesquisa
+		List<Assunto> assuntosList = obterAssuntos(pesquisa);
+
+		//Obtendo uma lista de todos os cursos pertencentes ao tipo de graduação escolhido
+		List<Segmento> segmentosList = obterSegmentos(pesquisa);
+
+
+
+		//Cria uma lista para armazenar a média de notas de cada assunto de cada curso
+		RelatorioDeMedias listaDeMedias = new RelatorioDeMedias(tipoRelatorio);
+
+
+		MediasPorCurso notas;
+
+		for(Segmento curso : segmentosList) {
+
+			notas = null;// new MediasPorCurso(curso);
 
 			int i = 0;
 			System.out.println(assuntosList.size());
