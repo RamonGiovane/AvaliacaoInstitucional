@@ -1,6 +1,5 @@
 package com.rdr.avaliacao;
 
-import java.awt.Component;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.sql.SQLException;
@@ -11,7 +10,6 @@ import com.rdr.avaliacao.es.EntradaESaida;
 import com.rdr.avaliacao.es.ExtratorDeDados;
 import com.rdr.avaliacao.es.bd.BancoDeDados;
 import com.rdr.avaliacao.es.bd.DAO;
-import com.rdr.avaliacao.es.bd.Recuperacao;
 import com.rdr.avaliacao.ig.InterfaceConstraints;
 import com.rdr.avaliacao.ig.TipoRelatorio;
 import com.rdr.avaliacao.ig.janelas.IgAvaliacaoInstitucional;
@@ -32,6 +30,7 @@ public class AvaliacaoInstitucional {
 	/**Autoreferência para que todas as classes invocadas por essa possam ter acesso a seus métodos*/
 	private static AvaliacaoInstitucional app;
 	
+	/**Objeto da classe responsável por extrair dados do CSV e salvar/consultar o banco*/
 	private ExtratorDeDados extrator;
 	
 	private static Pesquisa pesquisaAtiva;
@@ -65,35 +64,19 @@ public class AvaliacaoInstitucional {
 		return app;
 	}
 	
-	//TODO: Este método só deve ser executado se houver conexão com o banco
+	/**Recupera do banco todas as pesquisas existentes e salva na memória
+	 * 
+	 * @throws SQLException se ocorerr um erro na consulta
+	 */
 	private void obterPesquisasBanco() throws SQLException {
 		
-		if(!checarConexaoBancoDeDados())
-			throw new SQLException();
 		
-		Pesquisa pesquisa;
-		Object[][] pesquisas = dao.consultar(new Recuperacao() {
-					@Override
-			public String selectQuery() {
-				return "select * from pesquisa";
-			}
-			
-			@Override
-			public Object[] searchKeys() {
-				return null;
-			}
-		});
+		pesquisasList = extrator.obterPesquisas();
 		
-		if(pesquisas.length == 0) return;
+		if(pesquisasList.size() == 0) return;
+	
 		
-		for(int i=0; i<pesquisas.length; i++){
-			pesquisa = new Pesquisa();
-			pesquisa.setCodigo((int)pesquisas[i][0]);
-			pesquisa.setNome(pesquisas[i][1].toString());
-			
-			pesquisasList.add(pesquisa);
-		}
-		
+		//Define a pesquisa ativa
 		pesquisaAtiva = pesquisasList.get(pesquisasList.size()-1);
 		
 	}
@@ -101,17 +84,7 @@ public class AvaliacaoInstitucional {
 	public static void main(String[] args) {
 		new AvaliacaoInstitucional();
 	}
-	
-//	/**Método que pode apenas ser chamado pelas classes que possuem referência esta.*/
-//	public void importarDados(String nomeArquivo) {
-//		if(extrator == null) extrator = new ExtratorDeDados(bd, nomeArquivo);
-//		extrator.setNomeArquivo(nomeArquivo);
-//		try {
-//		
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//		}
-//	}
+
 
 	/**Fecha todas as janelas que foram abertas pelo programa e o encerra.
 	 * @author Ramon Giovane**/
@@ -140,6 +113,8 @@ public class AvaliacaoInstitucional {
 	 */
 	public void adicionarPesquisa(Pesquisa pesquisa) throws SQLException {
 		dao.inserir(pesquisa);
+		
+		//Realiza uma consulta de uma pesquisa utilizando a implementação de Recuperação da classe pesquisa
 		Object resultadoBruto[][] = dao.consultar(pesquisa);
 		
 		pesquisa.setCodigo((int)resultadoBruto[0][0]);
@@ -181,11 +156,8 @@ public class AvaliacaoInstitucional {
 		return strPesquisas;
 	}
 	
-	/** Gera uma relatório de acordo com o tipo de pesquisa solicitado de uma pesquisa específica, salvando os dados
+	/** Gera uma relatório de acordo com o tipo de pesquisa solicitado dentro da pesquisa atual selecionada, salvando os dados
 	 * em uma classe que implementa o super tipo abstrato {@link Relatorio}.
-	 * 
-	 * @param pesquisa objeto pesquisa a qual se deseja realizar o relatório.
-	 * O atributo <code>codigo</code> deve estar setado para que a pesquisa seja identificada
 	 * 
 	 * @param tipoRelatorio tipo de relatório a ser gerado de acordo com a <code>enumeração</code> {@link TipoRelatorio}.
 	 * @param tipoGraduacao filtro de pesquisa representado pela descrição de um tipo de graduação de entrevistados
@@ -202,24 +174,22 @@ public class AvaliacaoInstitucional {
 	 * 
 	 * @see Relatorio
 	 * @see TipoRelatorio
+	 * @see AvaliacaoInstitucional#setPesquisaAtiva(String)
 	 */
-	public static Relatorio gerarRelatorio(Pesquisa pesquisa, TipoRelatorio tipoRelatorio, String tipoGraduacao) 
+	public Relatorio gerarRelatorio(TipoRelatorio tipoRelatorio, String tipoGraduacao) 
 			throws SQLException, NullPointerException {
-		ExtratorDeDados extrator = new ExtratorDeDados(bd, pesquisa);
-		System.err.println(tipoRelatorio);
-		
 		switch(tipoRelatorio){
 		case PARTICIPANTES_POR_CURSO:
-			 return extrator.gerarDataSetParticipantesCurso(pesquisa, tipoRelatorio);
+			 return extrator.gerarDataSetParticipantesCurso(tipoRelatorio);
 			
 		case PARTICIPANTES_POR_SEGMENTO:
-			return extrator.gerarDataSetParticipantesSegmento(pesquisa, tipoRelatorio);
+			return extrator.gerarDataSetParticipantesSegmento(tipoRelatorio);
 
 		case CONCEITO_MEDIO_CURSO:
-			return extrator.gerarDataSetConceitoMedioAssunto(pesquisa, tipoGraduacao, tipoRelatorio);
+			return extrator.gerarRelatorioDeMediasPorCurso(tipoGraduacao, tipoRelatorio);
 		
 		case CONCEITO_MEDIO_ASSUNTO:
-			return extrator.gerarDataSetConceitoMedioAssuntoSegmento(pesquisa, tipoRelatorio);
+			return extrator.gerarRelatorioDeMediasPorSegmento(tipoRelatorio);
 		
 		default:
 			throw new NullPointerException();
@@ -231,8 +201,15 @@ public class AvaliacaoInstitucional {
 		return pesquisasList.get(pesquisasList.indexOf(new Pesquisa(nomePesquisa)));
 	}
 	
-	public void importarDados(Component janelaPai, Pesquisa pesquisa) throws FileNotFoundException, IOException {
-		ExtratorDeDados.extrairDados(janelaPai, bd, pesquisa);
+	/**Realiza a importação dos dados do CSV de uma pesquisa especificada e os salva no banco de dados.
+	 * 
+	 * @param pesquisa objeto {@link Pesquisa} que deve conter o código, descrição e local onde o arquivo CSV se encontra.
+	 * @throws FileNotFoundException se o arquivo não for encontrado
+	 * @throws IOException se ocorrer algum erro na leitura
+	 * @throws SQLException se ocorrer algum erro na inserção dos dados no banco
+	 */
+	public void importarDados(Pesquisa pesquisa) throws FileNotFoundException, IOException, SQLException {
+		extrator.extrairDados(pesquisa);
 	}
 	
 	/**Inicia uma conexão com o banco de dados, preparando os serviços necessários para a manipulação de dados
@@ -255,6 +232,8 @@ public class AvaliacaoInstitucional {
 		
 		//Instancia o DAO
 		dao = new DAO(bd);
+		
+		extrator.setDao(dao);
 		
 		//Se a conexão foi bem sucedida, obtém então as pesquisas armazenadas na base de dado
 		obterPesquisasBanco();

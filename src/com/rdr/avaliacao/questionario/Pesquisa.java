@@ -42,11 +42,14 @@ public class Pesquisa  implements Persistencia, Recuperacao{
 		this.caminhoDataSet = caminhoDataSet;
 	}
 	
+	/**Retorna uma query SQL utilizada para inserir uma pesquisa no banco*/
 	@Override
 	public String insertQuery() {
 		return "insert into pesquisa (descricao)";
 	}
 
+	/**Retorna o objeto necessário para utilizar a query de inserção de uma pesquisa no banco. Em outras palavras,
+	 * mais especificamente,  um array de  <code>Object</code> contendo o nome da pesquisa a ser guardada*/
 	@Override
 	public Object[] insertObjects() {
 		return new Object[]{nome};
@@ -65,6 +68,8 @@ public class Pesquisa  implements Persistencia, Recuperacao{
 	}
 
 	@Override
+	/**Determina se uma pesquisa é igual a outra. Considera apenas a descrição (nome) da pesquisa como 
+	 * critério de comparação*/
 	public boolean equals(Object obj) {
 		Pesquisa pesquisa = null;
 		try {

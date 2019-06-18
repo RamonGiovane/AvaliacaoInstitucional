@@ -74,7 +74,6 @@ public class IgRelatorio extends JFrame implements PropriedadesDeJanela {
 	 * Parâmteros de pesquisa que variam de acordo com cada chamada da instância da janela
 	 */
 	private static TipoRelatorio tipoRelatorio;
-	private static Pesquisa pesquisa;
 	private String tipoGraduacao;
 
 
@@ -85,6 +84,7 @@ public class IgRelatorio extends JFrame implements PropriedadesDeJanela {
 
 
 	private static GeradorDeArtefatosDeRelatorio artefatosDeRelatorio;
+	private static AvaliacaoInstitucional app;
 
 
 	/**
@@ -94,12 +94,12 @@ public class IgRelatorio extends JFrame implements PropriedadesDeJanela {
 
 		artefatosDeRelatorio = new GeradorDeArtefatosDeRelatorio();
 		arquivoPDF = new ArquivoPDF();
+		app = AvaliacaoInstitucional.getInstance();
 	}
 
 	/**Guarda os parâmtros passados, que podem ser variáveis a cada chamada de uma instância da janela.*/
-	private void guardarParametros(TipoRelatorio tipoPesquisa, Pesquisa pesquisa, String tipoGraduacao) {
+	private void guardarParametros(TipoRelatorio tipoPesquisa, String tipoGraduacao) {
 		IgRelatorio.tipoRelatorio = tipoPesquisa;
-		IgRelatorio.pesquisa = pesquisa;
 		this.tipoGraduacao = tipoGraduacao;
 
 
@@ -110,20 +110,19 @@ public class IgRelatorio extends JFrame implements PropriedadesDeJanela {
 	 * parâmetros recebidos da forma apropriada. Retorna uma autoreferência.
 	 * 
 	 * @param tipoRelatorio tipo do relatório passado pelo método getInstance.
-	 * @param pesquisa valor também passado do método getInstance.
 	 * @param tipoGraduacao idem. <i>Porém, aceita <code>null</code></i>, se a o relatório não utiliar deste filtro.
 	 * @return uma atoreferência, sempre única.
 	 * @throws SQLException
 	 */
-	private static IgRelatorio instanciar(TipoRelatorio tipoRelatorio, Pesquisa pesquisa, String tipoGraduacao) throws SQLException {
+	private static IgRelatorio instanciar(TipoRelatorio tipoRelatorio, String tipoGraduacao) throws SQLException {
 
 		if(igRelatorio == null) {
 			igRelatorio = new IgRelatorio();
-			igRelatorio.guardarParametros(tipoRelatorio, pesquisa, tipoGraduacao);
+			igRelatorio.guardarParametros(tipoRelatorio, tipoGraduacao);
 			igRelatorio.construirIg();
 		}
 		else {
-			igRelatorio.guardarParametros(tipoRelatorio, pesquisa, tipoGraduacao);
+			igRelatorio.guardarParametros(tipoRelatorio, tipoGraduacao);
 			igRelatorio.atualizarTelaRelatorio();
 		}
 		return igRelatorio;
@@ -134,14 +133,13 @@ public class IgRelatorio extends JFrame implements PropriedadesDeJanela {
 	 * definir a forma como os relatórios serão gerados e futuramente exibidos.
 	 * <b>Nota:</b> Para exibir os dados, consulte o método <code>exibir</code>.
 	 * @param tipoRelatorio define se qual o tipo de relatório será gerado
-	 * @param pesquisa identifica os dados de qual pesquisa serão obtidos do banco
 	 * @return uma instânica única desta classe.
 	 * @throws SQLException se ocorrer um erro ao gerar o relatório.
 	 * 
 	 * @see IgRelatorio#exibir()
 	 */
-	public static IgRelatorio getInstance(TipoRelatorio tipoRelatorio, Pesquisa pesquisa) throws SQLException {
-		return instanciar(tipoRelatorio, pesquisa, null);
+	public static IgRelatorio getInstance(TipoRelatorio tipoRelatorio) throws SQLException {
+		return instanciar(tipoRelatorio, null);
 	}
 
 	/**Prepara a janela de relatórios para ser exibida. A janela será construída obtendo dados do banco de dados a 
@@ -149,7 +147,6 @@ public class IgRelatorio extends JFrame implements PropriedadesDeJanela {
 	 * definir a forma como os relatórios serão gerados e futuramente exibidos.
 	 * <b>Nota:</b> Para exibir os dados, consulte o método <code>exibir</code>.
 	 * @param tipoRelatorio define se qual o tipo de relatório será gerado
-	 * @param pesquisa identifica os dados de qual pesquisa serão obtidos do banco
 	 * @param tipoGraduacao descreve a modalidade dos cursos que serão gerados no relatório. Para que o relatório gerado não
 	 * filtre os cursos pelo tipo de graduação, utilize a versão sobrecaregada deste método.
 	 * @return uma instânica única desta classe.
@@ -158,8 +155,8 @@ public class IgRelatorio extends JFrame implements PropriedadesDeJanela {
 	 * @see IgRelatorio#exibir()
 	 * @see IgRelatorio#getInstance()
 	 */
-	public static IgRelatorio getInstance(TipoRelatorio tipoRelatorio, Pesquisa pesquisa, String tipoGraduacao) throws SQLException {
-		return instanciar(tipoRelatorio, pesquisa, tipoGraduacao);
+	public static IgRelatorio getInstance(TipoRelatorio tipoRelatorio, String tipoGraduacao) throws SQLException {
+		return instanciar(tipoRelatorio, tipoGraduacao);
 
 	}
 
@@ -266,7 +263,7 @@ public class IgRelatorio extends JFrame implements PropriedadesDeJanela {
 	/**Gera e armazena os dados de um relatório a ser exibido*/
 	private void gerarDadosRelatorio() throws SQLException {
 
-		dadosRelatorio = AvaliacaoInstitucional.gerarRelatorio(pesquisa, tipoRelatorio, tipoGraduacao);
+		dadosRelatorio = app.gerarRelatorio(tipoRelatorio, tipoGraduacao);
 		IgAvaliacaoInstitucional.mudarCursor(Cursor.DEFAULT_CURSOR);
 
 	}

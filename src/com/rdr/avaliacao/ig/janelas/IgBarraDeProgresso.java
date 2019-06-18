@@ -18,10 +18,30 @@ public class IgBarraDeProgresso extends JDialog{
 	private long valorMaximo;
 	private Component janelaPai;
 
+	/**Cria uma caixa de diálgo com uma barra de progresso e um texto descritivo abaixo.
+	 * A barra recebe um valor total de processamentos, e então o método <code>incrementar</code>
+	 * deve ser chamado. A barra atingirá 100% quando o valor processado for igual ao valor máximo de processamento.
+	 * 
+	 * @param janePai componente em relação a caixa. Aquele que a invoca. (null permitido).
+	 * @param titulo da janela
+	 * @param texto mensagem que a aparecerá sob a barra durante o processamento
+	 * @param valorMaximo valor total a ser processado
+	 */
 	public IgBarraDeProgresso(Component janePai, String titulo, String texto, long valorMaximo) {
 		this(janePai, titulo, texto, texto, texto, valorMaximo);
 	}
 	
+	/**Cria uma caixa de diálgo com uma barra de progresso e um texto descritivo abaixo.
+	 * A barra recebe um valor total de processamentos, e então o método <code>incrementar</code>
+	 * deve ser chamado. A barra atingirá 100% quando o valor processado for igual ao valor máximo de processamento.
+	 * 
+	 * @param janePai componente em relação a caixa. Aquele que a invoca. (null permitido).
+	 * @param titulo da janela
+	 * @param texto1 mensagem que a aparecerá sob a barra durante o processamento de 0 a 40%
+	 * @param texto2 mensagem que a aparecerá sob a barra durante o processamento de 41 a 80%
+	 * @param texto3 mensagem que a aparecerá sob a barra durante o processamento de 81 a 100%
+	 * @param valorMaximo valor total a ser processado
+	 */
 	public IgBarraDeProgresso(Component janelaPai, String titulo, String texto1,String texto2, String texto3,
 			long valorMaximo) {
 		this.texto1 = texto1;
@@ -37,6 +57,7 @@ public class IgBarraDeProgresso extends JDialog{
 
 	}
 
+	/**Constroi a caixa de diálogo da barra*/
 	private void construirIg() {
 		getContentPane().setLayout(null);
 
@@ -73,6 +94,13 @@ public class IgBarraDeProgresso extends JDialog{
 		
 	}
 
+	/**Incrementa em porcentagem o valor da barra a partir do valor processado em relação ao processamento
+	 * total.<br>
+	 * <b>Nota: </b> este método utiliza a Event Dispatch Thread (EDT) para atualizar e exibir a barra. A chamada deste
+	 * método deve ser feito por outra thread além da que responde a EDT (thread main), senão, um congelamento de tela 
+	 * será causado ou efeito esperado não será atigido
+	 * @param processado valor processado do total de processamentos.
+	 */
 	public void incrementar(long processado) {
 
 		
@@ -98,6 +126,7 @@ public class IgBarraDeProgresso extends JDialog{
 		
 	}
 	
+	/**Muda entre os três textos dependendo da porcentagem atual da barra*/
 	private void trocarLabel(double porcentagem) {
 		if(porcentagem > 40 && porcentagem < 80)
 			lblTexto.setText(texto2);
@@ -105,6 +134,11 @@ public class IgBarraDeProgresso extends JDialog{
 			lblTexto.setText(texto3);
 	}
 
+	/**Calcula quanto a barra já progrediu com base no volume total de processamentos e a quantia
+	 * já processada.
+	 * @param processado número de processamentos realizados até agora com relação ao total
+	 * @return
+	 */
 	private double calcularPorcentagem(long processado) {
 		return processado * 100 / valorMaximo;
 	}

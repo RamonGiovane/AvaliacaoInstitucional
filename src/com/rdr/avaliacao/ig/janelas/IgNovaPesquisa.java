@@ -31,6 +31,8 @@ import javax.swing.JLabel;
 import javax.swing.JTextField;
 
 import com.rdr.avaliacao.AvaliacaoInstitucional;
+import com.rdr.avaliacao.es.EntradaESaida;
+import com.rdr.avaliacao.es.ExtratorDeDados;
 import com.rdr.avaliacao.ig.LookAndFeel;
 import com.rdr.avaliacao.questionario.Pesquisa;
 
@@ -147,8 +149,17 @@ public class IgNovaPesquisa extends JDialog{
 		String nomePesquisa = fieldNomePesquisa.getText(),
 				caminhoDados = fieldCaminhoDados.getText();
 		
+		
+		
 		//Verifica se os campos estão vazios
 		if(!verificarCamposVazios(nomePesquisa, caminhoDados)) return;
+		
+		//Verifica se o arquivo existe
+		if(!EntradaESaida.verificarSeArquivoExiste(caminhoDados)) {
+			msgErro(this, MSG_ARQUIVO_NAO_ENCONTRADO + caminhoDados, TITULO_ABRIR_ARQUIVO);
+			return;
+		}
+		
 		
 		Pesquisa pesquisa = new Pesquisa(nomePesquisa);
 		pesquisa.setCaminhoDataSet(caminhoDados);
@@ -171,7 +182,7 @@ public class IgNovaPesquisa extends JDialog{
 		
 		//Começa a importação de dados.
 		try {
-			avaliacaoInstitucional.importarDados(this, pesquisa);
+			avaliacaoInstitucional.importarDados(pesquisa);
 			esconder();
 			
 		} catch (FileNotFoundException e) {
@@ -181,8 +192,8 @@ public class IgNovaPesquisa extends JDialog{
 		} catch (IOException e) {
 			e.printStackTrace();
 
-		} catch (Exception e) {
-			e.printStackTrace();
+		} catch (SQLException e) {
+			msgErro(this, "Ocorreu um erro durante a importação dos dados da pesquisa. Dados corrompidos ou inconsistentes.", TITULO_IMPORTAR_DADOS);
 		}
 
 	}

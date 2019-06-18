@@ -1,7 +1,15 @@
 package com.rdr.avaliacao.ig.janelas;
 
-import static com.rdr.avaliacao.es.EntradaESaida.msgInfo;
-import static com.rdr.avaliacao.ig.InterfaceConstraints.*;
+import static com.rdr.avaliacao.ig.InterfaceConstraints.CAMINHO_ICON_DB;
+import static com.rdr.avaliacao.ig.InterfaceConstraints.CAMINHO_ICON_GRAPHIC;
+import static com.rdr.avaliacao.ig.InterfaceConstraints.CAMINHO_IMPORT_ICON;
+import static com.rdr.avaliacao.ig.InterfaceConstraints.COR_BACKGROUND;
+import static com.rdr.avaliacao.ig.InterfaceConstraints.COR_BTN_MENU;
+import static com.rdr.avaliacao.ig.InterfaceConstraints.COR_BTN_MENU_HOVER;
+import static com.rdr.avaliacao.ig.InterfaceConstraints.MSG_ERRO_IMPORTAR_SEM_CONEXAO;
+import static com.rdr.avaliacao.ig.InterfaceConstraints.MSG_SOBRE;
+import static com.rdr.avaliacao.ig.InterfaceConstraints.TITULO_IMPORTAR_DADOS;
+import static com.rdr.avaliacao.ig.InterfaceConstraints.TITULO_PROGRAMA;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -35,7 +43,6 @@ import com.rdr.avaliacao.ig.TipoRelatorio;
 public class IgAvaliacaoInstitucional extends JFrame{
 	private static IgAvaliacaoInstitucional igAvaliacaoInstitucional;
 	private static IgBancoDeDados igBancoDeDados;
-	private static IgNovaPesquisa igPesquisa;
 	
 	private AvaliacaoInstitucional avaliacaoInstitucional;
 
@@ -57,8 +64,9 @@ public class IgAvaliacaoInstitucional extends JFrame{
 	}
 
 	public static IgAvaliacaoInstitucional getInstance(AvaliacaoInstitucional avaliacaoInstitucional) {
-		return igAvaliacaoInstitucional == null ? 
-				new IgAvaliacaoInstitucional(avaliacaoInstitucional) : igAvaliacaoInstitucional;
+		if(igAvaliacaoInstitucional == null)
+			igAvaliacaoInstitucional = 	new IgAvaliacaoInstitucional(avaliacaoInstitucional);
+		return igAvaliacaoInstitucional;
 	}
 
 
@@ -93,18 +101,18 @@ public class IgAvaliacaoInstitucional extends JFrame{
 
 		lblImportarDados.setToolTipText("Abrir planilha de dados a serem analisados");
 		lblImportarDados.setForeground(COR_BTN_MENU);
-		lblImportarDados.setBounds(275, 132, 217, 24);
+		lblImportarDados.setBounds(275, 192, 217, 24);
 
 		panel.add(lblImportarDados);
 
 		JLabel lblComear = new JLabel("Come\u00E7ar");
 		lblComear.setFont(new Font("Tahoma", Font.PLAIN, 14));
-		lblComear.setBounds(199, 104, 113, 17);
+		lblComear.setBounds(199, 164, 113, 17);
 		panel.add(lblComear);
 
 		JLabel lblFinalizar = new JLabel("Gerar Relat\u00F3rio");
 		lblFinalizar.setFont(new Font("Tahoma", Font.PLAIN, 14));
-		lblFinalizar.setBounds(199, 199, 113, 14);
+		lblFinalizar.setBounds(199, 259, 113, 14);
 		panel.add(lblFinalizar);
 
 		JButton lblGerarRelatrios = new JButton("Participantes por Curso...");
@@ -116,7 +124,7 @@ public class IgAvaliacaoInstitucional extends JFrame{
 		lblGerarRelatrios.setFont(new Font("Tahoma", Font.PLAIN, 13));
 		lblGerarRelatrios.setForeground(COR_BTN_MENU);
 		lblGerarRelatrios.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-		lblGerarRelatrios.setBounds(275, 229, 217, 24);
+		lblGerarRelatrios.setBounds(275, 289, 217, 24);
 		panel.add(lblGerarRelatrios);
 
 		JButton lblparticipantesPorSegmento = new JButton("Participantes por Segmento...");
@@ -129,7 +137,7 @@ public class IgAvaliacaoInstitucional extends JFrame{
 		lblparticipantesPorSegmento.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 		lblparticipantesPorSegmento.setFont(new Font("Tahoma", Font.PLAIN, 13));
 		lblparticipantesPorSegmento.setForeground(COR_BTN_MENU);
-		lblparticipantesPorSegmento.setBounds(275, 266, 217, 24);
+		lblparticipantesPorSegmento.setBounds(275, 326, 217, 24);
 		panel.add(lblparticipantesPorSegmento);
 
 		JButton lblconceitoMdioPor = new JButton("Conceito M\u00E9dio por Curso...");
@@ -140,7 +148,7 @@ public class IgAvaliacaoInstitucional extends JFrame{
 		});
 		lblconceitoMdioPor.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 		lblconceitoMdioPor.setFont(new Font("Tahoma", Font.PLAIN, 13));
-		lblconceitoMdioPor.setBounds(275, 303, 217, 24);
+		lblconceitoMdioPor.setBounds(275, 363, 217, 24);
 		lblconceitoMdioPor.setForeground(COR_BTN_MENU);
 		panel.add(lblconceitoMdioPor);
 
@@ -152,13 +160,13 @@ public class IgAvaliacaoInstitucional extends JFrame{
 		});
 		lblconceitoMdioPor_1.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 		lblconceitoMdioPor_1.setFont(new Font("Tahoma", Font.PLAIN, 13));
-		lblconceitoMdioPor_1.setBounds(275, 343, 217, 24);
+		lblconceitoMdioPor_1.setBounds(275, 403, 217, 24);
 		lblconceitoMdioPor_1.setForeground(COR_BTN_MENU);
 		panel.add(lblconceitoMdioPor_1);
 
 		JLabel lblConfigurar = new JLabel("Configurar");
 		lblConfigurar.setFont(new Font("Tahoma", Font.PLAIN, 14));
-		lblConfigurar.setBounds(199, 386, 113, 17);
+		lblConfigurar.setBounds(199, 446, 113, 17);
 		panel.add(lblConfigurar);
 
 		JButton lblConfigurar_1 = new JButton("Conex\u00E3o com Banco de Dados...");
@@ -179,22 +187,22 @@ public class IgAvaliacaoInstitucional extends JFrame{
 		comportamentoJLabelMenu(lblparticipantesPorSegmento);
 		comportamentoJLabelMenu(lblGerarRelatrios);
 
-		lblConfigurar_1.setBounds(275, 415, 217, 24);
+		lblConfigurar_1.setBounds(275, 475, 217, 24);
 		panel.add(lblConfigurar_1);
 
 		JLabel label_1 = new JLabel("");
 		label_1.setIcon(new ImageIcon(IgAvaliacaoInstitucional.class.getResource(CAMINHO_ICON_DB)));
-		label_1.setBounds(163, 371, 32, 32);
+		label_1.setBounds(163, 431, 32, 32);
 		panel.add(label_1);
 
 		JLabel label_4 = new JLabel("");
 		label_4.setIcon(new ImageIcon(IgAvaliacaoInstitucional.class.getResource(CAMINHO_ICON_GRAPHIC)));
-		label_4.setBounds(163, 186, 32, 32);
+		label_4.setBounds(163, 246, 32, 32);
 		panel.add(label_4);
 
 		JLabel label_5 = new JLabel("");
 		label_5.setIcon(new ImageIcon(IgAvaliacaoInstitucional.class.getResource(CAMINHO_IMPORT_ICON)));
-		label_5.setBounds(163, 92, 32, 32);
+		label_5.setBounds(163, 152, 32, 32);
 		panel.add(label_5);
 		JMenuBar menuBar = new JMenuBar();
 		setJMenuBar(menuBar);
@@ -296,7 +304,7 @@ public class IgAvaliacaoInstitucional extends JFrame{
 		});
 		mnAjuda.add(mntmSobre);
 
-		setSize(700, 600);
+		setSize(700, 694);
 		getContentPane().setBackground(COR_BACKGROUND);
 		
 		addWindowListener(new WindowAdapter() {
@@ -346,8 +354,8 @@ public class IgAvaliacaoInstitucional extends JFrame{
 		igAvaliacaoInstitucional.setEnabled(true);
 		igAvaliacaoInstitucional.requestFocus();
 	}
-	private void relatorio(TipoRelatorio tipoPesquisa) {
-		IgSeletorRelatorio.getInstance(avaliacaoInstitucional, tipoPesquisa).exibir(this);
+	private void relatorio(TipoRelatorio tipoRelatorio) {
+		IgSeletorRelatorio.getInstance(tipoRelatorio).exibir(this);
 		
 	}
 	

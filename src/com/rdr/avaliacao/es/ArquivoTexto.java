@@ -5,6 +5,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.util.Formatter;
 import java.util.FormatterClosedException;
 import java.util.Scanner;
@@ -25,26 +27,32 @@ import java.util.Scanner;
  * @author Prof. Márlon Oliveira da Silva<br>
  * 		   Ramon Giovane
  * 
- * @version 0.1
+ * @version 0.2
  */
 public class ArquivoTexto {
 	private Scanner inputScanner; // O conteúdo do arquivo texto será lido usando um objeto Scanner.
 	private FileInputStream fileInputStream; // Representa o arquivo texto como um arquivo de bytes. 
 	private Formatter fileOutputFormatter; // O conteúdo do arquivo texto será escrito usando um objeto Formatter.
 	private BufferedReader reader;
+	private final String UTF_8 = "UTF-8";
 	 
-	private final String EOF_MESSAGE ="Fim do arquivo (EOF) atingido.";
 	/** 
 	 * Abre um arquivo texto armazenado em disco somente para leitura. A escrita não é permitida.
 	 * 
 	 * @param nomeArquivo nome do arquivo a ser aberto.
 	 * 
-	 * @throws FileNotFoundException se o nome do arquivo não for encontrado.
 	 * @throws NullPointerException se o nome do arquivo for nulo.
+	 * @throws IOException 
 	 */
-	  public void abrir(String nomeArquivo) throws FileNotFoundException, NullPointerException {
+	  public void abrir(String nomeArquivo) throws NullPointerException, IOException {
 		 //Cria um objeto de reder bufferizado.
-		  reader = new BufferedReader(new FileReader(nomeArquivo));
+		  try {
+			  //Tenta abrir o arquivo como UTF-8
+			  reader = new BufferedReader(new InputStreamReader(new FileInputStream(nomeArquivo), UTF_8));
+		} catch (UnsupportedEncodingException e) {
+			//Se não conseguir, tenta abri-lo de outra forma. 
+			reader = new BufferedReader(new FileReader(nomeArquivo));
+		}
 		
 		  // Abre um arquivo de bytes para realizar a entrada de dados. 
 		  fileInputStream = new FileInputStream(nomeArquivo);

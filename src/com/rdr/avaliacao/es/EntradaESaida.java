@@ -27,6 +27,14 @@ import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
 
 
+/**
+ * Classe que contém métodos básicos para a manipulação de entrada e saída de dados na tela,
+ * como gerar componentes visuais como tabelas, caixas de diálogo para abrir e salvar arquivos,
+ * caixas de texto e diálogos de input e de mensagem.
+ * 
+ * @author Ramon Giovane<br>Prof. Márlon Silva
+ *
+ */
 public class EntradaESaida {
 
 	/**Reproduz um som de alerta padrão do sistema operacional*/
@@ -161,18 +169,7 @@ public class EntradaESaida {
 	public static JTable gerarTabela(Object[][] linhas, String[] colunas) {
 
 		// Cria o componente GUI Swing JTable para exibir a tabela.
-		JTable table = new JTable(linhas, colunas) ;//{
-		//			//Sobrescrevendo o método prepareRenderer para que as colunas se ajustem de acodo com o tamanho de seu conteúdo
-		//			@Override
-		//			public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
-		//				Component component = super.prepareRenderer(renderer, row, column);
-		//				int rendererWidth = component.getPreferredSize().width;
-		//				TableColumn tableColumn = getColumnModel().getColumn(column);
-		//				tableColumn.setPreferredWidth(Math.max(rendererWidth + getIntercellSpacing().width, tableColumn.getPreferredWidth()));
-		//				return component;
-		//			}
-		//		};
-
+		JTable table = new JTable(linhas, colunas) ;
 
 		table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF );
 
@@ -247,10 +244,6 @@ public class EntradaESaida {
 				new JScrollPane(gerarTabela(linhas, colunas)), 
 				titulo);
 	}
-
-
-
-
 
 	/**
 	 * Exibe um texto em uma caixa de diálogo com o texto da barra de título definido em titulo.
@@ -424,7 +417,17 @@ public class EntradaESaida {
 			fileChooser.setFileFilter(filter);
 		}
 	}
-
+	/**Verifica se um arquivo qualquer especificado numa <code>String</code>  com o caminho existe.
+	 * 
+	 * @param caminho do arquivo a ser verificado
+	 * @return <code>true</code> se existe. Senão, <code>false</code>.
+	 * 
+	 * @author RamonGiovane
+	 */
+	public static boolean verificarSeArquivoExiste(String caminho) {
+		File file = new File(caminho);
+		return file.exists();
+	}
 
 
 } // class EntradaESaida

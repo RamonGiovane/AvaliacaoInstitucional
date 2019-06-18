@@ -45,21 +45,21 @@ public class IgSeletorRelatorio extends JDialog implements PropriedadesDeJanela{
 	private JLabel lblNomeDaPesquisa;
 	private final String[] TIPOS_GRADUACAO = {"Bacharelado", "Licenciatura", "Técnicos e Tecnólogos"};
 
-	private IgSeletorRelatorio(AvaliacaoInstitucional avaliacaoInstitucional, TipoRelatorio tipoRelatorio) {
+	private IgSeletorRelatorio(TipoRelatorio tipoRelatorio) {
 		this.tipoRelatorio = tipoRelatorio;
-		avaliacao = avaliacaoInstitucional;
+		avaliacao = AvaliacaoInstitucional.getInstance();
 		construirIg();
 		popularCombosBoxes();
 
 	}
 
-	public static IgSeletorRelatorio getInstance(AvaliacaoInstitucional avaliacaoInstitucional, TipoRelatorio tipoPesquisa) {
+	public static IgSeletorRelatorio getInstance(TipoRelatorio tipoRelatorio) {
 		if(igPesquisa == null) {
-			igPesquisa = new IgSeletorRelatorio(avaliacaoInstitucional, tipoPesquisa);
+			igPesquisa = new IgSeletorRelatorio(tipoRelatorio);
 			return igPesquisa;
 		}
 		else {
-			igPesquisa.resetar(tipoPesquisa);
+			igPesquisa.resetar(tipoRelatorio);
 			return igPesquisa;
 		}
 	}
@@ -96,14 +96,14 @@ public class IgSeletorRelatorio extends JDialog implements PropriedadesDeJanela{
 	 * @return false se não houver dados disponíveis, true se há.
 	 */
 	private boolean checarDadosDisponiveis() {
-
+		IgAvaliacaoInstitucional janelaPai = IgAvaliacaoInstitucional.getInstance();
 		if(!avaliacao.checarConexaoBancoDeDados()) {
-			EntradaESaida.msgInfo(this, MSG_RELATORIO_SEM_CONEXAO, InterfaceConstraints.TITULO_PROGRAMA);
+			EntradaESaida.msgInfo(janelaPai, MSG_RELATORIO_SEM_CONEXAO, InterfaceConstraints.TITULO_PROGRAMA);
 			return false;
 		}
 
 		if(avaliacao.numeroPesquisas() == 0) {
-			EntradaESaida.msgInfo(this, MSG_NAO_HA_PESQUISAS,InterfaceConstraints.TITULO_PROGRAMA);
+			EntradaESaida.msgInfo(janelaPai, MSG_NAO_HA_PESQUISAS,InterfaceConstraints.TITULO_PROGRAMA);
 			return false;
 		}
 		
@@ -140,8 +140,9 @@ public class IgSeletorRelatorio extends JDialog implements PropriedadesDeJanela{
 		btnOK.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				IgAvaliacaoInstitucional.mudarCursor(Cursor.WAIT_CURSOR);
-				abrirRelatorio();
 				avaliacao.setPesquisaAtiva(comboNomePesquisa.getSelectedItem().toString());
+				abrirRelatorio();
+				
 			}
 
 		});
@@ -205,6 +206,7 @@ public class IgSeletorRelatorio extends JDialog implements PropriedadesDeJanela{
 
 	}
 
+	/**Esconde a janela*/
 	public void esconder() {
 
 		setVisible(false);
@@ -216,14 +218,13 @@ public class IgSeletorRelatorio extends JDialog implements PropriedadesDeJanela{
 		esconder();
 
 		try {
-			Pesquisa pesquisa = avaliacao.obterPesquisa(comboNomePesquisa.getSelectedItem().toString());
 			
 			//Se o relatório for sobre o conceito médio, é preciso chamar a versão sobrecarregada do método que abre IgRelatorio.
 			if(tipoRelatorio.equals(TipoRelatorio.CONCEITO_MEDIO_CURSO))
-				IgRelatorio.getInstance(tipoRelatorio, pesquisa,
+				IgRelatorio.getInstance(tipoRelatorio, 
 						comboTipoGraduacao.getSelectedItem().toString()).exibir(this);
 			else
-				IgRelatorio.getInstance(tipoRelatorio, pesquisa).exibir(this);
+				IgRelatorio.getInstance(tipoRelatorio).exibir(this);
 		}catch (SQLException e) {
 			EntradaESaida.msgErro(this, MSG_ERRO_GERAR_RELATORIO + MSG_DETALHES_ERRO, 
 			TITULO_PROGRAMA);
