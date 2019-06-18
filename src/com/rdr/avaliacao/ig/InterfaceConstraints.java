@@ -42,7 +42,8 @@ public interface InterfaceConstraints {
 			MSG_JANELA_BANCO = "<html>Para usar as funcionalidades do programa,<br> \u00E9 preciso uma conex\u00E3o com o"
 					+ " Banco de Dados</html>",
 			MSG_SOBRE = "© 2019 Avaliação Institucional\nDesenvolvido por Ramon Giovane.\n"
-					+ "Aluno do curso Tecnologia em Sistemas para Internet.\nhttps://github.com/RamonGiovane/";
+					+ "Aluno do curso Tecnologia em Sistemas para Internet.\nhttps://github.com/RamonGiovane/",
+			MSG_ARQUIVO_VAZIO = "O arquivo passado está vazio ou corrompido.";
 	
 	
 

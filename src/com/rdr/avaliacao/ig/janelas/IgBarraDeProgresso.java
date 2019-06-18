@@ -118,11 +118,8 @@ public class IgBarraDeProgresso extends JDialog{
 				progressBar.setString((int)porcentagem + " %");
 				progressBar.setValue((int)porcentagem);
 				progressBar.setStringPainted(true);
-				
-				
 			}
 		});
-		
 		
 	}
 	

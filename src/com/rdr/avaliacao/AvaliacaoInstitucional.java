@@ -242,12 +242,20 @@ public class AvaliacaoInstitucional {
 			
 	}
 	
+	/**Define qual é a pesquisa ativa na aplicação. Isso é importante para evitar que usuário tenha sempre  
+	 * que utilizar o combo box para escolher a pesquisa desejada quando gerar um relatório.
+	 * Se a pesquisa informada não existir na lista de pesquisa na memória, não faz nada.
+	 * @param nomePesquisa uma <code>String</code> com o nome da pesquisa a ser usada. 
+	 */
 	public void setPesquisaAtiva(String nomePesquisa) {
 		Pesquisa pesquisa = obterPesquisa(nomePesquisa);
 		if(pesquisasList.contains(pesquisa))
 			pesquisaAtiva = pesquisa;
 	}
 	
+	/**
+	 * Retorna a pesquisa ativa na aplicação  no momento.
+	 */
 	public Pesquisa getPesquisaAtiva() {
 		return pesquisaAtiva;
 	}

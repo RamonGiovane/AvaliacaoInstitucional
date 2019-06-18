@@ -3,7 +3,7 @@ package com.rdr.avaliacao.es;
 import static com.rdr.avaliacao.es.bd.constraints.FuncoesSQL.FUNCTION_INSERIR_ENTREVISTADO;
 import static com.rdr.avaliacao.es.bd.constraints.FuncoesSQL.FUNCTION_INSERIR_PERGUNTA;
 import static com.rdr.avaliacao.es.bd.constraints.FuncoesSQL.FUNCTION_INSERIR_RESPOSTA;
-import static com.rdr.avaliacao.ig.InterfaceConstraints.MSG_BARRA_DE_PROGRESSO_1;
+import static com.rdr.avaliacao.ig.InterfaceConstraints.*;
 import static com.rdr.avaliacao.ig.InterfaceConstraints.MSG_BARRA_DE_PROGRESSO_2;
 import static com.rdr.avaliacao.ig.InterfaceConstraints.MSG_BARRA_DE_PROGRESSO_3;
 import static com.rdr.avaliacao.ig.InterfaceConstraints.MSG_PERGUNTA_VAZIA;
@@ -15,6 +15,7 @@ import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.StringTokenizer;
 
 import com.rdr.avaliacao.AvaliacaoInstitucional;
 import com.rdr.avaliacao.es.bd.DAO;
@@ -125,12 +126,13 @@ public class ExtratorDeDados {
 		abrirArquivo();
 		numeroDeLinhas = contarLinhas();
 
-	//	try {
-			extrairPerguntas();
-			extrairRespostas();
-//		} catch (SQLException e) {
-//			e.printStackTrace();
-//		}
+		//	try {
+		extrairPerguntas();
+		
+		extrairRespostas();
+		//		} catch (SQLException e) {
+		//			e.printStackTrace();
+		//		}
 
 		fecharArquivo();
 
@@ -151,16 +153,42 @@ public class ExtratorDeDados {
 	/**Fecha a barra de progresso, reativa a janela principal, se não estiver ativada, e exibe uma mensagem 
 	 * de sucesso na importação.
 	 */
-	private void terminarBarraDeProgresso() {
+	private void terminarExtracao(int linhasIgnoradas, int totalDeLinhas) {
 		barraDeProgresso.fechar();
+
+		//Se nenhuma foi ignorada
+		if(linhasIgnoradas == 0) {
+			EntradaESaida.msgInfo(janelaPai, MSG_PESQUISA_IMPORTADA, 
+					InterfaceConstraints.TITULO_PROGRAMA);
+		}
+		//Se todas as linhas foram ignoradas
+		else if(linhasIgnoradas == totalDeLinhas) {
+			EntradaESaida.msgErro(janelaPai, "ERRO: A importação foi mal sucedida porque as respostas do entrevistados não condizem com o cabeçalho de perguntas.",
+					InterfaceConstraints.TITULO_PROGRAMA);
+			app.apagarPesquisa(pesquisa);
+		}
+
+		//Se algumas linhas foram ignoradas
+		else {
+			EntradaESaida.msgAlerta(janelaPai, String.format("A pesquisa for importada.\nNo entanto %s linha(s) ignorada(s) durante o processo porque não "
+					+ "condiziam com o cabeçalho de perguntas.", linhasIgnoradas), InterfaceConstraints.TITULO_PROGRAMA);
+		}
+
 		IgAvaliacaoInstitucional.ativarInterface();
-		EntradaESaida.msgInfo(janelaPai, MSG_PESQUISA_IMPORTADA, 
-				InterfaceConstraints.TITULO_PROGRAMA);
 	}
 
 	private void extrairPerguntas() throws IOException {
 
-		String strPerguntas[] =  quebrarTexto(obterCabecalho()); //!!! must check this
+		//Obtém o texto do cabeçalho
+		String texto = obterCabecalho();
+		
+		//Cancela a importação se estiver vazio
+		if(texto == null) {
+			cancelarImportacao(MSG_ARQUIVO_VAZIO);
+			throw new IOException();
+		}
+		
+		String strPerguntas[] =  quebrarTexto(texto); //!!! must check this
 
 		indicesPerguntas = new IndicePergunta[strPerguntas.length-3];
 
@@ -202,7 +230,7 @@ public class ExtratorDeDados {
 		System.out.println(indicesPerguntas.length);
 	}
 
-	/**Exibe uma mensagem de erro e cancela a importação dos dados. Apaga a pesquisa criada*/
+	/**Exibe uma mensagem de erro e cancela a importação dos dados. Tenta apagar pesquisa criada*/
 	private void cancelarImportacao(String mensagemDeErro) {
 		EntradaESaida.msgErro(janelaPai, mensagemDeErro, InterfaceConstraints.TITULO_IMPORTAR_DADOS);
 		app.apagarPesquisa(pesquisa);
@@ -239,31 +267,45 @@ public class ExtratorDeDados {
 				String linha, respostas[];
 				int contador = 0;
 
+				//Contador de quantas linhas tiveram dados inconsistentes e as respostas não foram armazenadas
+				int linhasIgnoradas = 0;
+
 				try {
 
 					iniciarBarraDeProgresso();
 
 					do {
 
-						/* 	Obtendo uma linha do arquivo, capturando a exceção e saindo do loop
-						 * 	se houver algum erro ou chegar ao fim do arquivo.
-						 */
-
+						//Obtendo uma linha do arquivo
 						linha = arquivo.lerLinha();
 
 						barraDeProgresso.incrementar(contador++);
 
-						//Se a linha estiver vazia ou a leitura houver terminado, reavalia a condição do loop
-						if(linha == null || linha.isEmpty()) continue;
+						//Se a linha for nula, significa que a importação terminou 
+						if(linha == null ) continue; 
+
+						//Se estiver vazia, incrementa o número de linhas ignoradas e pula os processamentos seguintes
+						if(linha.isEmpty()) { linhasIgnoradas++; continue; }
 
 						//Dividindo a linha e strings com cada coluna
 						respostas = quebrarTexto(linha);
 
 						//Extrai e salva no banco de dados o entrevistado, obtendo o código do entrevistado salvo no banco
-						codigoEntrevistado = extrairEntrevistado(respostas);
+						try{ codigoEntrevistado = extrairEntrevistado(respostas);
+						}catch (Exception e) {
+							//Se acontecer algum erro ao extrair o entrevistado, pula a leitura de respostas
+							linhasIgnoradas++;
+							continue;
+						}
 
 						//Extrai e salva no banco de dados as respostas de um entrevistado.
-						extrairLinhaResposta(linha, codigoEntrevistado);
+						try{ 
+							extrairLinhaResposta(linha, codigoEntrevistado);
+						
+						}catch (IllegalArgumentException e) {
+							linhasIgnoradas++;
+							continue;
+						}
 
 
 					}while(linha != null);
@@ -271,46 +313,44 @@ public class ExtratorDeDados {
 					Thread.currentThread().interrupt();
 					e.printStackTrace();
 				}
-				terminarBarraDeProgresso();
+				terminarExtracao(linhasIgnoradas, contador);
 
 			}
 		});
+
 		thread.start();
+		if(thread.isInterrupted()) throw new SQLException();
 	}
 
 
 
-	private void extrairLinhaResposta(String textoLinha, int codigoEntrevistado) throws SQLException {
-		int i = 0;
+	
+	private void extrairLinhaResposta(String textoLinha, int codigoEntrevistado) throws SQLException, IllegalArgumentException {
+		int i = 0, numeroPerguntas = indicesPerguntas.length+3;
+		
+		StringTokenizer tokenizer = new StringTokenizer(textoLinha, separador);
+		
+		int numeroToknes = tokenizer.countTokens();
+		
+		//Ignorando as identificacoes do entrevistado
+		for(int x = 0; x<3; x++)
+			tokenizer.nextElement();
 
-		String resposta = null;
-		for(int x = 0; x<3; x++) {
-			textoLinha = textoLinha.substring(textoLinha.indexOf(";") + 1) + " ";
-			resposta = textoLinha.substring(0,textoLinha.indexOf(";"));
-		}
+		//Se o número de perguntas não for igual ao número de tokens, ignora a linha disparando uma exceção
+		if(numeroToknes != numeroPerguntas)
+			throw new IllegalArgumentException("Respostas não condizem com o cabeçalho");
 
-
-		while(true){
-
-			//Tenta inserir uma resposta por meio da storded function inserir_pergunta. Incrementa a vaiável i
-			dao.executarFuncao(FUNCTION_INSERIR_RESPOSTA, pesquisa.getCodigo(), resposta.trim(), indicesPerguntas[i].getIndiceAssunto(),
+		String resposta;
+		while (tokenizer.hasMoreElements()) {
+			
+			resposta = tokenizer.nextElement().toString();
+			
+			dao.executarFuncao(FUNCTION_INSERIR_RESPOSTA, pesquisa.getCodigo(), resposta, indicesPerguntas[i].getIndiceAssunto(),
 					indicesPerguntas[i++].getIndicePergunta(), codigoEntrevistado);
-
-			textoLinha = textoLinha.substring(textoLinha.indexOf(";") + 1) + " ";
-
-
-			try {
-				resposta = textoLinha.substring(0,textoLinha.indexOf(";"));
-
-			}catch (Exception e) {
-				/*Quando chega na última resposta, não é possível quebrar mais, e a variável resposta vazia enquanto textoLinha
-				conterá a última respota da linha*/
-				dao.executarFuncao(FUNCTION_INSERIR_RESPOSTA, pesquisa.getCodigo(), textoLinha.trim(), indicesPerguntas[i].getIndiceAssunto(),
-						indicesPerguntas[i].getIndicePergunta(), codigoEntrevistado);
-				break;
-			}
-
+			System.out.println(resposta);
+			
 		}
+
 
 	}
 
@@ -319,6 +359,9 @@ public class ExtratorDeDados {
 
 		int codigoEntrevistado;
 		String segmento = textoLinhas[0];
+		String campus = textoLinhas[1]; 
+
+		if(segmento.isEmpty() || campus.isEmpty()) throw new IllegalArgumentException("Campo vazio detectado");
 
 		/*
 		 * Executando a função SQL para inserção (que recebe o codigo da pesquisa, segmento, campus e curso) e 
@@ -330,7 +373,7 @@ public class ExtratorDeDados {
 		 */
 
 		Object resultado [][] = dao.executarFuncao(FUNCTION_INSERIR_ENTREVISTADO, pesquisa.getCodigo(), segmento,
-				textoLinhas[1], segmento.equals(Segmento.DISCENTE) ? textoLinhas[2] : null);
+				campus, segmento.equals(Segmento.DISCENTE) ? textoLinhas[2] : null);
 
 
 		codigoEntrevistado = (int) resultado[0][0];
@@ -673,7 +716,7 @@ public class ExtratorDeDados {
 	public List<Pesquisa> obterPesquisas() throws SQLException {
 
 		List<Pesquisa> pesquisasList = new ArrayList<Pesquisa>();
-		
+
 		/*
 		 * Seleciona as pesquisas implementando os métodos da classe recuperação, para uma forma
 		 * de consulta paralela ao padrão da classe Pesquisa
@@ -689,14 +732,14 @@ public class ExtratorDeDados {
 				return null;
 			}
 		});
-		
+
 
 		//Copiando o resultado da consulta dentro da lista
 		for(int i=0; i<pesquisas.length; i++){
 			pesquisa = new Pesquisa();
 			pesquisa.setCodigo((int)pesquisas[i][0]);
 			pesquisa.setNome(pesquisas[i][1].toString());
-			
+
 			pesquisasList.add(pesquisa);
 		}
 

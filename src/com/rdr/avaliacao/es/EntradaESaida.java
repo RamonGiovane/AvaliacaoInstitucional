@@ -1,6 +1,6 @@
 package com.rdr.avaliacao.es;
 
-import static javax.swing.JOptionPane.ERROR_MESSAGE;
+import static javax.swing.JOptionPane.*;
 import static javax.swing.JOptionPane.INFORMATION_MESSAGE;
 import static javax.swing.JOptionPane.QUESTION_MESSAGE;
 import static javax.swing.JOptionPane.YES_NO_OPTION;
@@ -86,6 +86,12 @@ public class EntradaESaida {
 	public static void msgErro(Component janelaPai, String mensagem, String titulo) {
 		reproduzirSom();
 		showMessageDialog(janelaPai, mensagem, titulo, ERROR_MESSAGE);
+	}
+	
+	public static void msgAlerta(Component janelaPai, String mensagem, String titulo) {
+		reproduzirSom();
+		showMessageDialog(janelaPai, mensagem, titulo, WARNING_MESSAGE);
+		
 	}
 
 	/**
@@ -428,6 +434,8 @@ public class EntradaESaida {
 		File file = new File(caminho);
 		return file.exists();
 	}
+
+	
 
 
 } // class EntradaESaida
