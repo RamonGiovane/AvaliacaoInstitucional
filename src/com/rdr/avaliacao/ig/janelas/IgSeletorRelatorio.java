@@ -1,5 +1,5 @@
 
-package com.rdr.avaliacao.ig;
+package com.rdr.avaliacao.ig.janelas;
 
 import static com.rdr.avaliacao.ig.InterfaceConstraints.*;
 import static com.rdr.avaliacao.ig.InterfaceConstraints.COR_BACKGROUND;
@@ -29,6 +29,10 @@ import javax.swing.SwingUtilities;
 
 import com.rdr.avaliacao.AvaliacaoInstitucional;
 import com.rdr.avaliacao.es.EntradaESaida;
+import com.rdr.avaliacao.ig.InterfaceConstraints;
+import com.rdr.avaliacao.ig.LookAndFeel;
+import com.rdr.avaliacao.ig.PropriedadesDeJanela;
+import com.rdr.avaliacao.ig.TipoRelatorio;
 import com.rdr.avaliacao.questionario.Pesquisa;
 
 public class IgSeletorRelatorio extends JDialog implements PropriedadesDeJanela{
@@ -114,7 +118,7 @@ public class IgSeletorRelatorio extends JDialog implements PropriedadesDeJanela{
 	
 
 	private void construirIg() {
-		Aparencia.definirLookAndFeel(this);
+		LookAndFeel.definirLookAndFeel(this);
 		setModal(true);
 		setResizable(false);
 		setBounds(new Rectangle(0, 0, 340, 255));
@@ -144,7 +148,7 @@ public class IgSeletorRelatorio extends JDialog implements PropriedadesDeJanela{
 		btnOK.setBounds(331, 89, 89, 23);
 		getContentPane().add(btnOK);
 
-		Aparencia.definirBotaoPrincipal(this, btnOK);
+		LookAndFeel.definirBotaoPrincipal(this, btnOK);
 		
 		JLabel label = new JLabel("");
 		label.setIcon(new ImageIcon(IgSeletorRelatorio.class.getResource(CAMINHO_ICON_GRAPHIC)));

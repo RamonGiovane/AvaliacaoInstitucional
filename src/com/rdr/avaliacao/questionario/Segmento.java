@@ -8,7 +8,7 @@ import com.rdr.avaliacao.relatorio.DadosDeGrafico;
  *
  */
 public class Segmento implements DadosDeGrafico {
-	public static String DISCENTE = "Discente";
+	public static String DISCENTE = "Discente", DOCENTE = "Docente", TECNICO =  "Técnico Administrativo";
 
 	private int codigo;
 	private String descricao;
@@ -50,8 +50,8 @@ public class Segmento implements DadosDeGrafico {
 		this.quantidadeEntrevistados = quantidadeEntrevistados;
 	}
 
-	public void setQuatidadeEntrevistados(long quatidadeEntrevistados) {
-		this.quantidadeEntrevistados = quatidadeEntrevistados;
+	public long getQuantidadeEntrevistados() {
+		return quantidadeEntrevistados;
 	}
 
 	@Override

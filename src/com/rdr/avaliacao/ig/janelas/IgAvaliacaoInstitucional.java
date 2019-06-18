@@ -1,10 +1,6 @@
-package com.rdr.avaliacao.ig;
+package com.rdr.avaliacao.ig.janelas;
 
-import static com.rdr.avaliacao.ig.InterfaceConstraints.CAMINHO_ICON_DB;
-import static com.rdr.avaliacao.ig.InterfaceConstraints.CAMINHO_ICON_GRAPHIC;
-import static com.rdr.avaliacao.ig.InterfaceConstraints.CAMINHO_IMPORT_ICON;
-import static com.rdr.avaliacao.ig.InterfaceConstraints.COR_BACKGROUND;
-import static com.rdr.avaliacao.ig.InterfaceConstraints.COR_BTN_MENU;
+import static com.rdr.avaliacao.es.EntradaESaida.msgInfo;
 import static com.rdr.avaliacao.ig.InterfaceConstraints.*;
 
 import java.awt.BorderLayout;
@@ -33,6 +29,8 @@ import javax.swing.KeyStroke;
 
 import com.rdr.avaliacao.AvaliacaoInstitucional;
 import com.rdr.avaliacao.es.EntradaESaida;
+import com.rdr.avaliacao.ig.LookAndFeel;
+import com.rdr.avaliacao.ig.TipoRelatorio;
 
 public class IgAvaliacaoInstitucional extends JFrame{
 	private static IgAvaliacaoInstitucional igAvaliacaoInstitucional;
@@ -47,7 +45,7 @@ public class IgAvaliacaoInstitucional extends JFrame{
 		setResizable(false);
 
 		
-		Aparencia.definirIcone(this);
+		LookAndFeel.definirIcone(this);
 		igAvaliacaoInstitucional = this;
 		this.avaliacaoInstitucional = avaliacaoInstitucional;
 
@@ -69,7 +67,10 @@ public class IgAvaliacaoInstitucional extends JFrame{
 	}
 
 	private void construirIg() {
-		Aparencia.definirLookAndFeel(this);
+		
+		LookAndFeel.definirLookAndFeel(this);
+	
+		
 		setTitle("Avalia\u00E7\u00E3o Institucional");
 		getContentPane().setLayout(new BorderLayout(0, 0));
 		setLocationByPlatform(true);
@@ -78,17 +79,12 @@ public class IgAvaliacaoInstitucional extends JFrame{
 		getContentPane().add(panel, BorderLayout.CENTER);
 		panel.setLayout(null);
 
-		JButton lblImportarDados = new JButton("Importar Dados...");
+		JButton lblImportarDados = new JButton("Importar Nova Pesquisa...");
 		lblImportarDados.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				try{
-					importarDados();
-				}catch (NullPointerException e) {
-					System.out.println("Abrir arquivo cancelado.");
-				}
+				abrirIgNovaPesquisa();
 			}
 
-		
 		});
 		lblImportarDados.setBackground(Color.WHITE);
 		lblImportarDados.setFont(new Font("Tahoma", Font.PLAIN, 13));
@@ -97,7 +93,7 @@ public class IgAvaliacaoInstitucional extends JFrame{
 
 		lblImportarDados.setToolTipText("Abrir planilha de dados a serem analisados");
 		lblImportarDados.setForeground(COR_BTN_MENU);
-		lblImportarDados.setBounds(275, 132, 213, 24);
+		lblImportarDados.setBounds(275, 132, 217, 24);
 
 		panel.add(lblImportarDados);
 
@@ -120,7 +116,7 @@ public class IgAvaliacaoInstitucional extends JFrame{
 		lblGerarRelatrios.setFont(new Font("Tahoma", Font.PLAIN, 13));
 		lblGerarRelatrios.setForeground(COR_BTN_MENU);
 		lblGerarRelatrios.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-		lblGerarRelatrios.setBounds(275, 229, 213, 24);
+		lblGerarRelatrios.setBounds(275, 229, 217, 24);
 		panel.add(lblGerarRelatrios);
 
 		JButton lblparticipantesPorSegmento = new JButton("Participantes por Segmento...");
@@ -133,7 +129,7 @@ public class IgAvaliacaoInstitucional extends JFrame{
 		lblparticipantesPorSegmento.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 		lblparticipantesPorSegmento.setFont(new Font("Tahoma", Font.PLAIN, 13));
 		lblparticipantesPorSegmento.setForeground(COR_BTN_MENU);
-		lblparticipantesPorSegmento.setBounds(275, 266, 213, 24);
+		lblparticipantesPorSegmento.setBounds(275, 266, 217, 24);
 		panel.add(lblparticipantesPorSegmento);
 
 		JButton lblconceitoMdioPor = new JButton("Conceito M\u00E9dio por Curso...");
@@ -144,11 +140,11 @@ public class IgAvaliacaoInstitucional extends JFrame{
 		});
 		lblconceitoMdioPor.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 		lblconceitoMdioPor.setFont(new Font("Tahoma", Font.PLAIN, 13));
-		lblconceitoMdioPor.setBounds(275, 303, 213, 24);
+		lblconceitoMdioPor.setBounds(275, 303, 217, 24);
 		lblconceitoMdioPor.setForeground(COR_BTN_MENU);
 		panel.add(lblconceitoMdioPor);
 
-		JButton lblconceitoMdioPor_1 = new JButton("Conceito M\u00E9dio por Assunto...");
+		JButton lblconceitoMdioPor_1 = new JButton("Conceito Médio por Segmento...");
 		lblconceitoMdioPor_1.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				relatorio(TipoRelatorio.CONCEITO_MEDIO_ASSUNTO);
@@ -156,7 +152,7 @@ public class IgAvaliacaoInstitucional extends JFrame{
 		});
 		lblconceitoMdioPor_1.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 		lblconceitoMdioPor_1.setFont(new Font("Tahoma", Font.PLAIN, 13));
-		lblconceitoMdioPor_1.setBounds(275, 343, 213, 24);
+		lblconceitoMdioPor_1.setBounds(275, 343, 217, 24);
 		lblconceitoMdioPor_1.setForeground(COR_BTN_MENU);
 		panel.add(lblconceitoMdioPor_1);
 
@@ -168,7 +164,7 @@ public class IgAvaliacaoInstitucional extends JFrame{
 		JButton lblConfigurar_1 = new JButton("Conex\u00E3o com Banco de Dados...");
 		lblConfigurar_1.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				igBancoDeDados.exibir(IgAvaliacaoInstitucional.this);
+				abrirIgBancoDeDados();
 			}
 		});
 		lblConfigurar_1.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
@@ -183,7 +179,7 @@ public class IgAvaliacaoInstitucional extends JFrame{
 		comportamentoJLabelMenu(lblparticipantesPorSegmento);
 		comportamentoJLabelMenu(lblGerarRelatrios);
 
-		lblConfigurar_1.setBounds(275, 415, 213, 24);
+		lblConfigurar_1.setBounds(275, 415, 217, 24);
 		panel.add(lblConfigurar_1);
 
 		JLabel label_1 = new JLabel("");
@@ -207,7 +203,12 @@ public class IgAvaliacaoInstitucional extends JFrame{
 		mnArquivo.setMnemonic(KeyEvent.VK_A);
 		menuBar.add(mnArquivo);
 
-		JMenuItem mntmNovaImportaoDe = new JMenuItem("Importar Novos Dados...");
+		JMenuItem mntmNovaImportaoDe = new JMenuItem("Importar Novos Pesquisa...");
+		mntmNovaImportaoDe.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				abrirIgNovaPesquisa();
+			}
+		});
 		mntmNovaImportaoDe.setMnemonic(KeyEvent.VK_I);
 		mntmNovaImportaoDe.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_I, InputEvent.CTRL_MASK));
 		mnArquivo.add(mntmNovaImportaoDe);
@@ -216,6 +217,11 @@ public class IgAvaliacaoInstitucional extends JFrame{
 		mnArquivo.add(separator_1);
 
 		JMenuItem mntmAbrir = new JMenuItem("Conectar com Banco de Dados...");
+		mntmAbrir.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				abrirIgBancoDeDados();
+			}
+		});
 		mntmAbrir.setMnemonic(KeyEvent.VK_C);
 		mntmAbrir.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_B, InputEvent.CTRL_MASK));
 		mnArquivo.add(mntmAbrir);
@@ -224,6 +230,11 @@ public class IgAvaliacaoInstitucional extends JFrame{
 		mnArquivo.add(separator);
 
 		JMenuItem mntmFecharPrograma = new JMenuItem("Fechar Programa");
+		mntmFecharPrograma.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				AvaliacaoInstitucional.fecharPrograma();
+			}
+		});
 		mntmFecharPrograma.setMnemonic(KeyEvent.VK_F);
 		mnArquivo.add(mntmFecharPrograma);
 
@@ -232,22 +243,42 @@ public class IgAvaliacaoInstitucional extends JFrame{
 		menuBar.add(mnRelatrio);
 		
 		JMenuItem mntmParticipantesPorCurso = new JMenuItem("Participantes por Curso...");
+		mntmParticipantesPorCurso.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				relatorio(TipoRelatorio.PARTICIPANTES_POR_CURSO);
+			}
+		});
 		mntmParticipantesPorCurso.setMnemonic(KeyEvent.VK_P);
 		mntmParticipantesPorCurso.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_P, InputEvent.CTRL_MASK | InputEvent.SHIFT_MASK));
 		mntmParticipantesPorCurso.setActionCommand("Participantes por Curso...");
 		mnRelatrio.add(mntmParticipantesPorCurso);
 		
 		JMenuItem mntmParticipantesPorSegmento = new JMenuItem("Participantes por Segmento...");
+		mntmParticipantesPorSegmento.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				relatorio(TipoRelatorio.PARTICIPANTES_POR_SEGMENTO);
+			}
+		});
 		mntmParticipantesPorSegmento.setMnemonic(KeyEvent.VK_S);
 		mntmParticipantesPorSegmento.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_MASK | InputEvent.SHIFT_MASK));
 		mnRelatrio.add(mntmParticipantesPorSegmento);
 		
 		JMenuItem mntmConceitoMdioPor = new JMenuItem("Conceito M\u00E9dio Por Curso...");
+		mntmConceitoMdioPor.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				relatorio(TipoRelatorio.CONCEITO_MEDIO_CURSO);
+			}
+		});
 		mntmConceitoMdioPor.setMnemonic(KeyEvent.VK_C);
 		mntmConceitoMdioPor.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, InputEvent.CTRL_MASK | InputEvent.SHIFT_MASK));
 		mnRelatrio.add(mntmConceitoMdioPor);
 		
 		JMenuItem mntmConceitoMdioPor_1 = new JMenuItem("Conceito M\u00E9dio por Assuto...");
+		mntmConceitoMdioPor_1.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				relatorio(TipoRelatorio.CONCEITO_MEDIO_ASSUNTO);
+			}
+		});
 		mntmConceitoMdioPor_1.setMnemonic(KeyEvent.VK_A);
 		mntmConceitoMdioPor_1.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_A, InputEvent.CTRL_MASK | InputEvent.SHIFT_MASK));
 		mnRelatrio.add(mntmConceitoMdioPor_1);
@@ -255,6 +286,15 @@ public class IgAvaliacaoInstitucional extends JFrame{
 		JMenu mnAjuda = new JMenu("Ajuda");
 		mnAjuda.setMnemonic(KeyEvent.VK_U);
 		menuBar.add(mnAjuda);
+		
+		JMenuItem mntmSobre = new JMenuItem("Sobre");
+		mntmSobre.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				sobre();
+			}
+
+		});
+		mnAjuda.add(mntmSobre);
 
 		setSize(700, 600);
 		getContentPane().setBackground(COR_BACKGROUND);
@@ -269,6 +309,11 @@ public class IgAvaliacaoInstitucional extends JFrame{
 		});
 		setVisible(true);
 
+	}
+
+
+	private void abrirIgBancoDeDados() {
+		igBancoDeDados.exibir(IgAvaliacaoInstitucional.this);
 	}
 
 	public static void mudarCursor(int tipoCursor) {
@@ -291,10 +336,12 @@ public class IgAvaliacaoInstitucional extends JFrame{
 		});
 	}
 	
+	/**Minimiza a janela principal do programa*/
 	public static void desativarInterface() {
 		igAvaliacaoInstitucional.setEnabled(false);
 	}
 	
+	/**Maximiza e foca a janela principal do programa. Se já estiver ativada, não faz nada.*/
 	public static void ativarInterface() {
 		igAvaliacaoInstitucional.setEnabled(true);
 		igAvaliacaoInstitucional.requestFocus();
@@ -309,5 +356,18 @@ public class IgAvaliacaoInstitucional extends JFrame{
 			IgNovaPesquisa.getInstance(avaliacaoInstitucional).exibir();
 		else
 			EntradaESaida.msgInfo(this, MSG_ERRO_IMPORTAR_SEM_CONEXAO, TITULO_IMPORTAR_DADOS);
+	}
+	
+	private void abrirIgNovaPesquisa() {
+		try{
+			importarDados();
+		}catch (NullPointerException e) {
+			System.out.println("Abrir arquivo cancelado.");
+		}
+	}
+	
+	private void sobre() {
+		EntradaESaida.msgInfo(this, MSG_SOBRE, TITULO_PROGRAMA);
+		
 	}
 }

@@ -18,10 +18,10 @@ import javax.swing.CellRendererPane;
 import com.rdr.avaliacao.AvaliacaoInstitucional;
 import com.rdr.avaliacao.es.bd.BancoDeDados;
 import com.rdr.avaliacao.es.bd.DAO;
-import com.rdr.avaliacao.ig.IgAvaliacaoInstitucional;
-import com.rdr.avaliacao.ig.IgBarraDeProgresso;
 import com.rdr.avaliacao.ig.InterfaceConstraints;
 import com.rdr.avaliacao.ig.TipoRelatorio;
+import com.rdr.avaliacao.ig.janelas.IgAvaliacaoInstitucional;
+import com.rdr.avaliacao.ig.janelas.IgBarraDeProgresso;
 import com.rdr.avaliacao.questionario.Assunto;
 import com.rdr.avaliacao.questionario.Curso;
 import com.rdr.avaliacao.questionario.Pesquisa;
@@ -79,6 +79,16 @@ public class ExtratorDeDados {
 		app = AvaliacaoInstitucional.getInstance();
 	}
 
+	
+	public ExtratorDeDados() {
+		
+		this.separador = SEPARADOR_PADRAO;
+		
+		arquivo = new ArquivoTexto();
+		
+		app = AvaliacaoInstitucional.getInstance();
+	}
+	
 	public ExtratorDeDados(BancoDeDados bd, Pesquisa pesquisa) {
 		dao = new DAO(bd);
 		this.separador = SEPARADOR_PADRAO;
@@ -92,6 +102,17 @@ public class ExtratorDeDados {
 		this.separador = separador;
 		arquivo = new ArquivoTexto();
 		this.pesquisa = pesquisa;
+	}
+
+	
+
+	public DAO getDao() {
+		return dao;
+	}
+
+
+	public void setDao(DAO dao) {
+		this.dao = dao;
 	}
 
 
@@ -142,18 +163,25 @@ public class ExtratorDeDados {
 
 	}
 
+	/**Cria a barra de progresso e esconde a janela principal*/
 	private void iniciarBarraDeProgresso() throws IOException {
+		//Esconde a janela principal quando a barra é criada
 		IgAvaliacaoInstitucional.desativarInterface();
+		
+		//Cria a barra de progresso, passando as mensagens que passarão durante a importação
 		barraDeProgresso = new IgBarraDeProgresso(janelaPai, 
-				InterfaceConstraints.TITULO_PROGRAMA, 
-				"Lendo pesquisa...", "Isto pode levar alguns minutos...", "Quase lá...", numeroDeLinhas);
+				InterfaceConstraints.TITULO_PROGRAMA, MSG_BARRA_DE_PROGRESSO_1, 
+				MSG_BARRA_DE_PROGRESSO_2 , MSG_BARRA_DE_PROGRESSO_3 , numeroDeLinhas);
 
 	}
 
+	/**Fecha a barra de progresso, reativa a janela principal, se não estiver ativada, e exibe uma mensagem 
+	 * de sucesso na importação.
+	 */
 	private void terminarBarraDeProgresso() {
 		barraDeProgresso.fechar();
 		IgAvaliacaoInstitucional.ativarInterface();
-		EntradaESaida.msgInfo(janelaPai, "Pesquisa importada com sucesso!", 
+		EntradaESaida.msgInfo(janelaPai, MSG_PESQUISA_IMPORTADA, 
 				InterfaceConstraints.TITULO_PROGRAMA);
 	}
 
@@ -210,6 +238,7 @@ public class ExtratorDeDados {
 		System.out.println(indicesPerguntas.length);
 	}
 
+	/**Exibe uma mensagem de erro e cancela a importação dos dados. Apaga a pesquisa criada*/
 	private void cancelarImportacao(String mensagemDeErro) {
 		EntradaESaida.msgErro(janelaPai, mensagemDeErro, InterfaceConstraints.TITULO_IMPORTAR_DADOS);
 		app.apagarPesquisa(pesquisa);
@@ -234,6 +263,10 @@ public class ExtratorDeDados {
 
 	private void extrairRespostas() throws IOException, SQLException {
 
+		/*É preciso criar uma thread aqui para processar as respostas, pois ao incrementar a barra de progresso,
+		 * a EDT que é a mesma que a thread main travará, esperando que a caixa de diálogo com a barra seja
+		 * fechada, travando o programa na chamada do método barraDeProgresso.incrementar().
+		 */
 		Thread thread = new Thread(new Runnable() {
 
 			@Override
@@ -254,10 +287,10 @@ public class ExtratorDeDados {
 
 						linha = arquivo.lerLinha();
 
-						if(linha == null) break;
-
-
 						barraDeProgresso.incrementar(contador++);
+						
+						//Se a linha estiver vazia ou a leitura houver terminado, reavalia a condição do loop
+						if(linha == null || linha.isEmpty()) continue;
 
 						//Dividindo a linha e strings com cada coluna
 						respostas = quebrarTexto(linha);
@@ -286,10 +319,10 @@ public class ExtratorDeDados {
 	private void extrairLinhaResposta(String textoLinha, int codigoEntrevistado) throws SQLException {
 		int i = 0;
 
-		String word = null;
+		String resposta = null;
 		for(int x = 0; x<3; x++) {
 			textoLinha = textoLinha.substring(textoLinha.indexOf(";") + 1) + " ";
-			word = textoLinha.substring(0,textoLinha.indexOf(";"));
+			resposta = textoLinha.substring(0,textoLinha.indexOf(";"));
 		}
 
 
@@ -297,50 +330,49 @@ public class ExtratorDeDados {
 			System.out.println(i + " " + indicesPerguntas[i].getIndiceAssunto());
 
 			//Tenta inserir uma resposta por meio da storded function inserir_pergunta. Incrementa a vaiável i
-			dao.executarFuncao(FUNCTION_INSERIR_RESPOSTA, pesquisa.getCodigo(), word.trim(), indicesPerguntas[i].getIndiceAssunto(),
+			dao.executarFuncao(FUNCTION_INSERIR_RESPOSTA, pesquisa.getCodigo(), resposta.trim(), indicesPerguntas[i].getIndiceAssunto(),
 					indicesPerguntas[i++].getIndicePergunta(), codigoEntrevistado);
 
 			textoLinha = textoLinha.substring(textoLinha.indexOf(";") + 1) + " ";
 
 
 			try {
-				word = textoLinha.substring(0,textoLinha.indexOf(";"));
+				resposta = textoLinha.substring(0,textoLinha.indexOf(";"));
 
 			}catch (Exception e) {
-				System.out.println(i + " " + indicesPerguntas[i].getIndiceAssunto());
+				/*Quando chega na última resposta, não é possível quebrar mais, e a variável resposta vazia enquanto textoLinha
+				conterá a última respota da linha*/
 				dao.executarFuncao(FUNCTION_INSERIR_RESPOSTA, pesquisa.getCodigo(), textoLinha.trim(), indicesPerguntas[i].getIndiceAssunto(),
 						indicesPerguntas[i].getIndicePergunta(), codigoEntrevistado);
 				break;
 			}
 
-
-
-			//i++;
 		}
 
 	}
 
 
-	//TODO: QUEBRAR O TEXTO NA FUNÇÃO ANTERIOR, PASSAR APENAS OS TRES PARAMETROS PARA ESSA! EVITA COPIAR A LINHA INTEIRA.
 	private int extrairEntrevistado(String[] textoLinhas) throws IOException, SQLException {
 
 		int codigoEntrevistado;
-
-
-
+		String segmento = textoLinhas[0];
+		
 		/*
-		 * Executando a função SQL para inserção (que recebe strings: segmento, campus, grau e curso) e 
+		 * Executando a função SQL para inserção (que recebe o codigo da pesquisa, segmento, campus e curso) e 
 		 * retorna um inteiro (código do entrevistado inserido).
 		 * Todos os retornos de instrunções SQL segundo a classe DAO retornam uma matriz que contém os nomes (se houver)
 		 * dos campos e os valores de retorno em forma de Object. 
+		 * 
+		 * Se o  campo segmento for discente, o campo curso não é salvo (passa-se null).
 		 */
-		Object resultado [][] = dao.executarFuncao("inserir_entrevistado", pesquisa.getCodigo(), textoLinhas[0], textoLinhas[1],  textoLinhas[2]);
+		
+		Object resultado [][] = dao.executarFuncao(FUNCTION_INSERIR_ENTREVISTADO, pesquisa.getCodigo(), segmento,
+				textoLinhas[1], segmento.equals(Segmento.DISCENTE) ? textoLinhas[2] : null);
 
 
 		codigoEntrevistado = (int) resultado[0][0];
 
 		return codigoEntrevistado;
-
 
 	}
 
@@ -375,7 +407,7 @@ public class ExtratorDeDados {
 	public RelatorioDeParticipantes gerarDataSetParticipantesCurso(Pesquisa pesquisa, TipoRelatorio tipoRelatorio) throws SQLException{
 		RelatorioDeParticipantes dataSet = new RelatorioDeParticipantes(tipoRelatorio);
 
-		//Consulta 1: Seleciona todos os cursos
+		//Consulta 1: Seleciona todos os cursos de todos os segmentos
 		List<Curso> cursos = obterCursos(null);
 
 		Object[][] resultado = new Object[0][0];
@@ -392,8 +424,10 @@ public class ExtratorDeDados {
 			//Formata o nome do curso se possível
 			formatarNomeCursoTecnico(curso);
 			
-			//Adiciona um curso no dataSet
-			dataSet.adicionar(curso);
+			if(curso.getQuantidadeEntrevistados() > 0) {
+				//Adiciona um curso no dataSet
+				dataSet.adicionar(curso);
+			}
 		}
 
 
@@ -404,7 +438,7 @@ public class ExtratorDeDados {
 		RelatorioDeParticipantes dataSet = new RelatorioDeParticipantes(tipoRelatorio);
 
 		//Consulta 1: Seleciona todos os segmentos
-		List<Segmento> objetos = obterSegmentos(pesquisa);
+		List<Segmento> objetos = obterSegmentos();
 
 		Object[][] resultado = new Object[0][0];
 
@@ -416,15 +450,17 @@ public class ExtratorDeDados {
 
 			segmento.setQuantidadeEntrevistados((long)resultado[0][0]);
 
-			//Adiciona um curso no dataSet
-			dataSet.adicionar(segmento);
+			if(segmento.getQuantidadeEntrevistados() > 0) {
+				//Adiciona um segmento no dataSet
+				dataSet.adicionar(segmento);
+			}
 		}
 
 
 		return dataSet;
 	}
 
-	private List<Segmento> obterSegmentos(Pesquisa pesquisa) throws SQLException {
+	private List<Segmento> obterSegmentos() throws SQLException {
 		List<Segmento> segmentosList = new ArrayList<Segmento>();
 
 		Object[][] segmentos = dao.consultar("select codigo, descricao from segmento");
@@ -576,7 +612,7 @@ public class ExtratorDeDados {
 		List<Assunto> assuntosList = obterAssuntos(pesquisa);
 
 		//Obtendo uma lista de todos os cursos pertencentes ao tipo de graduação escolhido
-		List<Segmento> segmentosList = obterSegmentos(pesquisa);
+		List<Segmento> segmentosList = obterSegmentos();
 
 
 

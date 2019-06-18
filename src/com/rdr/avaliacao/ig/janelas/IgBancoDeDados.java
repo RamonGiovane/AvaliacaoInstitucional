@@ -1,6 +1,6 @@
-package com.rdr.avaliacao.ig;
+package com.rdr.avaliacao.ig.janelas;
 
-import static com.rdr.avaliacao.ig.InterfaceConstraints.CAMINHO_ICON_DB;
+import static com.rdr.avaliacao.ig.InterfaceConstraints.*;
 import static com.rdr.avaliacao.ig.InterfaceConstraints.COR_BACKGROUND;
 import static com.rdr.avaliacao.ig.InterfaceConstraints.ERRO_CONECTAR_BD;
 import static com.rdr.avaliacao.ig.InterfaceConstraints.ERRO_DESCONECTAR_BD;
@@ -28,6 +28,8 @@ import javax.swing.JTextField;
 import com.rdr.avaliacao.AvaliacaoInstitucional;
 import com.rdr.avaliacao.es.EntradaESaida;
 import com.rdr.avaliacao.es.bd.BancoDeDados;
+import com.rdr.avaliacao.ig.LookAndFeel;
+import com.rdr.avaliacao.ig.PropriedadesDeJanela;
 
 public class IgBancoDeDados extends JDialog implements PropriedadesDeJanela{
 	private static BancoDeDados bd;
@@ -54,14 +56,13 @@ public class IgBancoDeDados extends JDialog implements PropriedadesDeJanela{
 
 	private void construirIg() {
 		System.out.println("Passing through...");
-		Aparencia.definirLookAndFeel(this);
+		LookAndFeel.definirLookAndFeel(this);
 		setModal(true);
 		setResizable(false);
 		setBounds(new Rectangle(0, 0, 340, 255));
 		getContentPane().setLayout(null);
 
-		JLabel lblParaImportarOs = new JLabel("<html>Para importar os dados, \u00E9 preciso uma conex\u00E3o<br>com o"
-				+ " Banco de Dados</html>");
+		JLabel lblParaImportarOs = new JLabel(MSG_JANELA_BANCO);
 		lblParaImportarOs.setBounds(10, 143, 282, 48);
 		getContentPane().add(lblParaImportarOs);
 
@@ -120,7 +121,7 @@ public class IgBancoDeDados extends JDialog implements PropriedadesDeJanela{
 		fieldSenha.setText(SENHA_BD_PADRAO);
 		filedUsuario.setText(USUARIO_BD_PADRAO);
 
-		Aparencia.definirBotaoPrincipal(this, btnConectar);
+		LookAndFeel.definirBotaoPrincipal(this, btnConectar);
 	}
 
 

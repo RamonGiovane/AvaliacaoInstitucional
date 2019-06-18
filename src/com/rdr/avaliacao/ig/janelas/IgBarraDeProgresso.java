@@ -1,4 +1,4 @@
-package com.rdr.avaliacao.ig;
+package com.rdr.avaliacao.ig.janelas;
 
 import java.awt.Component;
 import java.awt.Font;

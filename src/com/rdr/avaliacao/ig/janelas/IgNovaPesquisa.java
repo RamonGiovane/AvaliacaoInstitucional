@@ -1,4 +1,4 @@
-package com.rdr.avaliacao.ig;
+package com.rdr.avaliacao.ig.janelas;
 
 import static com.rdr.avaliacao.es.EntradaESaida.dialogoAbrirArquivo;
 import static com.rdr.avaliacao.es.EntradaESaida.msgErro;
@@ -31,6 +31,7 @@ import javax.swing.JLabel;
 import javax.swing.JTextField;
 
 import com.rdr.avaliacao.AvaliacaoInstitucional;
+import com.rdr.avaliacao.ig.LookAndFeel;
 import com.rdr.avaliacao.questionario.Pesquisa;
 
 public class IgNovaPesquisa extends JDialog{
@@ -62,7 +63,7 @@ public class IgNovaPesquisa extends JDialog{
 
 
 	private void construirIg() {
-		Aparencia.definirLookAndFeel(this);
+		LookAndFeel.definirLookAndFeel(this);
 		setModal(true);
 		setResizable(false);
 		setBounds(new Rectangle(0, 0, 340, 255));
@@ -133,7 +134,7 @@ public class IgNovaPesquisa extends JDialog{
 
 		});
 		
-		Aparencia.definirBotaoPrincipal(this, btnOK);
+		LookAndFeel.definirBotaoPrincipal(this, btnOK);
 
 	}
 

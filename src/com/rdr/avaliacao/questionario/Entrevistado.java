@@ -13,7 +13,7 @@ public class Entrevistado {
 	public Entrevistado() {	}
 
 	public Entrevistado(String campus, String segmento) {
-		//TODO: Apagar Enum Segmento
+		this(new Segmento(segmento), campus);
 	}
 
 	public Segmento getSegmento() {

@@ -19,7 +19,7 @@ public interface InterfaceConstraints {
 			MSG_ERRO_BUILD_UI = "Ocorreu um problema desconhecido durante a contrução da interface gráfica.\n "
 					+ "A funcionalidade do programa não será afetada, mas os componentes visuais podem não estar  corretos.",
 			ERRO_CONECTAR_BD = "Ocorreu um erro ao abrir a conexão com o banco de dados.\nVerifique "
-							+ "se as credenciais da conexão estão corretas.",
+							+ "se as credenciais da conexão estão corretas ou se a base de dados existe.",
 			ERRO_DESCONECTAR_BD = "Ocorreu um erro ao fechar a conexão com o banco de dados.",
 			TITULO_BD = "Configurar Banco de Dados",
 			MSG_SUCESSO_BD = "Conexão estabelecida com sucesso!",
@@ -34,7 +34,17 @@ public interface InterfaceConstraints {
 	 		MSG_ERRO_GERAR_RELATORIO = "Ocorreu um erro ao gerar os relatórios.\nContate o suporte.",
 	 		MSG_DETALHES_ERRO  = "\nTalvez haja um problema na conexão com o banco.",
 	 		MSG_ERRO_NENHUM_RELATORIO_GERADO = "Não há dados suficientes para gerar relatórios com os parâmteros passados",
-	 		MSG_ERRO_IMPORTAR_SEM_CONEXAO = "É necessária uma conexão com banco de dados para\nimportar  dados de uma pesquisa";
+	 		MSG_ERRO_IMPORTAR_SEM_CONEXAO = "É necessária uma conexão com banco de dados para\nimportar  dados de uma pesquisa",
+			MSG_PESQUISA_IMPORTADA = "Pesquisa importada com sucesso!",
+			MSG_BARRA_DE_PROGRESSO_1 = "Lendo pesquisa...",
+			MSG_BARRA_DE_PROGRESSO_2 = "Isto pode levar alguns minutos...",
+			MSG_BARRA_DE_PROGRESSO_3 =	"Quase lá...",
+			MSG_JANELA_BANCO = "<html>Para usar as funcionalidades do programa,<br> \u00E9 preciso uma conex\u00E3o com o"
+					+ " Banco de Dados</html>",
+			MSG_SOBRE = "© 2019 Avaliação Institucional\nDesenvolvido por Ramon Giovane.\n"
+					+ "Aluno do curso Tecnologia em Sistemas para Internet.\nhttps://github.com/RamonGiovane/";
+	
+	
 
 	/**Caminho de imagem usada na interface gráfica**/
 	public final static String CAMINHO_ICON_DB = "/com/rdr/avaliacao/ig/img/db_icon.png",

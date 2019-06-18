@@ -1,7 +1,6 @@
 package com.rdr.avaliacao;
 
 import java.awt.Component;
-import java.awt.Cursor;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.sql.SQLException;
@@ -13,16 +12,11 @@ import com.rdr.avaliacao.es.ExtratorDeDados;
 import com.rdr.avaliacao.es.bd.BancoDeDados;
 import com.rdr.avaliacao.es.bd.DAO;
 import com.rdr.avaliacao.es.bd.Recuperacao;
-import com.rdr.avaliacao.ig.IgAvaliacaoInstitucional;
 import com.rdr.avaliacao.ig.InterfaceConstraints;
 import com.rdr.avaliacao.ig.TipoRelatorio;
-import com.rdr.avaliacao.questionario.Curso;
-import com.rdr.avaliacao.questionario.Pergunta;
+import com.rdr.avaliacao.ig.janelas.IgAvaliacaoInstitucional;
 import com.rdr.avaliacao.questionario.Pesquisa;
-import com.rdr.avaliacao.questionario.Resposta;
-import com.rdr.avaliacao.relatorio.RelatorioDeParticipantes;
 import com.rdr.avaliacao.relatorio.Relatorio;
-import com.rdr.avaliacao.relatorio.RelatorioDeMedias;
 
 /**Classe principal do programa de Avaliação Institucional. Nesta classe encontra-se o método main.
  * Nenhuma outra classe pode instaciar um objeto desta.
@@ -52,6 +46,8 @@ public class AvaliacaoInstitucional {
 		app = this;
 		
 		pesquisasList = new ArrayList<Pesquisa>();
+		
+		extrator  = new  ExtratorDeDados();
 		
 		try {
 		

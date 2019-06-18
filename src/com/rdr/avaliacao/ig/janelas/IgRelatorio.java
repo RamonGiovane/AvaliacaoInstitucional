@@ -1,4 +1,4 @@
-package com.rdr.avaliacao.ig;
+package com.rdr.avaliacao.ig.janelas;
 
 import static com.rdr.avaliacao.ig.InterfaceConstraints.TITULO_SALVAR_PDF;
 
@@ -17,6 +17,7 @@ import java.sql.SQLException;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JDialog;
+import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
@@ -44,6 +45,9 @@ import com.itextpdf.text.DocumentException;
 import com.rdr.avaliacao.AvaliacaoInstitucional;
 import com.rdr.avaliacao.es.ArquivoPDF;
 import com.rdr.avaliacao.es.EntradaESaida;
+import com.rdr.avaliacao.ig.LookAndFeel;
+import com.rdr.avaliacao.ig.PropriedadesDeJanela;
+import com.rdr.avaliacao.ig.TipoRelatorio;
 import com.rdr.avaliacao.questionario.Assunto;
 import com.rdr.avaliacao.questionario.Pesquisa;
 import com.rdr.avaliacao.relatorio.MediasDeNotas;
@@ -51,7 +55,7 @@ import com.rdr.avaliacao.relatorio.Relatorio;
 import com.rdr.avaliacao.relatorio.RelatorioDeMedias;
 import com.rdr.avaliacao.relatorio.RelatorioDeParticipantes;
 
-public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
+public class IgRelatorio extends JFrame implements PropriedadesDeJanela {
 
 	/**
 	 * Componentes da interface, salvos de forma a serem mais acessíveis durante o 
@@ -60,7 +64,7 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 	private ButtonGroup buttonGroup =  new ButtonGroup();
 	private JRadioButton radioBtnTabela;
 	private JRadioButton radioBtnGrafico;
-	private static JPanel panelDados;
+	private static JPanel panelDados, panelModoExibicao;
 	private static JPanel panelTabela, panelGrafico;
 	private static IgRelatorio igRelatorio;
 	private static ChartPanel graficoPanel;
@@ -175,11 +179,12 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 
 		panelDados.setLayout(new BorderLayout(0, 0));
 
-		JPanel panelModoExibicao = new JPanel();
+		panelModoExibicao = new JPanel();
 		panelModoExibicao.setBorder(new TitledBorder(null, "Modo de Exibi\u00E7\u00E3o", TitledBorder.LEADING, TitledBorder.TOP, null, Color.DARK_GRAY));
 		panelModoExibicao.setBounds(10, 526, 824, 64);
 		getContentPane().add(panelModoExibicao);
 		panelModoExibicao.setLayout(null);
+		
 
 		radioBtnTabela = new JRadioButton("Tabela");
 		radioBtnTabela.setSelected(true);
@@ -221,11 +226,14 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 		panelDados.add(panelTabela, BorderLayout.CENTER);
 		panelDados.add(panelTabela);	
 
-		setModal(true);
+		//Só será modal se for JDialog
+		//setModal(true);
 
-		Aparencia.definirBotaoPrincipal(this, btnGerarPdf);
 		
+		LookAndFeel.definirBotaoPrincipal(this, btnGerarPdf);
+		LookAndFeel.definirIcone(this);
 		gerarDadosRelatorio();
+		
 		exibirTabela();
 	}
 
@@ -323,11 +331,12 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 	 * Exibe de fato uma tabela, antes preparando a tela para tal.
 	 */
 	private void exibirTabela() {
-
+		
 		limparPaineis();
 
 		construirTabela();
-
+		panelModoExibicao.requestFocus();
+		
 		repintarPaineis();
 	}
 
