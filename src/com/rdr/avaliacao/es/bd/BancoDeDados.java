@@ -7,14 +7,7 @@ import java.sql.Statement;
 
 /** 
  * Usa o padrão de projeto (design pattern) Singleton para obter uma conexão única com o banco 
- * de dados. Esta classe possui operações para permitir as operações CRUD no banco de dados.
- * 
- *   O acrônimo CRUD corresponde as seguintes instruções SQL:
- *   
- *   Create = SQL INSERT 
- *   Retrieve =  SQL SELECT
- *   Update = SQL UPDATE
- *   Delete = SQL DELETE
+ * de dados. 
  */
 public class BancoDeDados {
 	private Connection connection;
@@ -58,7 +51,10 @@ public class BancoDeDados {
 		return bd;
 	} // criarConexao()
 
-	/** Fecha a conexão com o banco de dados. */  
+	/** Fecha a conexão com o banco de dados.
+	 *  
+	 * @throws SQLException se ocorrer um erro durante a operação
+	 */
 	public void fecharConexao() throws SQLException { 
 		if (statement != null) statement.close();
 		if (connection != null) connection.close();

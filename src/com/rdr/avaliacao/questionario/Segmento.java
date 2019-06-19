@@ -2,7 +2,9 @@ package com.rdr.avaliacao.questionario;
 
 import com.rdr.avaliacao.relatorio.DadosDeGrafico;
 
-/**Enumeração que representa os tipos de segmentos dos entrevistados.
+/**Clase para armazenar o segmento de um entrevistado, que pode ser um {@link Segmento#DISCENTE},
+ * {@link Segmento#DOCENTE}, {@link Segmento#TECNICO} ou qualquer outro tipo.
+ * Implementa a interface {@link DadosDeGrafico} para a geração de relatórios de participantes.
  * 
  * @author Ramon Giovane
  *

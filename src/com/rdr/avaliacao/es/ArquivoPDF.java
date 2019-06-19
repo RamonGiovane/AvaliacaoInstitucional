@@ -89,7 +89,11 @@ public class ArquivoPDF implements AutoCloseable {
 		documento.add(titulo);
 	}
 
-	public void novaLinha() throws DocumentException {
+	/**Insere uma nova linha vazia no documento
+	 * 
+	 * @throws DocumentException se o documento estiver fechado.
+	 */
+	public void adicionarNovaLinha() throws DocumentException {
 		documento.add(new Paragraph("\n"));
 	}
 

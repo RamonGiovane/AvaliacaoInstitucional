@@ -76,11 +76,10 @@ public class IgBarraDeProgresso extends JDialog{
 		setSize(386, 127);
 		progressBar.setMaximum(100);
 		setResizable(false);
-		//setUndecorated(true);
 
 		
+		//Impedindo que a caixa seja fechada
 		setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
-
 		addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent e) {

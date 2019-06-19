@@ -7,7 +7,7 @@ import static com.rdr.avaliacao.ig.InterfaceConstraints.*;
 import static com.rdr.avaliacao.ig.InterfaceConstraints.MSG_BARRA_DE_PROGRESSO_2;
 import static com.rdr.avaliacao.ig.InterfaceConstraints.MSG_BARRA_DE_PROGRESSO_3;
 import static com.rdr.avaliacao.ig.InterfaceConstraints.MSG_PERGUNTA_VAZIA;
-import static com.rdr.avaliacao.ig.InterfaceConstraints.MSG_PESQUISA_IMPORTADA;
+import static com.rdr.avaliacao.ig.InterfaceConstraints.MSG_PESQUISA_IMPORTADA_COM_SUCESSO;
 
 import java.awt.Component;
 import java.io.IOException;
@@ -32,6 +32,7 @@ import com.rdr.avaliacao.relatorio.MediasPorCurso;
 import com.rdr.avaliacao.relatorio.MediasPorSegmento;
 import com.rdr.avaliacao.relatorio.RelatorioDeMedias;
 import com.rdr.avaliacao.relatorio.RelatorioDeParticipantes;
+
 /**
  * Esta classe realiza o intermédio entre os dispositivos de armazenamento e as classes e objetos.
  * É responsável por todo o trabalho pesado: ler arquivos de texto, fazer requisões e chamadas
@@ -69,6 +70,7 @@ public class ExtratorDeDados {
 
 
 
+	/**Cria um objeto extrator de dados com as configurações padrões.*/
 	public ExtratorDeDados() {
 
 		separador = SEPARADOR_PADRAO;
@@ -80,9 +82,10 @@ public class ExtratorDeDados {
 		janelaPai = IgAvaliacaoInstitucional.getInstance();
 	}
 
-	public ExtratorDeDados(String separadorArquivo) {
+	/**Cria um objeto extrator de dados com um separador de colunas de arquivo diferente para os arquivos lidos.*/
+	public ExtratorDeDados(String separadorDeColunasDeArquivo) {
 
-		separador = separadorArquivo;
+		separador = separadorDeColunasDeArquivo;
 
 		arquivo = new ArquivoTexto();
 
@@ -91,49 +94,78 @@ public class ExtratorDeDados {
 		janelaPai = IgAvaliacaoInstitucional.getInstance();
 	}
 
+	/**Obtém o objeto {@link DAO} que tem acesso ao banco de dados associado à classe.
+	 * 
+	 * @return um objeto {@link DAO}.
+	 */
 	public DAO getDao() {
 		return dao;
 	}
 
 
+	/**Define o objeto que terá acesso ao banco de dados e será usado por esta classe
+	 * 
+	 * @param dao objeto {@link DAO} com uma conexão ativa ao banco, associado à classe
+	 */
 	public void setDao(DAO dao) {
 		this.dao = dao;
 	}
 
+	/**Define o seprador de colunas dos arquivos de texto associado à  classe*/
 	public String getSeparador() {
 		return separador;
 	}
 
+	/**Obtém o seprador de colunas dos arquivos de texto associado à classe*/
 	public void setSeparador(String separador) {
 		this.separador = separador;
 	}
 
 
+	/**Quebra um texto de acordo com o separador de colunas associado à classe, retornando as partes divididas.
+	 * 
+	 * @param texto <code>String</code> com o texto na íntegra a ser quebrado
+	 * @return um array de <code>String</code> contendo os elementos obtidos na quebra do texto
+	 * @throws IOException se ocorrer um erro na quebra, como por exemplo, o texto não possui ocorrências do delimitador
+	 * fornecido.
+	 */
 	private String[] quebrarTexto(String texto) throws IOException {
 
 		return texto.split(separador); 
 
 	}
 
+	/**Fecha o objeto {@link ArquivoTexto} associado à classe. Deve ser chamado após qualquer uso 
+	 * de entrada e saída através do objeto.
+	 * 
+	 * @throws IOException se o arquivo já estiver fechado.
+	 */
 	private void fecharArquivo() throws IOException {
 		arquivo.fechar();
 	}
 
+	/**Extrai os dados de uma pesquisa (do seu respectivo arquivo de texto) e os salva no banco de dados.
+	 * 
+	 * @param pesquisa objeto {@link Pesquisa} contendo entre seus atributo um caminho para um arquivo válido.
+	 * @throws IOException se ocorrer um erro na extração dos dados do arquivo.
+	 * @throws SQLException se ocorrer um erro na importação dos dados um banco
+	 */
 	public void extrairDados(Pesquisa pesquisa) throws IOException, SQLException {
 
+		//Associa o objeto pesquisa da classe à pesquisa passada por parâmetro
 		this.pesquisa = pesquisa;
 
 		abrirArquivo();
+		
+		//Conta e gurada o número de linhas total do arquivo
 		numeroDeLinhas = contarLinhas();
 
-		//	try {
+		//Extrai e salva as perguntas (o cabeçalho)
 		extrairPerguntas();
 		
+		//Extrai e salva as perguntas e entrevistados (as linhas subsequentes)
 		extrairRespostas();
-		//		} catch (SQLException e) {
-		//			e.printStackTrace();
-		//		}
-
+		
 		fecharArquivo();
 
 	}
@@ -158,25 +190,29 @@ public class ExtratorDeDados {
 
 		//Se nenhuma foi ignorada
 		if(linhasIgnoradas == 0) {
-			EntradaESaida.msgInfo(janelaPai, MSG_PESQUISA_IMPORTADA, 
-					InterfaceConstraints.TITULO_PROGRAMA);
+			EntradaESaida.msgInfo(janelaPai, MSG_PESQUISA_IMPORTADA_COM_SUCESSO, TITULO_PROGRAMA);
 		}
 		//Se todas as linhas foram ignoradas
 		else if(linhasIgnoradas == totalDeLinhas) {
-			EntradaESaida.msgErro(janelaPai, "ERRO: A importação foi mal sucedida porque as respostas do entrevistados não condizem com o cabeçalho de perguntas.",
-					InterfaceConstraints.TITULO_PROGRAMA);
+			EntradaESaida.msgErro(janelaPai, MSG_IMPORTACAO_MAL_SUCEDIDA, TITULO_PROGRAMA);
 			app.apagarPesquisa(pesquisa);
 		}
 
 		//Se algumas linhas foram ignoradas
 		else {
-			EntradaESaida.msgAlerta(janelaPai, String.format("A pesquisa for importada.\nNo entanto %s linha(s) ignorada(s) durante o processo porque não "
-					+ "condiziam com o cabeçalho de perguntas.", linhasIgnoradas), InterfaceConstraints.TITULO_PROGRAMA);
+			EntradaESaida.msgAlerta(janelaPai, String.format(MSG_PESQUISA_IMPORTADA_PARCIALMENTE + linhasIgnoradas + 
+					MSG_LINHAS_IGNORADAS, linhasIgnoradas), InterfaceConstraints.TITULO_PROGRAMA);
 		}
 
+		//Reativando a interface depois do processamento
 		IgAvaliacaoInstitucional.ativarInterface();
 	}
 
+	/**
+	 * Extrai o cabeçalho do arquivo texto que contém as perguntas de uma pesquisa (que está associada à classe) e as salvas no banco de dados.
+	 *  
+	 * @throws IOException se ocorrer um erro na extração do arquivo
+	 */
 	private void extrairPerguntas() throws IOException {
 
 		//Obtém o texto do cabeçalho
@@ -195,14 +231,18 @@ public class ExtratorDeDados {
 		//Ignora as colunas de identificacao do entrevistado
 		int indice = 3;
 		String tema, questao;
-		Object[][] retorno;
 		for(; indice<strPerguntas.length; indice++) {
 			if(strPerguntas[indice].isEmpty()) {
 				cancelarImportacao(MSG_PERGUNTA_VAZIA);
 				throw new IOException(MSG_PERGUNTA_VAZIA);
 			}
-			strPerguntas[indice] = strPerguntas[indice].replace(" - ", ".");
-			strPerguntas[indice] = strPerguntas[indice].replaceAll("\\d{1,}[.]", "").trim();
+		
+			
+			//Retira os números e símbolos do inicio dos assuntos e perguntas
+			strPerguntas[indice] = retirarSimbolosInicioPergunta(strPerguntas[indice]);
+		
+			
+			//Tentando separar o tema da pergunta(a.k.a questao)
 			try{
 				tema = strPerguntas[indice].substring(0,
 						strPerguntas[indice].indexOf('[')).trim();
@@ -217,17 +257,40 @@ public class ExtratorDeDados {
 				tema = strPerguntas[indice];
 				questao = strPerguntas[indice];
 			}
-			try {
-				retorno = dao.executarFuncao(FUNCTION_INSERIR_PERGUNTA, pesquisa.getCodigo(), questao, tema);
-
-				indicesPerguntas[indice-3] = new IndicePergunta((int)retorno[0][0], (int) retorno[0][1]);
-
-			} catch (SQLException e) {
-				cancelarImportacao(InterfaceConstraints.MSG_PERGUNTA_REPETIDA);
-				throw new IOException(InterfaceConstraints.MSG_PERGUNTA_REPETIDA);
-			}
+			
+			//Insere de fato a pergunta
+			inserirPergunta(tema, questao, indice);
 		}
-		System.out.println(indicesPerguntas.length);
+	}
+
+	/**Insere uma pergunta no banco de dados.
+	 * 
+	 * @param tema da pergunta (valor entre colchetes) se não houver, será considerado o mesmo valor que a questao (a.k.a) pergunta
+	 * @param questao pergunta a ser inserida sobre o tema especificado anteriormente
+	 * @param indicePerguntaAtual indice da classe de índices {@link IndicePergunta} da qual será retirada uma pergunta e um tema
+	 * @throws IOException se ocorrer um erro na inserção no banco
+	 */
+	private void inserirPergunta(String tema, String questao, int indicePerguntaAtual) throws IOException {
+		try {
+			Object[][] retorno = dao.executarFuncao(FUNCTION_INSERIR_PERGUNTA, pesquisa.getCodigo(), questao, tema);
+
+			indicesPerguntas[indicePerguntaAtual-3] = new IndicePergunta((int)retorno[0][0], (int) retorno[0][1]);
+
+		} catch (SQLException e) {
+			cancelarImportacao(InterfaceConstraints.MSG_PERGUNTA_REPETIDA);
+			throw new IOException(InterfaceConstraints.MSG_PERGUNTA_REPETIDA);
+		}
+	}
+
+	/**Tenta retirar os números no texto de uma pergunta
+	 * 
+	 * @param string a ser formatada
+	 * @return a string formatada.
+	 */
+	private String retirarSimbolosInicioPergunta(String string) {
+		string = string.replace(" - ", ".");
+		string = string.replaceAll("\\d{1,}[.]", "").trim();
+		return string;
 	}
 
 	/**Exibe uma mensagem de erro e cancela a importação dos dados. Tenta apagar pesquisa criada*/
@@ -242,17 +305,32 @@ public class ExtratorDeDados {
 	}
 
 
+	/**Apaga uma pesquisa e do banco e tudo associado à ela
+	 * 
+	 * @throws SQLException se a pesquisa não existir ou acontecer um erro
+	 */
 	private void apagarPesquisaBanco() throws SQLException {
 		dao.consultar("delete from pesquisa cascade where codigo = ?", pesquisa.getCodigo());
 	}
 
+	/**Contas as linhas de um arquivo de texto. Isto é necessário para se ter noção de quantos processamentos é preciso
+	 * realizar para completar o todo o trabalho. Útil para usar com a classe {@link IgBarraDeProgresso}.
+	 * @return o número de linhas do 
+	 * @throws IOException
+	 */
 	private int contarLinhas() throws IOException {
 		int i = 0;
 		for(; arquivo.lerLinha() != null; i++);
+		System.out.println("lINHAS " + i);
 		resetarArquivo();
 		return i;
 	}
 
+	/**Extrai do arquivo as respostas (conteúdo após o cabeçalho).
+	 * 
+	 * @throws IOException se ocorrer algum erro na extração do arquivo
+	 * @throws SQLException se ocorrer algum erro na importação ao banco
+	 */
 	private void extrairRespostas() throws IOException, SQLException {
 
 		/*É preciso criar uma thread aqui para processar as respostas, pois ao incrementar a barra de progresso,
@@ -272,6 +350,7 @@ public class ExtratorDeDados {
 
 				try {
 
+					//Constrói e exibe a barra de progresso vazia
 					iniciarBarraDeProgresso();
 
 					do {
@@ -324,7 +403,15 @@ public class ExtratorDeDados {
 
 
 
-	
+	/**Recebe uma linha contendo todas as respostas de um entrevistado. Ignora os dados do mesmo, já processados
+	 * e salva no banco as respostas com os conceitos dados por ele. Se a quantidade de respostas for diferente da quantidade
+	 * de perguntas passadas, dispara uma exceção sinalizando que nada desta linha foi salvo e ela deve ser ignorada.
+	 * 
+	 * @param textoLinha conteúdo da linha, com os dados do entrevistado e as respostas em si.
+	 * @param codigoEntrevistado código do entrevistado a qual pertence as respostas
+	 * @throws SQLException se um erro ocorrer na inserção ao banco
+	 * @throws IllegalArgumentException se as respostas dadas não condizem com as perguntas da pesquisa.
+	 */
 	private void extrairLinhaResposta(String textoLinha, int codigoEntrevistado) throws SQLException, IllegalArgumentException {
 		int i = 0, numeroPerguntas = indicesPerguntas.length+3;
 		
@@ -338,7 +425,7 @@ public class ExtratorDeDados {
 
 		//Se o número de perguntas não for igual ao número de tokens, ignora a linha disparando uma exceção
 		if(numeroToknes != numeroPerguntas)
-			throw new IllegalArgumentException("Respostas não condizem com o cabeçalho");
+			throw new IllegalArgumentException(MSG_EXCECAO_RESPOSTAS_NAO_CONDIZEM);
 
 		String resposta;
 		while (tokenizer.hasMoreElements()) {
@@ -347,21 +434,25 @@ public class ExtratorDeDados {
 			
 			dao.executarFuncao(FUNCTION_INSERIR_RESPOSTA, pesquisa.getCodigo(), resposta, indicesPerguntas[i].getIndiceAssunto(),
 					indicesPerguntas[i++].getIndicePergunta(), codigoEntrevistado);
-			System.out.println(resposta);
 			
 		}
-
-
 	}
 
 
+	/** Recebe um array com dados do entrevistado como <code>String</code>. Valida os campos e os insere no banco.
+	 * 
+	 * @param textoLinhas dados do entrevistado (segmento, campus e curso) em um array de <code>String</code>.
+	 * @return o código do entrevistado recém inserido
+	 * @throws SQLException se um erro ocorrer na inserção ao banco
+	 * @throws IllegalArgumentException se as respostas dadas não condizem com as perguntas da pesquisa.
+	 */
 	private int extrairEntrevistado(String[] textoLinhas) throws IOException, SQLException {
 
 		int codigoEntrevistado;
 		String segmento = textoLinhas[0];
 		String campus = textoLinhas[1]; 
 
-		if(segmento.isEmpty() || campus.isEmpty()) throw new IllegalArgumentException("Campo vazio detectado");
+		if(segmento.isEmpty() || campus.isEmpty()) throw new IllegalArgumentException(MSG_EXCECAO_CAMPO_VAZIO);
 
 		/*
 		 * Executando a função SQL para inserção (que recebe o codigo da pesquisa, segmento, campus e curso) e 
@@ -404,13 +495,22 @@ public class ExtratorDeDados {
 		abrirArquivo();
 	}
 
+	/**Abre um arquivo de texto para leitura dos dados, utilizando o objeto da classe {@link ArquivoTexto} associado à esta*/
 	private void abrirArquivo() throws NullPointerException, IOException{
 		arquivo.abrir(pesquisa.getCaminhoDataSet());
 	}
 
 
 
-	public RelatorioDeParticipantes gerarDataSetParticipantesCurso(TipoRelatorio tipoRelatorio) throws SQLException{
+	/**
+	 * Importa do banco de dados um relatório de participantes por curso, encapsulados
+	 * em um objeto do tipo {@link RelatorioDeParticipantes}.
+	 * 
+	 * @param tipoRelatorio enumeração que contém informações do tipo do relatório a ser gerado
+	 * @return
+	 * @throws SQLException se ocorrer um erro relacionado ao banco de dados
+	 */
+	public RelatorioDeParticipantes gerarRelatorioParticipantesCurso(TipoRelatorio tipoRelatorio) throws SQLException{
 		RelatorioDeParticipantes dataSet = new RelatorioDeParticipantes(tipoRelatorio);
 
 		pesquisa = app.getPesquisaAtiva();
@@ -442,7 +542,16 @@ public class ExtratorDeDados {
 		return dataSet;
 	}
 
-	public RelatorioDeParticipantes gerarDataSetParticipantesSegmento(TipoRelatorio tipoRelatorio) throws SQLException{
+
+	/**
+	 * Importa do banco de dados um relatório de participantes por segmento, encapsulados
+	 * em um objeto do tipo {@link RelatorioDeParticipantes}.
+	 * 
+	 * @param tipoRelatorio enumeração que contém informações do tipo do relatório a ser gerado
+	 * @return um objeto do tipo {@link RelatorioDeParticipantes}
+	 * @throws SQLException se ocorrer um erro relacionado ao banco de dados
+	 */
+	public RelatorioDeParticipantes gerarRelatorioParticipantesSegmento(TipoRelatorio tipoRelatorio) throws SQLException{
 		RelatorioDeParticipantes dataSet = new RelatorioDeParticipantes(tipoRelatorio);
 
 		pesquisa = app.getPesquisaAtiva();
@@ -470,6 +579,11 @@ public class ExtratorDeDados {
 		return dataSet;
 	}
 
+	/**Retorna em um {@link List}  de {@link Segmento} todos os segmentos armazenados no banco de dados
+	 * 
+	 * @return uma lista de segmentos
+	 * @throws SQLException
+	 */
 	private List<Segmento> obterSegmentos() throws SQLException {
 		List<Segmento> segmentosList = new ArrayList<Segmento>();
 
@@ -482,7 +596,14 @@ public class ExtratorDeDados {
 		return segmentosList;
 	}
 
-	/**Retorna todos os assuntos de uma pesquisa específica em uma lista de Cursos*/
+	/**Retorna em um {@link List}  de {@link Curso} todos os cursos armazenados no banco de dados.
+	 * A pesquisa pode ser filtrada pelo tipo (modalidade) de curso.
+	 * 
+	 * @param tipoGraduacao uma <code>String</code> com a modalidade dos cursos a serem obtidos. Exemplo: 'bacharelado'
+	 * <br>(<code>null</code> pode ser passado para ignorar este filtro).
+	 * @return uma lista de cursos
+	 * @throws SQLException se ocorrer um erro relacionado ao banco de dados
+	 */
 	private List<Curso> obterCursos( String tipoGraduacao) throws SQLException {
 		List<Curso> cursosList = new ArrayList<Curso>();
 		boolean cursosTecnologia = false;
@@ -518,7 +639,11 @@ public class ExtratorDeDados {
 		return cursosList;
 	}
 
-	/**Retorna todos os assuntos de uma pesquisa específica em uma lista de Assuntos*/
+	/**Retorna em um {@link List}  de {@link Assunto}, todos os assuntos de uma pesquisa específica armazenados no banco de dados
+	 * @param pesquisa contendo o código da pesquisa associada aos assuntos a serem obtidos.
+	 * @return uma lista de segmentos
+	 * @throws SQLException
+	 */
 	private List<Assunto> obterAssuntos(Pesquisa pesquisa) throws SQLException {
 		List<Assunto> assuntosList = new ArrayList<Assunto>();
 
@@ -529,7 +654,7 @@ public class ExtratorDeDados {
 
 		for(int i = 0; i<assuntos.length; i++) {
 			assuntosList.add(new Assunto((int)assuntos[i][0], 
-					formataraDescricaoAssunto(assuntos[i][1].toString())));
+					formatarDescricaoAssunto(assuntos[i][1].toString())));
 
 
 		}
@@ -544,7 +669,7 @@ public class ExtratorDeDados {
 	 * @param assunto descrição do assunto a ser formatado
 	 * @return a descrição formatada. Se não for possível formatá-la, retorna o conteúdo original.
 	 */
-	private String formataraDescricaoAssunto(String assunto) {
+	private String formatarDescricaoAssunto(String assunto) {
 		String novoAssunto;
 		try{
 			novoAssunto = assunto.split("Das condições \\w{2,3} ")[1].trim();
@@ -560,6 +685,18 @@ public class ExtratorDeDados {
 		novoAssunto = Character.toUpperCase(novoAssunto.charAt(0)) + novoAssunto.substring(1); 
 		return novoAssunto;
 	}
+	
+	
+
+	/**
+	 * Importa do banco de dados um relatório de médias de notas por um tipo de curso, encapsulados
+	 * em um objeto do tipo {@link RelatorioDeMedias}.
+	 * 
+	 * @param tipoGraduacao descrição em formato de <code>String</code> da modalidade dos cursos que serão obtidos no relatório
+	 * @param tipoRelatorio enumeração que contém informações do tipo do relatório a ser gerado
+	 * @return um objeto do {@link RelatorioDeMedias}.
+	 * @throws SQLException se ocorrer um erro relacionado ao banco de dados
+	 */
 	public RelatorioDeMedias gerarRelatorioDeMediasPorCurso(String tipoGraduacao, TipoRelatorio tipoRelatorio) throws SQLException {
 
 		pesquisa = app.getPesquisaAtiva();
@@ -585,8 +722,6 @@ public class ExtratorDeDados {
 
 			notas = new MediasPorCurso(curso);
 
-			int i = 0;
-			System.out.println(assuntosList.size());
 			for(Assunto assunto : assuntosList) {
 
 				//Obtendo a média de nota de cada tema avaliado por entrevistados de um curso
@@ -595,7 +730,6 @@ public class ExtratorDeDados {
 						"inner join entrevistado on (entrevistado.codigo = resposta.codentrevistado) " + 
 						"where entrevistado.codcurso = ? and resposta.codassunto = ? and resposta.codpesquisa = ?", 
 						curso.getCodigo(), assunto.getCodigo(), pesquisa.getCodigo());
-				System.err.printf("\n%s: %s", i++, assunto.getCodigo());
 				if(resultado[0][0] != null) {
 					media = ((BigDecimal)resultado[0][0]).doubleValue();
 
@@ -613,13 +747,21 @@ public class ExtratorDeDados {
 		}
 
 		if(listaDeMedias.size() == 0)
-			throw new NullPointerException("Nenhum dado de relatório encontrado com os parâmetros passados.");
+			throw new NullPointerException(MSG_EXCECAO_NENHUM_DADO_ENCONTRADO);
 
 		return listaDeMedias;
 	}
 
 
 
+	/**
+	 * Importa do banco de dados um relatório de médias de notas por segmento, encapsulados
+	 * em um objeto do tipo {@link RelatorioDeMedias}.
+	 * 
+	 * @param tipoRelatorio enumeração que contém informações do tipo do relatório a ser gerado
+	 * @return um objeto do {@link RelatorioDeMedias}.
+	 * @throws SQLException se ocorrer um erro relacionado ao banco de dados
+	 */
 	public RelatorioDeMedias gerarRelatorioDeMediasPorSegmento(TipoRelatorio tipoRelatorio) throws SQLException {
 
 		pesquisa = app.getPesquisaAtiva();
@@ -645,8 +787,7 @@ public class ExtratorDeDados {
 
 			notas = new MediasPorSegmento(curso);
 
-			int i = 0;
-			System.out.println(assuntosList.size());
+			
 			for(Assunto assunto : assuntosList) {
 
 				//Obtendo a média de nota de cada tema avaliado por entrevistados de um curso
@@ -655,7 +796,7 @@ public class ExtratorDeDados {
 						"inner join entrevistado on (entrevistado.codigo = resposta.codentrevistado) " + 
 						"where entrevistado.codsegmento = ? and resposta.codassunto = ? and resposta.codpesquisa = ?", 
 						curso.getCodigo(), assunto.getCodigo(), pesquisa.getCodigo());
-				System.err.printf("\n%s: %s", i++, assunto.getCodigo());
+
 				if(resultado[0][0] != null) {
 					media = ((BigDecimal)resultado[0][0]).doubleValue();
 
@@ -679,29 +820,15 @@ public class ExtratorDeDados {
 	}
 
 
+	/**Arredonda uma média (<code>double</code>) para um valor com uma casa decimal*/
 	private double arredondarMedia(double media) {
 		return (double) Math.round(media * 10) /10;
 	}
 
-	private class IndicePergunta{
-		private int indiceAssunto, indicePergunta;
-
-		public IndicePergunta(int indiceAssunto, int indicePergunta) {
-			this.indiceAssunto = indiceAssunto;
-			this.indicePergunta = indicePergunta;
-		}
-
-		public int getIndiceAssunto() {
-			return indiceAssunto;
-		}
-
-
-		public int getIndicePergunta() {
-			return indicePergunta;
-		}
-
-	}
-
+	/**Recebe um objeto curso e tenta formatar sua descrição associada se for um curso técnico.
+	 * 
+	 * @param curso objeto {@link Curso} com uma descrição. Se não for possível, a descrição do curso passada permance inalterada
+	 */
 	public static void formatarNomeCursoTecnico(Curso curso) {
 		if(curso.getDescricao().equals(STR_TECNICO))
 			curso.setDescricao(STR_CURSOS_TECNICOS);
@@ -745,6 +872,30 @@ public class ExtratorDeDados {
 
 
 		return pesquisasList;
+	}
+	
+	/**Classe que contém o índices dos assuntos (a.k.a temas) e perguntas (a.k.a questoes ou subtemas)
+	 * inseridos no banco durante na extração dos dados.
+	 * @author RamonGiovane
+	 *
+	 */
+	private class IndicePergunta{
+		private int indiceAssunto, indicePergunta;
+
+		public IndicePergunta(int indiceAssunto, int indicePergunta) {
+			this.indiceAssunto = indiceAssunto;
+			this.indicePergunta = indicePergunta;
+		}
+
+		public int getIndiceAssunto() {
+			return indiceAssunto;
+		}
+
+
+		public int getIndicePergunta() {
+			return indicePergunta;
+		}
+
 	}
 
 }

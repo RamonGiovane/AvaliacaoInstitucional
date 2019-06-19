@@ -10,7 +10,7 @@ public interface InterfaceConstraints {
 			COR_BACKGROUND_BOTAO = Color.BLACK;//new Color(245, 245, 245);
 
 	/**Mensagem de interface gráfica*/
-	public final static String TITULO_PROGRAMA = "Autoavalia\u00E7\u00E3o Institucional",
+	public final static String TITULO_PROGRAMA = "Avalia\u00E7\u00E3o Institucional",
 
 			TITULO_ABRIR_ARQUIVO = "Abrir aquivo",
 			TITULO_IMPORTAR_DADOS = "Importar Novos Dados...",
@@ -35,7 +35,7 @@ public interface InterfaceConstraints {
 	 		MSG_DETALHES_ERRO  = "\nTalvez haja um problema na conexão com o banco.",
 	 		MSG_ERRO_NENHUM_RELATORIO_GERADO = "Não há dados suficientes para gerar relatórios com os parâmteros passados",
 	 		MSG_ERRO_IMPORTAR_SEM_CONEXAO = "É necessária uma conexão com banco de dados para\nimportar  dados de uma pesquisa",
-			MSG_PESQUISA_IMPORTADA = "Pesquisa importada com sucesso!",
+			MSG_PESQUISA_IMPORTADA_COM_SUCESSO = "Pesquisa importada com sucesso!",
 			MSG_BARRA_DE_PROGRESSO_1 = "Lendo pesquisa...",
 			MSG_BARRA_DE_PROGRESSO_2 = "Isto pode levar alguns minutos...",
 			MSG_BARRA_DE_PROGRESSO_3 =	"Quase lá...",
@@ -43,7 +43,18 @@ public interface InterfaceConstraints {
 					+ " Banco de Dados</html>",
 			MSG_SOBRE = "© 2019 Avaliação Institucional\nDesenvolvido por Ramon Giovane.\n"
 					+ "Aluno do curso Tecnologia em Sistemas para Internet.\nhttps://github.com/RamonGiovane/",
-			MSG_ARQUIVO_VAZIO = "O arquivo passado está vazio ou corrompido.";
+			MSG_ARQUIVO_VAZIO = "O arquivo passado está vazio ou corrompido.",
+			MSG_REVISAR_ARQUIVO =  "Se julgar necessário, por favor revise o arquivo fornecido e reimporte os dados.",
+			MSG_IMPORTACAO_MAL_SUCEDIDA = "ERRO: A importação foi mal sucedida porque nenhuma das\n"
+					+ "respostas do entrevistados contidas no arquivo passado\ncondiz com o cabeçalho de perguntas.\nPor favor revise o arquivo fornecido",
+			MSG_PESQUISA_IMPORTADA_PARCIALMENTE = "A pesquisa foi importada. Porém,  ",
+			
+			MSG_LINHAS_IGNORADAS = " linhas foram ignoradas durante o processo, pois\nnão condiziam com o cabeçalho de perguntas ou estavam em branco.\n" 
+			+ MSG_REVISAR_ARQUIVO,
+			MSG_EXCECAO_CAMPO_VAZIO = "Campo vazio detectado",
+			MSG_EXCECAO_RESPOSTAS_NAO_CONDIZEM = "Respostas não condizem com o cabeçalho",
+			MSG_EXCECAO_NENHUM_DADO_ENCONTRADO = "Nenhum dado de relatório encontrado com os parâmetros passados.";
+			
 	
 	
 

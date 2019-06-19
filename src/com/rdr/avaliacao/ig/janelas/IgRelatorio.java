@@ -1,5 +1,8 @@
 package com.rdr.avaliacao.ig.janelas;
 
+import static com.rdr.avaliacao.ig.InterfaceConstraints.DESCRICOES_EXTENSOES_PDF;
+import static com.rdr.avaliacao.ig.InterfaceConstraints.EXTENSOES_PDF;
+import static com.rdr.avaliacao.ig.InterfaceConstraints.PONTO;
 import static com.rdr.avaliacao.ig.InterfaceConstraints.TITULO_SALVAR_PDF;
 
 import java.awt.BasicStroke;
@@ -17,7 +20,6 @@ import java.sql.SQLException;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JDialog;
-import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
@@ -40,7 +42,7 @@ import org.jfree.chart.renderer.category.BarRenderer3D;
 import org.jfree.chart.renderer.category.CategoryItemRenderer;
 import org.jfree.data.category.DefaultCategoryDataset;
 import org.jfree.ui.TextAnchor;
-import static com.rdr.avaliacao.ig.InterfaceConstraints.*;
+
 import com.itextpdf.text.DocumentException;
 import com.rdr.avaliacao.AvaliacaoInstitucional;
 import com.rdr.avaliacao.es.ArquivoPDF;
@@ -49,13 +51,12 @@ import com.rdr.avaliacao.ig.LookAndFeel;
 import com.rdr.avaliacao.ig.PropriedadesDeJanela;
 import com.rdr.avaliacao.ig.TipoRelatorio;
 import com.rdr.avaliacao.questionario.Assunto;
-import com.rdr.avaliacao.questionario.Pesquisa;
 import com.rdr.avaliacao.relatorio.MediasDeNotas;
 import com.rdr.avaliacao.relatorio.Relatorio;
 import com.rdr.avaliacao.relatorio.RelatorioDeMedias;
 import com.rdr.avaliacao.relatorio.RelatorioDeParticipantes;
 
-public class IgRelatorio extends JFrame implements PropriedadesDeJanela {
+public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 
 	/**
 	 * Componentes da interface, salvos de forma a serem mais acessíveis durante o 
@@ -224,11 +225,12 @@ public class IgRelatorio extends JFrame implements PropriedadesDeJanela {
 		panelDados.add(panelTabela);	
 
 		//Só será modal se for JDialog
-		//setModal(true);
+		setModal(true);
 
 		
 		LookAndFeel.definirBotaoPrincipal(this, btnGerarPdf);
-		LookAndFeel.definirIcone(this);
+		//Só define o ícone se for JDialog
+		//LookAndFeel.definirIcone(this);
 		gerarDadosRelatorio();
 		
 		exibirTabela();
@@ -492,7 +494,7 @@ public class IgRelatorio extends JFrame implements PropriedadesDeJanela {
 
 		}
 
-		/**Formata, colore, customize o gráfico de linha*/
+		/**Formata, colore, customiza o gráfico de linha*/
 		private void customizarGraficoLinha(JFreeChart chart, DefaultCategoryDataset dataset) {
 			CategoryPlot categoryP = chart.getCategoryPlot();
 			CategoryItemRenderer renderer = categoryP.getRenderer();
@@ -586,12 +588,12 @@ public class IgRelatorio extends JFrame implements PropriedadesDeJanela {
 			arquivoPDF.adicionarTitulo(titulo);
 
 			//Separa o titulo do proximo conteudo
-			arquivoPDF.novaLinha();
+			arquivoPDF.adicionarNovaLinha();
 
 			//Adiciona o JTable
 			arquivoPDF.adicionarJTable(tabela, usarCoresCustomizadas);
 
-			arquivoPDF.novaLinha();
+			arquivoPDF.adicionarNovaLinha();
 
 			//Adiciona o gráfico
 			arquivoPDF.adicionarGrafico(graficoPanel.getChart(), panelDados.getWidth(), panelDados.getHeight());

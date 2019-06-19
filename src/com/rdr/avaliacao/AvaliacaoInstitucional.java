@@ -23,8 +23,6 @@ import com.rdr.avaliacao.relatorio.Relatorio;
 public class AvaliacaoInstitucional {
 	private static BancoDeDados bd;
 	
-	//TODO: Este objeto DAO deve ser comum para todas as classes que fazem acesso ao banco de dados
-	//TODO: Fazer método que obtém este objeto
 	private static DAO dao;
 	
 	/**Autoreferência para que todas as classes invocadas por essa possam ter acesso a seus métodos*/
@@ -180,10 +178,10 @@ public class AvaliacaoInstitucional {
 			throws SQLException, NullPointerException {
 		switch(tipoRelatorio){
 		case PARTICIPANTES_POR_CURSO:
-			 return extrator.gerarDataSetParticipantesCurso(tipoRelatorio);
+			 return extrator.gerarRelatorioParticipantesCurso(tipoRelatorio);
 			
 		case PARTICIPANTES_POR_SEGMENTO:
-			return extrator.gerarDataSetParticipantesSegmento(tipoRelatorio);
+			return extrator.gerarRelatorioParticipantesSegmento(tipoRelatorio);
 
 		case CONCEITO_MEDIO_CURSO:
 			return extrator.gerarRelatorioDeMediasPorCurso(tipoGraduacao, tipoRelatorio);
