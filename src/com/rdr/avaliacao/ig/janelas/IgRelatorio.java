@@ -196,7 +196,7 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 		JButton btnGerarPdf = new JButton("Gerar PDF");
 		btnGerarPdf.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				gerarPdf();
+				gerarESalvarPdf();
 			}
 		});
 		btnGerarPdf.setBounds(681, 30, 89, 23);
@@ -386,13 +386,14 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 		return caminhoArquivo;
 	}
 
-	public void gerarPdf() {
+	/**Exibe o diálogo para salvar PDF, gera e salva.*/
+	private void gerarESalvarPdf() {
 
 		try {
 			//Mostrando ao usuário a janela para salvar o arquivo PDF
 			String caminhoArquivo = dialogoSalvarArquivoPdf();
-
-			artefatosDeRelatorio.gerarPDF(caminhoArquivo, tipoRelatorio.getDescricao(), dadosRelatorio instanceof RelatorioDeMedias);
+			String titulo = tipoRelatorio.getDescricao() + "s de " + tipoGraduacao;
+			artefatosDeRelatorio.gerarPDF(caminhoArquivo, titulo,  dadosRelatorio instanceof RelatorioDeMedias);
 
 		} catch (NullPointerException e) {
 			e.printStackTrace();
@@ -407,6 +408,10 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 	}
 
 	@Override
+	/**Exibe a janela na tela em relação a janela pai.
+	 * 
+	 * @param janelPai Component AWT que invocou este. 
+	 */
 	public void exibir(Component janelaPai) {
 		construirGrafico();
 		construirTabela();
@@ -615,8 +620,8 @@ public class IgRelatorio extends JDialog implements PropriedadesDeJanela {
 			DefaultCategoryDataset dataset = new DefaultCategoryDataset( );
 
 			for(int i  = 0; i<dadosRelatorio.size(); i++) {
-				dataset.addValue(dadosRelatorio.obter(i).getValorLinha(), dadosRelatorio.obter(i).getValorColuna(), 
-						dadosRelatorio.obter(i).getValorColuna());
+				dataset.addValue(dadosRelatorio.obter(i).valor(), dadosRelatorio.obter(i).descricao(), 
+						dadosRelatorio.obter(i).descricao());
 			}
 
 			return dataset;

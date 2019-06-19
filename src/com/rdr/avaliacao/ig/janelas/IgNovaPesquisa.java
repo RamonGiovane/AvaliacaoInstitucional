@@ -14,6 +14,7 @@ import static com.rdr.avaliacao.ig.InterfaceConstraints.TEXTO_IMPORTAR_DADOS;
 import static com.rdr.avaliacao.ig.InterfaceConstraints.TITULO_ABRIR_ARQUIVO;
 import static com.rdr.avaliacao.ig.InterfaceConstraints.TITULO_IMPORTAR_DADOS;
 
+import java.awt.Component;
 import java.awt.Font;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
@@ -32,11 +33,17 @@ import javax.swing.JTextField;
 
 import com.rdr.avaliacao.AvaliacaoInstitucional;
 import com.rdr.avaliacao.es.EntradaESaida;
-import com.rdr.avaliacao.es.ExtratorDeDados;
 import com.rdr.avaliacao.ig.LookAndFeel;
+import com.rdr.avaliacao.ig.PropriedadesDeJanela;
 import com.rdr.avaliacao.questionario.Pesquisa;
 
-public class IgNovaPesquisa extends JDialog{
+/**Tela de interface gráfica para que possibilita o usuário possa inserir os dados de uma nova pesquisa
+ * e começar a imporação dos dados dela
+ * 
+ * @author Ramon Giovane
+ *
+ */
+public class IgNovaPesquisa extends JDialog implements PropriedadesDeJanela{
 	private  JTextField fieldNomePesquisa, fieldCaminhoDados;
 	private static IgNovaPesquisa igPesquisa;
 	private static AvaliacaoInstitucional avaliacaoInstitucional;
@@ -58,7 +65,13 @@ public class IgNovaPesquisa extends JDialog{
 		}
 	}
 
-	public void exibir() {
+	@Override
+	/**Exibe a janela em relação àquela que invocou esta
+	 * 
+	 * @param janelaPai componente AWT que realizou a invocação desta
+	 */
+	public void exibir(Component janelaPai) {
+		setLocationRelativeTo(janelaPai);
 		setVisible(true);
 	}
 
@@ -229,5 +242,7 @@ public class IgNovaPesquisa extends JDialog{
 	public void fechar() {
 		dispose();
 	}
+
+	
 
 }

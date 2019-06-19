@@ -2,6 +2,7 @@ package com.rdr.avaliacao.relatorio;
 
 import com.rdr.avaliacao.ig.TipoRelatorio;
 
+/**Classe abstrata que representa um relatório genérico e estabelece operações ele deve ter*/
 public abstract class Relatorio {
 	
 	private TipoRelatorio tipoRelatorio;

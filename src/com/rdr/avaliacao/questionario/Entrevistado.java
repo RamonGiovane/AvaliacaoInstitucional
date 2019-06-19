@@ -1,5 +1,9 @@
 package com.rdr.avaliacao.questionario;
 
+/**Representa um entrevistado, composto por um {@link Segmento} e um campus.
+ * @author Ramon Giovane
+ *
+ */
 public class Entrevistado {
 	
 	private Segmento segmento;

@@ -1,5 +1,10 @@
 package com.rdr.avaliacao.questionario;
 
+/**Classe que representa um tema ou assunto de uma pergunta de uma pesquisa
+ * 
+ * @author Ramon Giovane
+ *
+ */
 public class Assunto implements Comparable<Assunto> {
 	private int codigo;
 	private String descricao;

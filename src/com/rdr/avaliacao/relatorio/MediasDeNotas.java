@@ -6,6 +6,7 @@ import java.util.Map;
 
 import com.rdr.avaliacao.questionario.Assunto;
 
+/**Classe abstrata composta de uma estrutura de dados para armazenar medias de notas*/
 public abstract class MediasDeNotas{
 	private Map<Assunto, Double> mediasPorAssunto;
 	

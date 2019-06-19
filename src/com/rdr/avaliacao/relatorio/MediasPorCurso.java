@@ -3,6 +3,8 @@ package com.rdr.avaliacao.relatorio;
 import com.rdr.avaliacao.es.ExtratorDeDados;
 import com.rdr.avaliacao.questionario.Curso;
 
+/**Classe que estende {@link MediasDeNotas} composta de uma estrutura de dados para armazenar medias de notas de 
+ * entrevistados relacionados a um curso*/
 public class MediasPorCurso extends MediasDeNotas {
 	private Curso curso;
 

@@ -1,5 +1,10 @@
 package com.rdr.avaliacao.questionario;
 
+/**Classe que representa um conceito, decrição e valor de uma resposta
+ * 
+ * @author Ramon Giovane
+ *
+ */
 public class Conceito{
 	private String descricao;
 	private int valor;

@@ -1,9 +1,11 @@
 
 package com.rdr.avaliacao.ig.janelas;
 
-import static com.rdr.avaliacao.ig.InterfaceConstraints.*;
+import static com.rdr.avaliacao.ig.InterfaceConstraints.CAMINHO_ICON_GRAPHIC;
 import static com.rdr.avaliacao.ig.InterfaceConstraints.COR_BACKGROUND;
+import static com.rdr.avaliacao.ig.InterfaceConstraints.MSG_DETALHES_ERRO;
 import static com.rdr.avaliacao.ig.InterfaceConstraints.MSG_ERRO_GERAR_RELATORIO;
+import static com.rdr.avaliacao.ig.InterfaceConstraints.MSG_ERRO_NENHUM_RELATORIO_GERADO;
 import static com.rdr.avaliacao.ig.InterfaceConstraints.MSG_NAO_HA_PESQUISAS;
 import static com.rdr.avaliacao.ig.InterfaceConstraints.MSG_RELATORIO_SEM_CONEXAO;
 import static com.rdr.avaliacao.ig.InterfaceConstraints.TITULO_PROGRAMA;
@@ -24,8 +26,6 @@ import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
-import javax.swing.JRootPane;
-import javax.swing.SwingUtilities;
 
 import com.rdr.avaliacao.AvaliacaoInstitucional;
 import com.rdr.avaliacao.es.EntradaESaida;
@@ -33,7 +33,6 @@ import com.rdr.avaliacao.ig.InterfaceConstraints;
 import com.rdr.avaliacao.ig.LookAndFeel;
 import com.rdr.avaliacao.ig.PropriedadesDeJanela;
 import com.rdr.avaliacao.ig.TipoRelatorio;
-import com.rdr.avaliacao.questionario.Pesquisa;
 
 public class IgSeletorRelatorio extends JDialog implements PropriedadesDeJanela{
 	private  JComboBox<String> comboNomePesquisa, comboTipoGraduacao;
@@ -53,6 +52,9 @@ public class IgSeletorRelatorio extends JDialog implements PropriedadesDeJanela{
 
 	}
 
+	/**Obtém uma instância única da janela.
+	 * 
+	 */
 	public static IgSeletorRelatorio getInstance(TipoRelatorio tipoRelatorio) {
 		if(igPesquisa == null) {
 			igPesquisa = new IgSeletorRelatorio(tipoRelatorio);

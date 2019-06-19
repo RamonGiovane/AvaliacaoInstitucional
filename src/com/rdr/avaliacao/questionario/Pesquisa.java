@@ -3,6 +3,11 @@ package com.rdr.avaliacao.questionario;
 import com.rdr.avaliacao.es.bd.Persistencia;
 import com.rdr.avaliacao.es.bd.Recuperacao;
 
+/**Representa uma pesquisa, contendo nome (descrição), seu código associado ao banco de 
+ * dados e o caminho de onde os dados da pesquisa serão importados
+ * @author Ramon Giovane
+ *
+ */
 public class Pesquisa  implements Persistencia, Recuperacao{
 	private String nome;
 	private int codigo;

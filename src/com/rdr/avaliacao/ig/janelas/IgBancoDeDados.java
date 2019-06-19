@@ -1,10 +1,11 @@
 package com.rdr.avaliacao.ig.janelas;
 
-import static com.rdr.avaliacao.ig.InterfaceConstraints.*;
+import static com.rdr.avaliacao.ig.InterfaceConstraints.CAMINHO_ICON_DB;
 import static com.rdr.avaliacao.ig.InterfaceConstraints.COR_BACKGROUND;
 import static com.rdr.avaliacao.ig.InterfaceConstraints.ERRO_CONECTAR_BD;
 import static com.rdr.avaliacao.ig.InterfaceConstraints.ERRO_DESCONECTAR_BD;
 import static com.rdr.avaliacao.ig.InterfaceConstraints.MSG_BD_CONEXAO_JA_EXISTE;
+import static com.rdr.avaliacao.ig.InterfaceConstraints.MSG_JANELA_BANCO;
 import static com.rdr.avaliacao.ig.InterfaceConstraints.MSG_SUCESSO_BD;
 import static com.rdr.avaliacao.ig.InterfaceConstraints.NOME_BD_PADRAO;
 import static com.rdr.avaliacao.ig.InterfaceConstraints.SENHA_BD_PADRAO;
@@ -27,12 +28,15 @@ import javax.swing.JTextField;
 
 import com.rdr.avaliacao.AvaliacaoInstitucional;
 import com.rdr.avaliacao.es.EntradaESaida;
-import com.rdr.avaliacao.es.bd.BancoDeDados;
 import com.rdr.avaliacao.ig.LookAndFeel;
 import com.rdr.avaliacao.ig.PropriedadesDeJanela;
 
+/**Tela de interface gráfica para que o usuário possa inserir os dados de e realizar  uma conexão com o banco de dados
+ * 
+ * @author Ramon Giovane
+ *
+ */
 public class IgBancoDeDados extends JDialog implements PropriedadesDeJanela{
-	private static BancoDeDados bd;
 	private static JTextField fieldNomeBD;
 	private static JTextField filedUsuario;
 	private static JPasswordField fieldSenha;
@@ -46,6 +50,7 @@ public class IgBancoDeDados extends JDialog implements PropriedadesDeJanela{
 
 	}
 
+	/**Obtém uma instância única da janela*/
 	public static IgBancoDeDados getInstance() {
 		if(igBancoDeDados == null) 
 			new IgBancoDeDados();
@@ -55,7 +60,6 @@ public class IgBancoDeDados extends JDialog implements PropriedadesDeJanela{
 
 
 	private void construirIg() {
-		System.out.println("Passing through...");
 		LookAndFeel.definirLookAndFeel(this);
 		setModal(true);
 		setResizable(false);
@@ -126,6 +130,10 @@ public class IgBancoDeDados extends JDialog implements PropriedadesDeJanela{
 
 
 	@Override
+	/**Exibe a janela em relação àquela que invocou esta
+	 * 
+	 * @param janelaPai componente AWT que realizou a invocação desta
+	 */
 	public void exibir(Component janelaPai) {
 		setLocationRelativeTo(janelaPai);
 		setVisible(true);
@@ -133,12 +141,14 @@ public class IgBancoDeDados extends JDialog implements PropriedadesDeJanela{
 	}
 
 	@Override
+	/**Esconde a janela mas <b>não</b> a fecha*/
 	public void esconder() {
 		setVisible(false);
 
 	}
 
 	@Override
+	/**Libera os recursos da janela e fecha de fato*/
 	public void fechar() {
 		igBancoDeDados.dispose();
 	}

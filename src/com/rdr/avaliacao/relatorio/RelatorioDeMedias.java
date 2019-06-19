@@ -6,6 +6,7 @@ import java.util.List;
 import com.rdr.avaliacao.ig.TipoRelatorio;
 import com.rdr.avaliacao.questionario.Assunto;
 
+/**Classe que encapsula um conjuto de {@link MediasDeNotas} e implementa operações para gerar relatórios sobre esses dados*/
 public class RelatorioDeMedias extends Relatorio{
 	private List<MediasDeNotas> listaDeMedias;
 	

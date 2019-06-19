@@ -5,7 +5,7 @@
 -- Dumped from database version 9.6.13
 -- Dumped by pg_dump version 9.6.13
 
--- Started on 2019-06-17 01:46:21
+-- Started on 2019-06-18 23:41:15
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -18,12 +18,570 @@ SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
 
+--
+-- TOC entry 1 (class 3079 OID 12387)
+-- Name: plpgsql; Type: EXTENSION; Schema: -; Owner: 
+--
+
+CREATE EXTENSION IF NOT EXISTS plpgsql WITH SCHEMA pg_catalog;
+
+
+--
+-- TOC entry 2247 (class 0 OID 0)
+-- Dependencies: 1
+-- Name: EXTENSION plpgsql; Type: COMMENT; Schema: -; Owner: 
+--
+
+COMMENT ON EXTENSION plpgsql IS 'PL/pgSQL procedural language';
+
+
+--
+-- TOC entry 620 (class 1247 OID 33446)
+-- Name: retorno_entrevistado; Type: TYPE; Schema: public; Owner: postgres
+--
+
+CREATE TYPE public.retorno_entrevistado AS (
+	codigo_entrevistado integer,
+	codigo_segmento integer,
+	codigo_curso integer,
+	codigo_grau integer,
+	codigo_campus integer
+);
+
+
+ALTER TYPE public.retorno_entrevistado OWNER TO postgres;
+
+--
+-- TOC entry 206 (class 1255 OID 33447)
+-- Name: inserir_conceito(character varying); Type: FUNCTION; Schema: public; Owner: spaadmin
+--
+
+CREATE FUNCTION public.inserir_conceito(descricao_conceito character varying) RETURNS integer
+    LANGUAGE plpgsql
+    AS $$declare
+	codigo_conceito integer;
+	valor_conceito integer;
+begin
+raise notice 'entrou em inserir conceito [%]', descricao_conceito;
+if descricao_conceito = 'Ótimo' then
+		valor_conceito := 5;
+elsif descricao_conceito = 'Bom' then
+		valor_conceito := 4;
+elsif descricao_conceito = 'Satisfatório' then
+		valor_conceito := 3;
+elsif descricao_conceito = 'Ruim' then
+		valor_conceito := 2;
+	
+elsif descricao_conceito = 'Péssimo' then
+		valor_conceito := 1;
+else
+	valor_conceito := 0;
+end if;
+	insert into conceito (descricao, valor)
+	values (descricao_conceito, valor_conceito)
+	returning codigo into codigo_conceito;
+return codigo_conceito;
+end;
+		$$;
+
+
+ALTER FUNCTION public.inserir_conceito(descricao_conceito character varying) OWNER TO spaadmin;
+
+--
+-- TOC entry 220 (class 1255 OID 33448)
+-- Name: inserir_entrevistado(integer, character varying, character varying, character varying); Type: FUNCTION; Schema: public; Owner: spaadmin
+--
+
+CREATE FUNCTION public.inserir_entrevistado(codigo_pesquisa integer, nome_segmento character varying, nome_campus character varying, nome_curso character varying) RETURNS integer
+    LANGUAGE plpgsql COST 150
+    AS $$    DECLARE 
+
+	codigo_segmento integer;
+	codigo_curso integer;
+	codigo_campus integer;
+	codigo_entrevistado integer;
+	codretorno integer;
+
+    BEGIN
+	
+	/**Obtendo o codigo do segmento passdo ou inserindo um novo segmento*/
+	SELECT codigo into codigo_segmento from segmento where segmento.descricao = nome_segmento;
+	IF NOT FOUND THEN
+		insert into segmento (descricao) values(nome_segmento);
+		SELECT segmento.codigo into codigo_segmento from segmento order by 
+		segmento.codigo desc limit 1;
+	END IF;
+	
+	/**Obtendo o codigo do campus passdo ou inserindo um novo campus*/
+	SELECT campus.codigo into codigo_campus from campus where campus.nome = nome_campus;
+	IF NOT FOUND THEN
+		insert into campus (nome) values(nome_campus);
+		SELECT campus.codigo into codigo_campus from campus 
+		order by campus.codigo desc limit 1;
+	END IF;
+	
+
+	/*Inserindo curso se não estiver em branco*/
+	IF nome_curso != '' then
+		/**Obtendo o codigo do curso passdo ou inserindo um novo curso*/
+		SELECT curso.codigo into codigo_curso from curso where curso.descricao = nome_curso;
+		IF NOT FOUND THEN
+			insert into curso (descricao) values(nome_curso);
+			SELECT curso.codigo into codigo_curso from curso 
+			order by curso.codigo desc limit 1;
+			
+		END IF;
+
+		insert into entrevistado (codpesquisa, codcampus, codsegmento, codcurso) 
+		values(codigo_pesquisa, codigo_campus, codigo_segmento, codigo_curso);
+		
+		select entrevistado.codigo from entrevistado into codretorno 
+		order by entrevistado.codigo desc limit 1;
+	
+	ELSE
+		insert into entrevistado (codpesquisa, codcampus, codsegmento) 
+		values(codigo_pesquisa, codigo_campus, codigo_segmento);
+		
+		select entrevistado.codigo from entrevistado into codretorno
+		order by entrevistado.codigo desc limit 1;
+
+	END IF;
+	
+	
+	return codretorno;
+	
+
+	
+    END;
+  $$;
+
+
+ALTER FUNCTION public.inserir_entrevistado(codigo_pesquisa integer, nome_segmento character varying, nome_campus character varying, nome_curso character varying) OWNER TO spaadmin;
+
 SET default_tablespace = '';
 
 SET default_with_oids = false;
 
 --
--- TOC entry 201 (class 1259 OID 18587)
+-- TOC entry 186 (class 1259 OID 33449)
+-- Name: assunto_pergunta; Type: TABLE; Schema: public; Owner: spaadmin
+--
+
+CREATE TABLE public.assunto_pergunta (
+    codassunto integer NOT NULL,
+    codpergunta integer NOT NULL,
+    codpesquisa integer NOT NULL
+);
+
+
+ALTER TABLE public.assunto_pergunta OWNER TO spaadmin;
+
+--
+-- TOC entry 221 (class 1255 OID 33452)
+-- Name: inserir_pergunta(integer, character varying, character varying); Type: FUNCTION; Schema: public; Owner: spaadmin
+--
+
+CREATE FUNCTION public.inserir_pergunta(codigo_pesquisa integer, descricao_pergunta character varying, descricao_assunto character varying) RETURNS SETOF public.assunto_pergunta
+    LANGUAGE plpgsql
+    AS $$	DECLARE
+		codigo_assunto integer;
+		codigo_pergunta integer;
+		
+		
+	BEGIN
+		if not exists(select 1 from assunto_pergunta where codpergunta = codigo_pergunta
+					  and codassunto = codigo_assunto) then
+			SELECT codigo into codigo_assunto from assunto 
+				where descricao = descricao_assunto 
+				and codpesquisa = codigo_pesquisa;
+			IF NOT FOUND THEN
+				insert into assunto (descricao, codpesquisa)
+				values(descricao_assunto, codigo_pesquisa);
+				select codigo into codigo_assunto from assunto 
+				order by codigo desc limit 1;
+			END IF;
+
+			SELECT codigo into codigo_pergunta from pergunta 
+				where descricao = descricao_pergunta
+				and codpesquisa = codigo_pesquisa;
+			IF NOT FOUND THEN
+				insert into pergunta (descricao, codpesquisa) 
+				values(descricao_pergunta, codigo_pesquisa);
+				select codigo into codigo_pergunta from pergunta 
+				order by codigo desc limit 1;
+			END IF;
+
+			insert into assunto_pergunta (codpergunta, codassunto, codpesquisa)
+			values (codigo_pergunta, codigo_assunto, codigo_pesquisa);
+		end if;
+		return query  
+		select codassunto, codpergunta, codpesquisa from assunto_pergunta
+		order by assunto_pergunta.codassunto desc limit 1;
+		
+		
+		
+	END;
+$$;
+
+
+ALTER FUNCTION public.inserir_pergunta(codigo_pesquisa integer, descricao_pergunta character varying, descricao_assunto character varying) OWNER TO spaadmin;
+
+--
+-- TOC entry 205 (class 1255 OID 33453)
+-- Name: inserir_resposta(integer, character varying, integer, integer, integer); Type: FUNCTION; Schema: public; Owner: spaadmin
+--
+
+CREATE FUNCTION public.inserir_resposta(codigo_pesquisa integer, descricao_resposta character varying, codigo_assunto integer, codigo_pergunta integer, codigo_entrevistado integer) RETURNS void
+    LANGUAGE plpgsql COST 150
+    AS $$ declare
+		codigo_conceito integer;
+
+    BEGIN
+	
+	select codigo into codigo_conceito from conceito  where conceito.descricao = descricao_resposta; 
+	if codigo_conceito is null then
+		select inserir_conceito(descricao_resposta) into codigo_conceito;
+	end if;
+	insert into resposta (codconceito, codpergunta, codassunto, codentrevistado, codpesquisa) 
+	values(codigo_conceito, codigo_pergunta, codigo_assunto, codigo_entrevistado, codigo_pesquisa);
+	
+	RETURN;
+    END;
+  $$;
+
+
+ALTER FUNCTION public.inserir_resposta(codigo_pesquisa integer, descricao_resposta character varying, codigo_assunto integer, codigo_pergunta integer, codigo_entrevistado integer) OWNER TO spaadmin;
+
+--
+-- TOC entry 207 (class 1255 OID 33454)
+-- Name: truncate_tables(character varying); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.truncate_tables(username character varying) RETURNS void
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    statements CURSOR FOR
+        SELECT tablename FROM pg_tables
+        WHERE tableowner = username AND schemaname = 'public';
+BEGIN
+    FOR stmt IN statements LOOP
+        EXECUTE 'TRUNCATE TABLE ' || quote_ident(stmt.tablename) || ' CASCADE;';
+    END LOOP;
+END;
+$$;
+
+
+ALTER FUNCTION public.truncate_tables(username character varying) OWNER TO postgres;
+
+--
+-- TOC entry 187 (class 1259 OID 33455)
+-- Name: assunto; Type: TABLE; Schema: public; Owner: spaadmin
+--
+
+CREATE TABLE public.assunto (
+    codigo integer NOT NULL,
+    descricao character varying(150) NOT NULL,
+    codpesquisa integer
+);
+
+
+ALTER TABLE public.assunto OWNER TO spaadmin;
+
+--
+-- TOC entry 188 (class 1259 OID 33458)
+-- Name: assunto_codigo_seq; Type: SEQUENCE; Schema: public; Owner: spaadmin
+--
+
+CREATE SEQUENCE public.assunto_codigo_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.assunto_codigo_seq OWNER TO spaadmin;
+
+--
+-- TOC entry 2248 (class 0 OID 0)
+-- Dependencies: 188
+-- Name: assunto_codigo_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: spaadmin
+--
+
+ALTER SEQUENCE public.assunto_codigo_seq OWNED BY public.assunto.codigo;
+
+
+--
+-- TOC entry 189 (class 1259 OID 33460)
+-- Name: campus; Type: TABLE; Schema: public; Owner: spaadmin
+--
+
+CREATE TABLE public.campus (
+    nome character varying(150),
+    codigo integer NOT NULL
+);
+
+
+ALTER TABLE public.campus OWNER TO spaadmin;
+
+--
+-- TOC entry 190 (class 1259 OID 33463)
+-- Name: campus_codigo_seq; Type: SEQUENCE; Schema: public; Owner: spaadmin
+--
+
+CREATE SEQUENCE public.campus_codigo_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.campus_codigo_seq OWNER TO spaadmin;
+
+--
+-- TOC entry 2249 (class 0 OID 0)
+-- Dependencies: 190
+-- Name: campus_codigo_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: spaadmin
+--
+
+ALTER SEQUENCE public.campus_codigo_seq OWNED BY public.campus.codigo;
+
+
+--
+-- TOC entry 191 (class 1259 OID 33465)
+-- Name: conceito; Type: TABLE; Schema: public; Owner: spaadmin
+--
+
+CREATE TABLE public.conceito (
+    codigo integer NOT NULL,
+    descricao character varying(100),
+    valor integer
+);
+
+
+ALTER TABLE public.conceito OWNER TO spaadmin;
+
+--
+-- TOC entry 192 (class 1259 OID 33468)
+-- Name: conceito_codigo_seq; Type: SEQUENCE; Schema: public; Owner: spaadmin
+--
+
+CREATE SEQUENCE public.conceito_codigo_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.conceito_codigo_seq OWNER TO spaadmin;
+
+--
+-- TOC entry 2250 (class 0 OID 0)
+-- Dependencies: 192
+-- Name: conceito_codigo_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: spaadmin
+--
+
+ALTER SEQUENCE public.conceito_codigo_seq OWNED BY public.conceito.codigo;
+
+
+--
+-- TOC entry 193 (class 1259 OID 33470)
+-- Name: curso; Type: TABLE; Schema: public; Owner: spaadmin
+--
+
+CREATE TABLE public.curso (
+    codigo integer NOT NULL,
+    descricao character varying(100)
+);
+
+
+ALTER TABLE public.curso OWNER TO spaadmin;
+
+--
+-- TOC entry 194 (class 1259 OID 33473)
+-- Name: curso_codigo_seq; Type: SEQUENCE; Schema: public; Owner: spaadmin
+--
+
+CREATE SEQUENCE public.curso_codigo_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.curso_codigo_seq OWNER TO spaadmin;
+
+--
+-- TOC entry 2251 (class 0 OID 0)
+-- Dependencies: 194
+-- Name: curso_codigo_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: spaadmin
+--
+
+ALTER SEQUENCE public.curso_codigo_seq OWNED BY public.curso.codigo;
+
+
+--
+-- TOC entry 195 (class 1259 OID 33475)
+-- Name: entrevistado; Type: TABLE; Schema: public; Owner: spaadmin
+--
+
+CREATE TABLE public.entrevistado (
+    codigo integer NOT NULL,
+    codsegmento integer NOT NULL,
+    codcurso integer,
+    codcampus integer NOT NULL,
+    codpesquisa integer NOT NULL
+);
+
+
+ALTER TABLE public.entrevistado OWNER TO spaadmin;
+
+--
+-- TOC entry 196 (class 1259 OID 33478)
+-- Name: entrevistado_codigo_seq; Type: SEQUENCE; Schema: public; Owner: spaadmin
+--
+
+CREATE SEQUENCE public.entrevistado_codigo_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.entrevistado_codigo_seq OWNER TO spaadmin;
+
+--
+-- TOC entry 2252 (class 0 OID 0)
+-- Dependencies: 196
+-- Name: entrevistado_codigo_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: spaadmin
+--
+
+ALTER SEQUENCE public.entrevistado_codigo_seq OWNED BY public.entrevistado.codigo;
+
+
+--
+-- TOC entry 197 (class 1259 OID 33480)
+-- Name: pergunta; Type: TABLE; Schema: public; Owner: spaadmin
+--
+
+CREATE TABLE public.pergunta (
+    codigo integer NOT NULL,
+    descricao character varying(150),
+    codpesquisa integer
+);
+
+
+ALTER TABLE public.pergunta OWNER TO spaadmin;
+
+--
+-- TOC entry 198 (class 1259 OID 33483)
+-- Name: pergunta_codigo_seq; Type: SEQUENCE; Schema: public; Owner: spaadmin
+--
+
+CREATE SEQUENCE public.pergunta_codigo_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.pergunta_codigo_seq OWNER TO spaadmin;
+
+--
+-- TOC entry 2253 (class 0 OID 0)
+-- Dependencies: 198
+-- Name: pergunta_codigo_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: spaadmin
+--
+
+ALTER SEQUENCE public.pergunta_codigo_seq OWNED BY public.pergunta.codigo;
+
+
+--
+-- TOC entry 199 (class 1259 OID 33485)
+-- Name: pesquisa; Type: TABLE; Schema: public; Owner: spaadmin
+--
+
+CREATE TABLE public.pesquisa (
+    codigo integer NOT NULL,
+    descricao character varying(200)
+);
+
+
+ALTER TABLE public.pesquisa OWNER TO spaadmin;
+
+--
+-- TOC entry 200 (class 1259 OID 33488)
+-- Name: pesquisa_codigo_seq; Type: SEQUENCE; Schema: public; Owner: spaadmin
+--
+
+CREATE SEQUENCE public.pesquisa_codigo_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.pesquisa_codigo_seq OWNER TO spaadmin;
+
+--
+-- TOC entry 2254 (class 0 OID 0)
+-- Dependencies: 200
+-- Name: pesquisa_codigo_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: spaadmin
+--
+
+ALTER SEQUENCE public.pesquisa_codigo_seq OWNED BY public.pesquisa.codigo;
+
+
+--
+-- TOC entry 201 (class 1259 OID 33490)
+-- Name: resposta; Type: TABLE; Schema: public; Owner: spaadmin
+--
+
+CREATE TABLE public.resposta (
+    codpergunta integer NOT NULL,
+    codentrevistado integer NOT NULL,
+    codassunto integer NOT NULL,
+    codigo integer NOT NULL,
+    codconceito integer NOT NULL,
+    codpesquisa integer
+);
+
+
+ALTER TABLE public.resposta OWNER TO spaadmin;
+
+--
+-- TOC entry 202 (class 1259 OID 33493)
+-- Name: resposta_codigo_seq; Type: SEQUENCE; Schema: public; Owner: spaadmin
+--
+
+CREATE SEQUENCE public.resposta_codigo_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.resposta_codigo_seq OWNER TO spaadmin;
+
+--
+-- TOC entry 2255 (class 0 OID 0)
+-- Dependencies: 202
+-- Name: resposta_codigo_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: spaadmin
+--
+
+ALTER SEQUENCE public.resposta_codigo_seq OWNED BY public.resposta.codigo;
+
+
+--
+-- TOC entry 203 (class 1259 OID 33495)
 -- Name: segmento; Type: TABLE; Schema: public; Owner: spaadmin
 --
 
@@ -36,7 +594,7 @@ CREATE TABLE public.segmento (
 ALTER TABLE public.segmento OWNER TO spaadmin;
 
 --
--- TOC entry 202 (class 1259 OID 18590)
+-- TOC entry 204 (class 1259 OID 33498)
 -- Name: segmento_codigo_seq; Type: SEQUENCE; Schema: public; Owner: spaadmin
 --
 
@@ -51,8 +609,8 @@ CREATE SEQUENCE public.segmento_codigo_seq
 ALTER TABLE public.segmento_codigo_seq OWNER TO spaadmin;
 
 --
--- TOC entry 2179 (class 0 OID 0)
--- Dependencies: 202
+-- TOC entry 2256 (class 0 OID 0)
+-- Dependencies: 204
 -- Name: segmento_codigo_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: spaadmin
 --
 
@@ -60,46 +618,155 @@ ALTER SEQUENCE public.segmento_codigo_seq OWNED BY public.segmento.codigo;
 
 
 --
--- TOC entry 2052 (class 2604 OID 18599)
+-- TOC entry 2063 (class 2604 OID 33581)
+-- Name: assunto codigo; Type: DEFAULT; Schema: public; Owner: spaadmin
+--
+
+ALTER TABLE ONLY public.assunto ALTER COLUMN codigo SET DEFAULT nextval('public.assunto_codigo_seq'::regclass);
+
+
+--
+-- TOC entry 2064 (class 2604 OID 33582)
+-- Name: campus codigo; Type: DEFAULT; Schema: public; Owner: spaadmin
+--
+
+ALTER TABLE ONLY public.campus ALTER COLUMN codigo SET DEFAULT nextval('public.campus_codigo_seq'::regclass);
+
+
+--
+-- TOC entry 2065 (class 2604 OID 33583)
+-- Name: conceito codigo; Type: DEFAULT; Schema: public; Owner: spaadmin
+--
+
+ALTER TABLE ONLY public.conceito ALTER COLUMN codigo SET DEFAULT nextval('public.conceito_codigo_seq'::regclass);
+
+
+--
+-- TOC entry 2066 (class 2604 OID 33584)
+-- Name: curso codigo; Type: DEFAULT; Schema: public; Owner: spaadmin
+--
+
+ALTER TABLE ONLY public.curso ALTER COLUMN codigo SET DEFAULT nextval('public.curso_codigo_seq'::regclass);
+
+
+--
+-- TOC entry 2067 (class 2604 OID 33585)
+-- Name: entrevistado codigo; Type: DEFAULT; Schema: public; Owner: spaadmin
+--
+
+ALTER TABLE ONLY public.entrevistado ALTER COLUMN codigo SET DEFAULT nextval('public.entrevistado_codigo_seq'::regclass);
+
+
+--
+-- TOC entry 2068 (class 2604 OID 33586)
+-- Name: pergunta codigo; Type: DEFAULT; Schema: public; Owner: spaadmin
+--
+
+ALTER TABLE ONLY public.pergunta ALTER COLUMN codigo SET DEFAULT nextval('public.pergunta_codigo_seq'::regclass);
+
+
+--
+-- TOC entry 2069 (class 2604 OID 33587)
+-- Name: pesquisa codigo; Type: DEFAULT; Schema: public; Owner: spaadmin
+--
+
+ALTER TABLE ONLY public.pesquisa ALTER COLUMN codigo SET DEFAULT nextval('public.pesquisa_codigo_seq'::regclass);
+
+
+--
+-- TOC entry 2070 (class 2604 OID 33588)
+-- Name: resposta codigo; Type: DEFAULT; Schema: public; Owner: spaadmin
+--
+
+ALTER TABLE ONLY public.resposta ALTER COLUMN codigo SET DEFAULT nextval('public.resposta_codigo_seq'::regclass);
+
+
+--
+-- TOC entry 2071 (class 2604 OID 33589)
 -- Name: segmento codigo; Type: DEFAULT; Schema: public; Owner: spaadmin
 --
 
 ALTER TABLE ONLY public.segmento ALTER COLUMN codigo SET DEFAULT nextval('public.segmento_codigo_seq'::regclass);
 
+-- chaves primarias
 
---
--- TOC entry 2172 (class 0 OID 18587)
--- Dependencies: 201
--- Data for Name: segmento; Type: TABLE DATA; Schema: public; Owner: spaadmin
---
+ALTER TABLE public.curso
+    ADD CONSTRAINT curso_pkey PRIMARY KEY (codigo);
+ALTER TABLE public.entrevistado
+    ADD CONSTRAINT entrevistado_pkey PRIMARY KEY (codigo);
 
-COPY public.segmento (codigo, descricao) FROM stdin;
-7	Discente
-8	Docente
-\.
-
-
---
--- TOC entry 2180 (class 0 OID 0)
--- Dependencies: 202
--- Name: segmento_codigo_seq; Type: SEQUENCE SET; Schema: public; Owner: spaadmin
---
-
-SELECT pg_catalog.setval('public.segmento_codigo_seq', 8, true);
-
-
---
--- TOC entry 2054 (class 2606 OID 18631)
--- Name: segmento segmento_pkey; Type: CONSTRAINT; Schema: public; Owner: spaadmin
---
-
-ALTER TABLE ONLY public.segmento
+ALTER TABLE public.conceito
+    ADD CONSTRAINT conceito_pkey PRIMARY KEY (codigo);
+ALTER TABLE public.assunto
+    ADD CONSTRAINT assunto_pkey PRIMARY KEY (codigo);
+ALTER TABLE public.campus
+    ADD CONSTRAINT campus_pkey PRIMARY KEY (codigo);	
+ALTER TABLE public.assunto_pergunta
+    ADD CONSTRAINT assunto_pergunta_pkey PRIMARY KEY (codassunto, codpergunta, codpesquisa);
+ALTER TABLE public.pergunta
+    ADD CONSTRAINT pergunta_pkey PRIMARY KEY (codigo);
+ALTER TABLE public.pesquisa
+    ADD CONSTRAINT pesquisa_pkey PRIMARY KEY (codigo);
+ALTER TABLE public.resposta
+    ADD CONSTRAINT resposta_pkey PRIMARY KEY (codigo);
+ALTER TABLE public.segmento
     ADD CONSTRAINT segmento_pkey PRIMARY KEY (codigo);
 
+-- unique
+ALTER TABLE public.pesquisa
+    ADD CONSTRAINT pesquisa_descricao_key UNIQUE (descricao);
 
--- Completed on 2019-06-17 01:46:21
+-- chaves estrangeiras	
+ALTER TABLE public.assunto_pergunta
+    ADD CONSTRAINT assunto_pergunta_codassunto_fkey FOREIGN KEY (codassunto)
+    REFERENCES public.assunto (codigo) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION;
+	
+ALTER TABLE public.assunto_pergunta
+    ADD CONSTRAINT assunto_pergunta_codpergunta_fkey FOREIGN KEY (codpergunta)
+    REFERENCES public.pergunta (codigo) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION;
 
---
--- PostgreSQL database dump complete
---
+ALTER TABLE public.assunto_pergunta
+    ADD CONSTRAINT assunto_pergunta_codpesquisa_fkey FOREIGN KEY (codpesquisa)
+    REFERENCES public.pesquisa (codigo) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE CASCADE;
 
+ALTER TABLE public.entrevistado
+    ADD CONSTRAINT entrevistado_codcampus_fkey FOREIGN KEY (codcampus)
+    REFERENCES public.campus (codigo) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION;
+ALTER TABLE public.entrevistado
+    ADD CONSTRAINT entrevistado_codcurso_fkey FOREIGN KEY (codcurso)
+    REFERENCES public.curso (codigo) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION;
+ALTER TABLE public.entrevistado
+    ADD CONSTRAINT entrevistado_codpesquisa_fkey FOREIGN KEY (codpesquisa)
+    REFERENCES public.pesquisa (codigo) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION;
+ALTER TABLE public.entrevistado
+    ADD CONSTRAINT entrevistado_codsegmento_fkey FOREIGN KEY (codsegmento)
+    REFERENCES public.segmento (codigo) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION;	
+ALTER TABLE public.resposta
+    ADD CONSTRAINT resposta_codconceito_fkey FOREIGN KEY (codconceito)
+    REFERENCES public.conceito (codigo) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION;
+ALTER TABLE public.resposta
+    ADD CONSTRAINT resposta_codentrevistado_fkey FOREIGN KEY (codentrevistado)
+    REFERENCES public.entrevistado (codigo) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION;
+ALTER TABLE public.resposta
+    ADD CONSTRAINT resposta_codpergunta_fkey FOREIGN KEY (codpergunta, codassunto, codpesquisa)
+    REFERENCES public.assunto_pergunta (codpergunta, codassunto, codpesquisa) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION;

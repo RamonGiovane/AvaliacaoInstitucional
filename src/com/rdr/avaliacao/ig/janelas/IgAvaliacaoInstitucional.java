@@ -40,6 +40,11 @@ import com.rdr.avaliacao.es.EntradaESaida;
 import com.rdr.avaliacao.ig.LookAndFeel;
 import com.rdr.avaliacao.ig.TipoRelatorio;
 
+/**Classe de interface gráfica que representa a janela principal da aplicação, por onde o usuário pode 
+ * acessar todos os outros componentes
+ * @author Ramon Giovane
+ *
+ */
 public class IgAvaliacaoInstitucional extends JFrame{
 	private static IgAvaliacaoInstitucional igAvaliacaoInstitucional;
 	private static IgBancoDeDados igBancoDeDados;
@@ -63,6 +68,11 @@ public class IgAvaliacaoInstitucional extends JFrame{
 		igBancoDeDados.exibir(this);
 	}
 
+	/**Obtém uma instância da classe de interface gráfica principal do programa
+	 * 
+	 * @param avaliacaoInstitucional
+	 * @return
+	 */
 	public static IgAvaliacaoInstitucional getInstance(AvaliacaoInstitucional avaliacaoInstitucional) {
 		if(igAvaliacaoInstitucional == null)
 			igAvaliacaoInstitucional = 	new IgAvaliacaoInstitucional(avaliacaoInstitucional);
@@ -324,6 +334,10 @@ public class IgAvaliacaoInstitucional extends JFrame{
 		igBancoDeDados.exibir(IgAvaliacaoInstitucional.this);
 	}
 
+	/**Transforma o cursor em um formato difrente.
+	 * 
+	 * @param tipoCursor código de formato do cursor estabelcido pelas constantes da classe {@link Cursor}.
+	 */
 	public static void mudarCursor(int tipoCursor) {
 		igAvaliacaoInstitucional.setCursor(Cursor.getPredefinedCursor(tipoCursor));
 	}
@@ -361,7 +375,7 @@ public class IgAvaliacaoInstitucional extends JFrame{
 	
 	private void importarDados() {
 		if(avaliacaoInstitucional.checarConexaoBancoDeDados())
-			IgNovaPesquisa.getInstance(avaliacaoInstitucional).exibir();
+			IgNovaPesquisa.getInstance(avaliacaoInstitucional).exibir(this);
 		else
 			EntradaESaida.msgInfo(this, MSG_ERRO_IMPORTAR_SEM_CONEXAO, TITULO_IMPORTAR_DADOS);
 	}
@@ -370,7 +384,7 @@ public class IgAvaliacaoInstitucional extends JFrame{
 		try{
 			importarDados();
 		}catch (NullPointerException e) {
-			System.out.println("Abrir arquivo cancelado.");
+			//System.out.println("Abrir arquivo cancelado.");
 		}
 	}
 	

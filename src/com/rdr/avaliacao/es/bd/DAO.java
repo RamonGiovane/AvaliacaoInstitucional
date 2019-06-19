@@ -7,8 +7,12 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Types;
 
-//Pode-se tentar um relacionamento de herança com BD
-
+/**Classe que realiza o trabalho de execução de querys SQL ao Banco de Dados.
+ * Trabalha em conjunto com a classe {@link BancoDeDados}.
+ * 
+ * @author Ramon Giovane
+ *
+ */
 public class DAO {
 	private static BancoDeDados bd;
 	private final String ERRO_PREPARAR_QUERY = "Não foi possível preparar a query SQL.",
@@ -17,24 +21,45 @@ public class DAO {
 			STR_FECHA_PARENTESES = ")", STR_VALUES = " values", STR_INTERROGACAO = "?",
 			STR_VIRGULA = ", ", STR_INSERT_INTO = "insert into " ;
 	
-	public DAO() {};
 	
+	/**Instancia um objeto da classe, recebendo um objeto {@link BancoDeDados} contendo uma conexão ativa
+	 * @see BancoDeDados
+	 * */
 	public DAO(BancoDeDados bd) {
 		DAO.bd = bd;
 	}
 	
+	/**Obtém o objeto de conexão ao banco relacionado à classe.
+	 * 
+	 * @return um objeto {@link BancoDeDados}
+	 */
 	public BancoDeDados getBd() {
 		return bd;
 	}
-
+	/**Define o objeto de conexão ao banco relacionado à classe.
+	 * 
+	 * @param bd um objeto {@link BancoDeDados} com uma conexão ativa
+	 */
 	public void setBd(BancoDeDados bd) {
 		DAO.bd = bd;
 	}
 	
+	/**Prepara a chamada para a execução de uma instrução SQL no banco.
+	 * 
+	 * @param query instrução SQL
+	 * @return um {@link PreparedStatement} com a query pronta para ser executada
+	 * @throws SQLException se ocorrer um erro na preparação ou a querry estiver mal formada
+	 */
 	private PreparedStatement prepareStatement(String query) throws SQLException {
 		return bd.getConnection().prepareStatement(query, ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_READ_ONLY);
 	}
 	
+	/**Prepara a chamada para a execução de uma função armazenada no banco.
+	 * 
+	 * @param query instrução SQL
+	 * @return um {@link PreparedStatement} com a query pronta para ser executada
+	 * @throws SQLException se ocorrer um erro na preparação ou a querry estiver mal formada
+	 */
 	private CallableStatement prepareCall(String query) throws SQLException {
 		return bd.getConnection().prepareCall(query,  ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_READ_ONLY);
 	}
@@ -67,7 +92,7 @@ public class DAO {
 		PreparedStatement ps;
 		StringBuilder insertQuery = new 
 				StringBuilder(STR_INSERT_INTO).append(nomeTabela).
-				append(queryColumnNames(nomeDasColunas)).append(queryFormatSymbols(objetos.length, true));
+				append(adicionarNomesColunasQuery(nomeDasColunas)).append(queryFormatSymbols(objetos.length, true));
 		
 		try {
 			ps = prepareStatement(insertQuery.toString());
@@ -190,6 +215,13 @@ public class DAO {
 	}
 	
 	
+	/**Executa uma instrução SQL qualquer. Não captura retornos.<br>
+	 * <b>Nota:</b> este método <b>NÃO</b> é seguro contra injeções SQL. Assegure-se de
+	 * usuá-lo da forma correta. Recomenda-se o uso apenas para funções armazenadas sem parâmetro ou
+	 * em ambiente controlado, onde não há interferência de agentes externos.
+	 * @param query instrução SQL a ser executada
+	 * @throws SQLException se ocorrer algo erro de conexão ou a query estiver mal formada.
+	 */
 	public void executar(String query) throws SQLException{
 		CallableStatement statement = prepareCall(new StringBuilder().
 				append(STR_ABRE_CALL).append(query).append(STR_FECHA_CALL).toString());
@@ -201,7 +233,7 @@ public class DAO {
 		
 	}
 	
-	/**Realiza uma pesquisa no banco de dados, retornando uma matriz de objetos obtidos na consulta.
+	/**Realiza uma consulta no banco de dados, retornando uma matriz de objetos obtidos na consulta.
 	 * 
 	 * <br><br>
 	 * <b>Nota:</b> este método é <b>seguro</b> contra injeções de SQL. 
@@ -225,11 +257,22 @@ public class DAO {
 		}
 	}
 	
-	public Object[][] consultar(String query, Object... chavesPrimarias) throws SQLException {
+	/**Realiza uma consulta no banco de dados, retornando uma matriz de objetos obtidos na consulta.
+	 * 
+	 * <br><br>
+	 * <b>Nota:</b> este método é <b>seguro</b> contra injeções de SQL. 
+	 * <br>
+	 * @param query instrução SQL a ser executada
+	 * @param parametros lista de parâmetros passados na instrução
+	 * @author Ramon Giovane
+	 * @return uma matriz de objetos contendo os nomes das colunas correspondentes no banco e objetos recuperados na consulta.
+	 * @throws SQLException caso ocorra algum erro na execução da instrução ou de conexão ao banco.*/
+	 
+	public Object[][] consultar(String query, Object... parametros) throws SQLException {
 		PreparedStatement ps = prepareStatement(query);
 		try{
-			if(chavesPrimarias != null)
-				inserirObjetosPreparedStatement(ps, chavesPrimarias);
+			if(parametros != null)
+				inserirObjetosPreparedStatement(ps, parametros);
 			return resultSetAsMatrix(ps.executeQuery());
 		}catch (Exception e) {
 			throw e;
@@ -295,7 +338,8 @@ public class DAO {
 		return str.toString();
 	}
 	
-	private Object queryColumnNames(String[] nomeDasColunas) {
+	/**Adiciona os nomes das colunas a serem usadas na instrução SQL.*/
+	private Object adicionarNomesColunasQuery(String[] nomeDasColunas) {
 		StringBuilder str = new StringBuilder(STR_ABRE_PARENTESES);
 		for(int i =0; i<nomeDasColunas.length; i++) {
 			str.append(nomeDasColunas[i]);

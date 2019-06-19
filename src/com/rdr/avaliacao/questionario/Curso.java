@@ -1,9 +1,14 @@
 package com.rdr.avaliacao.questionario;
 
-import com.rdr.avaliacao.relatorio.DadosDeGrafico;
+import com.rdr.avaliacao.relatorio.DadosDeGraficoDeBarra;
 
-public class Curso implements DadosDeGrafico {
-	//TODO: Refatorar esta classe, está incompleta!
+/**Representa um curso com uma descrição e um código associado ao banco de dados.
+ * Guarda também a quantiade de entrevistados de um curso*
+ * 
+ * @author Ramon Giovane
+ *
+ */
+public class Curso implements DadosDeGraficoDeBarra {
 	private String descricao;
 	private int codigo;
 	long quantidadeEntrevistados;
@@ -37,12 +42,12 @@ public class Curso implements DadosDeGrafico {
 	}
 
 	@Override
-	public Number getValorLinha() {
+	public Number valor() {
 		return quantidadeEntrevistados;
 	}
 
 	@Override
-	public String getValorColuna() {
+	public String descricao() {
 		return descricao;
 	}
 

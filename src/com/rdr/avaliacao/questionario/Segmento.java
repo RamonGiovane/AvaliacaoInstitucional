@@ -1,15 +1,15 @@
 package com.rdr.avaliacao.questionario;
 
-import com.rdr.avaliacao.relatorio.DadosDeGrafico;
+import com.rdr.avaliacao.relatorio.DadosDeGraficoDeBarra;
 
 /**Clase para armazenar o segmento de um entrevistado, que pode ser um {@link Segmento#DISCENTE},
  * {@link Segmento#DOCENTE}, {@link Segmento#TECNICO} ou qualquer outro tipo.
- * Implementa a interface {@link DadosDeGrafico} para a geração de relatórios de participantes.
+ * Implementa a interface {@link DadosDeGraficoDeBarra} para a geração de relatórios de participantes.
  * 
  * @author Ramon Giovane
  *
  */
-public class Segmento implements DadosDeGrafico {
+public class Segmento implements DadosDeGraficoDeBarra {
 	public static String DISCENTE = "Discente", DOCENTE = "Docente", TECNICO =  "Técnico Administrativo";
 
 	private int codigo;
@@ -57,12 +57,12 @@ public class Segmento implements DadosDeGrafico {
 	}
 
 	@Override
-	public Number getValorLinha() {
+	public Number valor() {
 		return quantidadeEntrevistados;
 	}
 
 	@Override
-	public String getValorColuna() {
+	public String descricao() {
 		return descricao;
 	}
 	

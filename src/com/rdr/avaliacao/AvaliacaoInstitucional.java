@@ -195,8 +195,18 @@ public class AvaliacaoInstitucional {
 		
 	}
 	
-	public Pesquisa obterPesquisa(String nomePesquisa) throws IndexOutOfBoundsException {
-		return pesquisasList.get(pesquisasList.indexOf(new Pesquisa(nomePesquisa)));
+	/**Obtém uma pesquisa da lista de pesquisas na memória*
+	 * 
+	 * @param nomePesquisa nome da pesquisa solicitada
+	 * @return
+	 * @throws IllegalArgumentException se a pesquisa passada não existe na memória
+	 */
+	public Pesquisa obterPesquisa(String nomePesquisa) {
+		try{
+			return pesquisasList.get(pesquisasList.indexOf(new Pesquisa(nomePesquisa)));
+		}catch (IndexOutOfBoundsException e) {
+			throw new IllegalArgumentException();
+		}
 	}
 	
 	/**Realiza a importação dos dados do CSV de uma pesquisa especificada e os salva no banco de dados.
@@ -253,12 +263,16 @@ public class AvaliacaoInstitucional {
 	
 	/**
 	 * Retorna a pesquisa ativa na aplicação  no momento.
+	 * @return o objeto {@link Pesquisa} atual.
 	 */
 	public Pesquisa getPesquisaAtiva() {
 		return pesquisaAtiva;
 	}
 	
-	
+	/**Verifica se o banco de dados tem uma conexão ativa.
+	 * 
+	 * @return <code>true</code> se fim, <code>false</code> do contrário
+	 */
 	public boolean checarConexaoBancoDeDados() {
 		if(bd == null) return false;
 		return BancoDeDados.isConectado();
@@ -267,6 +281,10 @@ public class AvaliacaoInstitucional {
 		bd.fecharConexao();
 	}
 
+	/**Apaga uma pesquisa da lista de pesquisas na memória
+	 * 
+	 * @param pesquisa pesquisa a ser removida
+	 */
 	public void apagarPesquisa(Pesquisa pesquisa) {
 		pesquisasList.remove(pesquisa);
 	}

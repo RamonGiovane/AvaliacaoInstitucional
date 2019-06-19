@@ -6,21 +6,22 @@ import java.util.List;
 
 import com.rdr.avaliacao.ig.TipoRelatorio;
 
+/**Classe que encapsula um conjuto de dados que implementam  {@link DadosDeGraficoDeBarra} e implementa operações para gerar relatórios sobre esses dados*/
 public class RelatorioDeParticipantes extends Relatorio{
-	private List<DadosDeGrafico> dados;
+	private List<DadosDeGraficoDeBarra> dados;
 	
 	private final String STR_PARTICIPANTES = "Participantes por ";
 	
 	public RelatorioDeParticipantes(TipoRelatorio tipoRelatorio){
 		super(tipoRelatorio);
-		dados = new ArrayList<DadosDeGrafico>();
+		dados = new ArrayList<DadosDeGraficoDeBarra>();
 		
 	}
-	public<T extends DadosDeGrafico> void adicionar(T t) {
+	public<T extends DadosDeGraficoDeBarra> void adicionar(T t) {
 		dados.add(t);	
 	}
 	
-	public DadosDeGrafico obter(int posicao) {
+	public DadosDeGraficoDeBarra obter(int posicao) {
 		return dados.get(posicao);
 	}
 	
@@ -33,8 +34,8 @@ public class RelatorioDeParticipantes extends Relatorio{
 	public Object[][] asMatrix() {
 		Object[][] matriz = new Object[dados.size()][2];
 		for(int i = 0; i<dados.size(); i++) {
-			matriz[i][0] = dados.get(i).getValorColuna();
-			matriz[i][1] = dados.get(i).getValorLinha();
+			matriz[i][0] = dados.get(i).descricao();
+			matriz[i][1] = dados.get(i).valor();
 		}
 		
 		return matriz;
@@ -51,11 +52,11 @@ public class RelatorioDeParticipantes extends Relatorio{
 		return STR_RELATORIO + STR_PARTICIPANTES + getTipoRelatorio().getTemaRelatório();
 	}
 	public void ordenar() {
-		dados.sort(new Comparator<DadosDeGrafico>() {
+		dados.sort(new Comparator<DadosDeGraficoDeBarra>() {
 
 			@Override
-			public int compare(DadosDeGrafico dado1, DadosDeGrafico dado2) {
-				return dado1.getValorColuna().compareTo(dado2.getValorColuna());
+			public int compare(DadosDeGraficoDeBarra dado1, DadosDeGraficoDeBarra dado2) {
+				return dado1.descricao().compareTo(dado2.descricao());
 			}
 			
 		});

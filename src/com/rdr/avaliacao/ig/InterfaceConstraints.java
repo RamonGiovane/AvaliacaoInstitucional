@@ -65,7 +65,7 @@ public interface InterfaceConstraints {
 			CAMINHO_PROGRAMA_ICON = "/com/rdr/avaliacao/ig/img/favicon.png",
 			ICONE_DB = "db_icon.png";
 
-	//Banco de Dados
+	/**Dados de login do banco de dados*/
 	public final static String NOME_BD_PADRAO = "spadb", USUARIO_BD_PADRAO = "spaadmin", 
 			SENHA_BD_PADRAO = "SPA#Barbacena@IFSudesteMG";
 
